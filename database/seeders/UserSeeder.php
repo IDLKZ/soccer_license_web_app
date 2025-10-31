@@ -1,0 +1,187 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Constants\RoleConstants;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class UserSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $users = [
+            [
+                'id' => 1,
+                'role_id' => RoleConstants::ADMIN_ROLE_ID,
+                'image_url' => null,
+                'email' => 'admin@example.com',
+                'phone' => '+77000000001',
+                'username' => 'admin',
+                'iin' => '123456789012',
+                'first_name' => 'Админ',
+                'last_name' => 'Системы',
+                'patronymic' => null,
+                'position' => null,
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 2,
+                'role_id' => RoleConstants::LICENSING_DEPARTMENT_ID,
+                'image_url' => null,
+                'email' => 'licence@example.com',
+                'phone' => '+77000000002',
+                'username' => 'licence',
+                'iin' => '222222222222',
+                'first_name' => 'Бегалинов',
+                'last_name' => 'Д.М',
+                'patronymic' => null,
+                'position' => 'Председатель КЛФК',
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 3,
+                'role_id' => RoleConstants::LEGAL_DEPARTMENT_ID,
+                'image_url' => null,
+                'email' => 'legal@example.com',
+                'phone' => '+77000000003',
+                'username' => 'legal',
+                'iin' => '333333333333',
+                'first_name' => 'Амангельдинова',
+                'last_name' => 'Д.С',
+                'patronymic' => null,
+                'position' => 'Эксперт по правовым критериям',
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 4,
+                'role_id' => RoleConstants::FINANCE_DEPARTMENT_ID,
+                'image_url' => null,
+                'email' => 'finance@example.com',
+                'phone' => '+77000000004',
+                'username' => 'finance',
+                'iin' => '444444444444',
+                'first_name' => 'Аркалык',
+                'last_name' => 'Д.Р',
+                'patronymic' => null,
+                'position' => 'Эксперт по финансовым критериям',
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 5,
+                'role_id' => RoleConstants::INFRASTRUCTURE_DEPARTMENT_ID,
+                'image_url' => null,
+                'email' => 'infrastructure@example.com',
+                'phone' => '+77000000005',
+                'username' => 'infrastructure',
+                'iin' => '555555555555',
+                'first_name' => 'Еламанов',
+                'last_name' => 'Н.Е',
+                'patronymic' => null,
+                'position' => 'Эксперт по спортивным, СЭУ и инфраструктурным критериям',
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 6,
+                'role_id' => RoleConstants::CONTROL_DEPARTMENT_ID,
+                'image_url' => null,
+                'email' => 'control@example.com',
+                'phone' => '+77000000006',
+                'username' => 'control',
+                'iin' => '666666666666',
+                'first_name' => 'Контрольный',
+                'last_name' => 'департамент',
+                'patronymic' => null,
+                'position' => null,
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 7,
+                'role_id' => RoleConstants::CLUB_ADMINISTRATOR_ID,
+                'image_url' => null,
+                'email' => 'club_admin@example.com',
+                'phone' => '+77000000007',
+                'username' => 'club_admin',
+                'iin' => '777777777777',
+                'first_name' => 'Администратор',
+                'last_name' => 'клуба',
+                'patronymic' => null,
+                'position' => null,
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 8,
+                'role_id' => RoleConstants::LEGAL_SPECIALIST_ID,
+                'image_url' => null,
+                'email' => 'club_legal@example.com',
+                'phone' => '+77000000008',
+                'username' => 'club_legal',
+                'iin' => '888888888888',
+                'first_name' => 'Юридический',
+                'last_name' => 'специалист',
+                'patronymic' => null,
+                'position' => null,
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 9,
+                'role_id' => RoleConstants::FINANCIAL_SPECIALIST_ID,
+                'image_url' => null,
+                'email' => 'club_financial@example.com',
+                'phone' => '+77000000009',
+                'username' => 'club_financial',
+                'iin' => '999999999999',
+                'first_name' => 'Финансовый',
+                'last_name' => 'специалист',
+                'patronymic' => null,
+                'position' => null,
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+            [
+                'id' => 10,
+                'role_id' => RoleConstants::SPORTING_DIRECTOR_ID,
+                'image_url' => null,
+                'email' => 'club_sport@example.com',
+                'phone' => '+77000000010',
+                'username' => 'club_sport',
+                'iin' => '111111111112',
+                'first_name' => 'Спортивный',
+                'last_name' => 'директор',
+                'patronymic' => null,
+                'position' => null,
+                'password' => Hash::make('admin123'),
+                'is_active' => true,
+                'verified' => true,
+            ],
+        ];
+
+        foreach ($users as $user) {
+            User::updateOrCreate(
+                ['id' => $user['id']],
+                $user
+            );
+        }
+    }
+}

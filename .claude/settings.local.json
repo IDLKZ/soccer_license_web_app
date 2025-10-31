@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(composer require:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(composer dump-autoload:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
