@@ -36,7 +36,7 @@ class CategoryDocument extends Model
 
 	protected $casts = [
 		'level' => 'int',
-		'roles' => 'json'
+		'roles' => 'array'
 	];
 
 	protected $fillable = [
@@ -60,5 +60,38 @@ class CategoryDocument extends Model
 				'source' => 'title_ru'
 			]
 		];
+	}
+
+	/**
+	 * Get the roles attribute, ensuring it's always an array or null
+	 */
+	public function getRolesAttribute($value)
+	{
+		if (is_null($value)) {
+			return null;
+		}
+
+		if (is_string($value)) {
+			$decoded = json_decode($value, true);
+			return is_array($decoded) ? $decoded : null;
+		}
+
+		return is_array($value) ? $value : null;
+	}
+
+	/**
+	 * Set the roles attribute
+	 * Stores role values (slugs) as JSON array
+	 */
+	public function setRolesAttribute($value)
+	{
+		if (is_null($value) || (is_array($value) && empty($value))) {
+			$this->attributes['roles'] = null;
+		} elseif (is_array($value)) {
+			// Store role values (slugs) as array
+			$this->attributes['roles'] = json_encode(array_values($value));
+		} else {
+			$this->attributes['roles'] = $value;
+		}
 	}
 }

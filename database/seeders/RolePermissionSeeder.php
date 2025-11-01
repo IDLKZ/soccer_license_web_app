@@ -24,5 +24,49 @@ class RolePermissionSeeder extends Seeder
             // Sync all permissions to admin role
             $adminRole->permissions()->syncWithoutDetaching($allPermissions);
         }
+
+        // Get Licensing Department Role
+        $licensingDepartmentRole = Role::where('value', 'licensing-department')->first();
+
+        if ($licensingDepartmentRole) {
+            // Get specific permissions for licensing department
+            $licensingPermissions = Permission::whereIn('value', [
+                'view-category-documents',
+                'create-category-documents',
+                'manage-category-documents',
+                'delete-category-documents',
+                'view-documents',
+                'create-documents',
+                'manage-documents',
+                'delete-documents',
+                'view-application-status-categories',
+                'create-application-status-categories',
+                'manage-application-status-categories',
+                'delete-application-status-categories',
+                'view-application-statuses',
+                'create-application-statuses',
+                'manage-application-statuses',
+                'delete-application-statuses',
+                'view-club-teams',
+                'create-club-teams',
+                'manage-club-teams',
+                'delete-club-teams',
+                'view-licences',
+                'create-licences',
+                'manage-licences',
+                'delete-licences',
+                'view-licence-requirements',
+                'create-licence-requirements',
+                'manage-licence-requirements',
+                'delete-licence-requirements',
+                'view-licence-deadlines',
+                'create-licence-deadlines',
+                'manage-licence-deadlines',
+                'delete-licence-deadlines',
+            ])->pluck('id')->toArray();
+
+            // Sync permissions to licensing department role
+            $licensingDepartmentRole->permissions()->syncWithoutDetaching($licensingPermissions);
+        }
     }
 }

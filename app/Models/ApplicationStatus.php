@@ -51,7 +51,7 @@ class ApplicationStatus extends Model
 		'category_id' => 'int',
 		'previous_id' => 'int',
 		'next_id' => 'int',
-		'role_values' => 'json',
+		'role_values' => 'array',
 		'is_active' => 'bool',
 		'is_first' => 'bool',
 		'is_last' => 'bool',
@@ -108,5 +108,38 @@ class ApplicationStatus extends Model
 				'source' => 'title_ru'
 			]
 		];
+	}
+
+	/**
+	 * Get the role_values attribute.
+	 * Ensures it's always returned as an array or null.
+	 */
+	public function getRoleValuesAttribute($value)
+	{
+		if (is_null($value)) {
+			return null;
+		}
+
+		if (is_string($value)) {
+			$decoded = json_decode($value, true);
+			return is_array($decoded) ? $decoded : null;
+		}
+
+		return is_array($value) ? $value : null;
+	}
+
+	/**
+	 * Set the role_values attribute.
+	 * Stores as JSON string in database.
+	 */
+	public function setRoleValuesAttribute($value)
+	{
+		if (is_null($value) || (is_array($value) && empty($value))) {
+			$this->attributes['role_values'] = null;
+		} elseif (is_array($value)) {
+			$this->attributes['role_values'] = json_encode(array_values($value));
+		} else {
+			$this->attributes['role_values'] = $value;
+		}
 	}
 }
