@@ -5,6 +5,8 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Admin\RoleManagement;
 use App\Livewire\Admin\SeasonManagement;
+use App\Livewire\Admin\LeagueManagement;
+use App\Livewire\Admin\ClubManagement;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -23,6 +25,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/users', UserManagement::class)->name('users');
         Route::get('/roles', RoleManagement::class)->name('roles');
         Route::get('/seasons', SeasonManagement::class)->name('seasons');
+        Route::get('/leagues', LeagueManagement::class)->name('leagues');
+        Route::get('/clubs', ClubManagement::class)->name('clubs');
     });
 
     // Logout

@@ -44,12 +44,12 @@
                     <span class="ml-3 font-medium">Сезоны</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
+                <a href="{{ route('admin.leagues') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.leagues') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
                     <i class="fas fa-trophy w-5 text-center text-yellow-500 dark:text-yellow-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-300"></i>
                     <span class="ml-3 font-medium">Лиги</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
+                <a href="{{ route('admin.clubs') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.clubs') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
                     <i class="fas fa-futbol w-5 text-center text-orange-500 dark:text-orange-400 group-hover:text-orange-600 dark:group-hover:text-orange-300"></i>
                     <span class="ml-3 font-medium">Клубы</span>
                 </a>

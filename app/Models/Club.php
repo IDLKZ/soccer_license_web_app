@@ -97,4 +97,9 @@ class Club extends Model
 	{
 		return $this->hasMany(Club::class, 'parent_id');
 	}
+
+	public function parent()
+	{
+		return $this->belongsTo(Club::class, 'parent_id');
+	}
 }
