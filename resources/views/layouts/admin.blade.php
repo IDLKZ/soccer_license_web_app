@@ -52,21 +52,42 @@
     <!-- Mobile Sidebar Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit for all elements to be properly rendered
+            setTimeout(initMobileSidebar, 100);
+        });
+
+        function initMobileSidebar() {
             const sidebar = document.getElementById('sidebar');
             const sidebarOverlay = document.getElementById('sidebar-overlay');
             const closeSidebar = document.getElementById('close-sidebar');
             const openSidebar = document.getElementById('sidebar-toggle'); // Burger menu button
 
+            // Check if all elements exist
+            if (!sidebar || !sidebarOverlay || !closeSidebar || !openSidebar) {
+                console.error('Mobile sidebar elements not found');
+                return;
+            }
+
             // Set initial state for mobile
-            if (window.innerWidth < 1024) { // lg breakpoint
-                sidebar.style.transform = 'translateX(-100%)';
-                sidebarOverlay.style.display = 'none';
+            function setInitialState() {
+                if (window.innerWidth < 1024) { // lg breakpoint
+                    sidebar.style.transform = 'translateX(-100%)';
+                    sidebarOverlay.style.display = 'none';
+                    closeSidebar.classList.add('hidden');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebarOverlay.style.display = 'none';
+                    closeSidebar.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
             }
 
             // Open sidebar
             function openMobileSidebar() {
                 sidebar.style.transform = 'translateX(0)';
                 sidebarOverlay.style.display = 'block';
+                closeSidebar.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
 
@@ -74,36 +95,40 @@
             function closeMobileSidebar() {
                 sidebar.style.transform = 'translateX(-100%)';
                 sidebarOverlay.style.display = 'none';
+                closeSidebar.classList.add('hidden');
                 document.body.style.overflow = '';
             }
 
+            // Set initial state
+            setInitialState();
+
             // Event listeners
-            if (openSidebar) {
-                openSidebar.addEventListener('click', openMobileSidebar);
-            }
-
-            if (closeSidebar) {
-                closeSidebar.addEventListener('click', closeMobileSidebar);
-            }
-
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', closeMobileSidebar);
-            }
+            openSidebar.addEventListener('click', openMobileSidebar);
+            closeSidebar.addEventListener('click', closeMobileSidebar);
+            sidebarOverlay.addEventListener('click', closeMobileSidebar);
 
             // Close sidebar when pressing Escape key
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && !sidebar.classList.contains('-translate-x-full')) {
+                if (e.key === 'Escape' && sidebar.style.transform === 'translateX(0px)') {
                     closeMobileSidebar();
                 }
             });
 
-            // Close sidebar when window is resized to desktop
+            // Close sidebar when window is resized
             window.addEventListener('resize', function() {
                 if (window.innerWidth >= 1024) { // lg breakpoint
-                    closeMobileSidebar();
+                    sidebar.style.transform = 'translateX(0)';
+                    sidebarOverlay.style.display = 'none';
+                    closeSidebar.classList.add('hidden');
+                    document.body.style.overflow = '';
+                } else {
+                    // When switching to mobile, hide sidebar
+                    if (sidebar.style.transform !== 'translateX(-100%)') {
+                        closeMobileSidebar();
+                    }
                 }
             });
-        });
+        }
     </script>
 </body>
 </html>

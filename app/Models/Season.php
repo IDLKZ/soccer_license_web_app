@@ -56,4 +56,12 @@ class Season extends Model
 			]
 		];
 	}
+
+	/**
+	 * Get the licences for the season.
+	 */
+	public function licences()
+	{
+		return $this->hasMany(Licence::class);
+	}
 }

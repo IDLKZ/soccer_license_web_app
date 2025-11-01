@@ -18,16 +18,11 @@ class RolePermissionSeeder extends Seeder
         $adminRole = Role::where('id', RoleConstants::ADMIN_ROLE_ID)->first();
 
         if ($adminRole) {
-            // Get all user management permissions
-            $userPermissions = Permission::whereIn('value', [
-                'view-users',
-                'create-users',
-                'manage-users',
-                'delete-users',
-            ])->pluck('id')->toArray();
+            // Get all system permissions (User, Role, and Permission Management)
+            $allPermissions = Permission::where('is_system', true)->pluck('id')->toArray();
 
-            // Sync permissions to admin role
-            $adminRole->permissions()->syncWithoutDetaching($userPermissions);
+            // Sync all permissions to admin role
+            $adminRole->permissions()->syncWithoutDetaching($allPermissions);
         }
     }
 }

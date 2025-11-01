@@ -29,7 +29,7 @@
                     <span class="ml-3 font-medium">Пользователи</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
+                <a href="{{ route('admin.roles') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.roles') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
                     <i class="fas fa-shield-alt w-5 text-center text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300"></i>
                     <span class="ml-3 font-medium">Роли и права</span>
                 </a>
@@ -39,7 +39,7 @@
                     <p class="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Справочники</p>
                 </div>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
+                <a href="{{ route('admin.seasons') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.seasons') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
                     <i class="fas fa-calendar w-5 text-center text-green-500 dark:text-green-400 group-hover:text-green-600 dark:group-hover:text-green-300"></i>
                     <span class="ml-3 font-medium">Сезоны</span>
                 </a>
@@ -106,6 +106,6 @@
 <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden transition-opacity duration-300"></div>
 
 <!-- Mobile close button -->
-<button id="close-sidebar" class="lg:hidden fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg">
+<button id="close-sidebar" class="lg:hidden fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 p-2 rounded-lg shadow-lg hidden">
     <i class="fas fa-times text-gray-600 dark:text-gray-400"></i>
 </button>

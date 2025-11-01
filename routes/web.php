@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Auth\Login;
 use App\Livewire\Admin\UserManagement;
+use App\Livewire\Admin\RoleManagement;
+use App\Livewire\Admin\SeasonManagement;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -19,6 +21,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Admin routes
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', UserManagement::class)->name('users');
+        Route::get('/roles', RoleManagement::class)->name('roles');
+        Route::get('/seasons', SeasonManagement::class)->name('seasons');
     });
 
     // Logout
