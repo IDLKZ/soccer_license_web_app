@@ -29,7 +29,19 @@
                     <span class="ml-3 font-medium">Мои заявки</span>
                 </a>
 
-    
+                <a href="{{ route('club.criterias') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-criterias*') ? 'bg-green-800 text-white' : '' }}">
+                    <i class="fas fa-tasks w-5 text-center text-blue-400 group-hover:text-blue-300 {{ request()->is('my-criterias*') ? 'text-blue-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Мои критерии</span>
+                    @php
+                        $criteriaCheckCount = \App\Livewire\Club\MyCriterias::getCriteriaCheckCount();
+                    @endphp
+                    @if($criteriaCheckCount > 0)
+                    <span class="ml-auto px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
+                        {{ $criteriaCheckCount }}
+                    </span>
+                    @endif
+                </a>
+
                 <a href="{{ route('club.licences') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-licences*') || request()->is('licence/*') ? 'bg-green-800 text-white' : '' }}">
                     <i class="fas fa-certificate w-5 text-center text-purple-400 group-hover:text-purple-300 {{ request()->is('my-licences*') || request()->is('licence/*') ? 'text-purple-300' : '' }}"></i>
                     <span class="ml-3 font-medium">Мои лицензии</span>
@@ -42,40 +54,9 @@
                     </span>
                     @endif
                 </a>
-
-                <!-- Документы -->
-                <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Документы</p>
-                </div>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-folder-open w-5 text-center text-orange-400 group-hover:text-orange-300"></i>
-                    <span class="ml-3 font-medium">Мои документы</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-upload w-5 text-center text-cyan-400 group-hover:text-cyan-300"></i>
-                    <span class="ml-3 font-medium">Загрузить документ</span>
-                </a>
-
-                <!-- Управление клубом -->
-                <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Клуб</p>
-                </div>
-
                 <a href="/club-management" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('club-management') ? 'bg-green-800 text-white' : '' }}">
                     <i class="fas fa-building w-5 text-center text-indigo-400 group-hover:text-indigo-300 {{ request()->is('club-management') ? 'text-indigo-300' : '' }}"></i>
                     <span class="ml-3 font-medium">Мои клубы</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-users w-5 text-center text-pink-400 group-hover:text-pink-300"></i>
-                    <span class="ml-3 font-medium">Команда</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-info-circle w-5 text-center text-blue-400 group-hover:text-blue-300"></i>
-                    <span class="ml-3 font-medium">Информация</span>
                 </a>
             </div>
         </nav>
