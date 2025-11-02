@@ -117,10 +117,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($criterias as $criteria)
                 <a href="{{ route('my-application-detail', $criteria->application_id) }}"
-                   class="block bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700
-                          hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                   class="block relative bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900/30
+                          rounded-xl shadow-lg border border-slate-200 dark:border-blue-800/50
+                          hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 overflow-hidden group">
                     <!-- Header -->
-                    <div class="p-6">
+                    <div class="p-6 relative z-10">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
@@ -175,7 +176,7 @@
                         </div>
 
                         <!-- Readiness Indicator -->
-                        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-blue-800/40">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm text-gray-500 dark:text-gray-400">
                                     Готовность:
@@ -198,7 +199,7 @@
                     </div>
 
                     <!-- Hover Effect -->
-                    <div class="absolute inset-0 bg-gray-600 bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-300"></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-blue-600/0 to-indigo-600/0 group-hover:from-blue-600/10 group-hover:to-indigo-600/5 dark:group-hover:from-blue-500/20 dark:group-hover:to-indigo-500/10 transition-all duration-300 pointer-events-none"></div>
                 </a>
             @endforeach
         </div>
