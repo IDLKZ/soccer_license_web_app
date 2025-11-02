@@ -1,12 +1,32 @@
 <div>
+    <!-- Flash Messages -->
+    @if (session()->has('success'))
+        <div class="mb-6 bg-green-100 border border-green-400 text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200 px-4 py-3 rounded-lg relative">
+            <i class="fas fa-check-circle mr-2"></i>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session()->has('error'))
+        <div class="mb-6 bg-red-100 border border-red-400 text-red-700 dark:bg-red-900 dark:border-red-600 dark:text-red-200 px-4 py-3 rounded-lg relative">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            {{ session('error') }}
+        </div>
+    @endif
+
     @if($application)
         <!-- Header Section -->
         <div class="mb-8">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                        Детали заявки
-                    </h1>
+                    <div class="flex items-center space-x-4 mb-2">
+                        <a href="{{ route('club.applications') }}" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                            Детали заявки #{{ $application->id }}
+                        </h1>
+                    </div>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">
                         Полная информация о заявке на лицензирование
                     </p>
@@ -48,13 +68,6 @@
                                 {{ $licence->start_at->format('d.m.Y') }} - {{ $licence->end_at->format('d.m.Y') }}
                             </p>
                         </div>
-                    </div>
-
-                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <a href="{{ route('club.licence-detail', $licence->id) }}" class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium inline-flex items-center">
-                            <i class="fas fa-arrow-right mr-2"></i>
-                            Подробнее об лицензии
-                        </a>
                     </div>
                 </div>
 
@@ -131,7 +144,7 @@
                             <i class="fas fa-folder mr-2"></i>
                             {{ $tab['title'] }}
                             <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
-                                {{ $tab['criteria']->count() }}
+                                {{ count($tab['criteria']) }}
                             </span>
                         </button>
                     @endforeach
@@ -143,124 +156,231 @@
                 @if($activeTab)
                     @php
                         $activeCategory = collect($criteriaTabs)->firstWhere('category.id', $activeTab);
+                        $criterion = $activeCategory ? collect($activeCategory['criteria'])->first() : null;
                     @endphp
 
-                    @if($activeCategory)
-                        <!-- Criteria Overview -->
-                        <div class="mb-6">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                {{ $activeCategory['title'] }} - Критерии
-                            </h3>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach($activeCategory['criteria'] as $criterion)
-                                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {{ $criterion->category_document->title_ru }}
-                                            </h4>
-                                            <span class="{{ $this->getCriterionStatusColor($criterion) }} px-2 py-1 rounded text-xs font-medium">
-                                                {{ $criterion->is_ready ? 'Готово' : 'Не готово' }}
-                                            </span>
-                                        </div>
-
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            Статус: {{ $criterion->application_status->title_ru ?? 'Не определен' }}
-                                        </div>
-
-                                        @if($this->canUploadDocuments($criterion))
+                    @if($activeCategory && $criterion)
+                        <!-- Criterion Status and Submit Button -->
+                        <div class="mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                        Статус критерия: {{ $activeCategory['title'] }}
+                                    </h3>
+                                    <div class="flex items-center space-x-4">
+                                        <span class="{{ $this->getCriterionStatusColor($criterion) }} px-3 py-1 rounded-full text-xs font-medium">
+                                            @if(!$criterion->is_ready)
+                                                <i class="fas fa-clock mr-1"></i> Не готово
+                                            @elseif($criterion->is_first_passed === false || $criterion->is_industry_passed === false || $criterion->is_final_passed === false)
+                                                <i class="fas fa-exclamation-triangle mr-1"></i> Требует исправлений
+                                            @elseif($criterion->is_first_passed === null || $criterion->is_industry_passed === null || $criterion->is_final_passed === null)
+                                                <i class="fas fa-spinner mr-1"></i> На проверке
+                                            @else
+                                                <i class="fas fa-check-circle mr-1"></i> Принято
+                                            @endif
+                                        </span>
+                                        <span class="text-sm text-gray-600 dark:text-gray-400">
+                                            {{ $criterion->application_status->title_ru ?? 'Не определен' }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    @if($criterion->application_status && in_array($criterion->application_status->value, ['awaiting-documents', 'first-check-revision']))
+                                        @if($this->canSubmitCriterion($criterion, 'first'))
                                             <button
-                                                wire:click="openUploadModal({{ $criterion->id }})"
-                                                class="mt-3 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 text-xs font-medium inline-flex items-center">
-                                                <i class="fas fa-upload mr-1"></i>
-                                                Загрузить документы
+                                                wire:click="submitCriterionForCheck({{ $criterion->id }}, 'first')"
+                                                wire:confirm="Отправить критерий на первичную проверку?"
+                                                class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-paper-plane mr-2"></i>
+                                                Отправить на первичную проверку
                                             </button>
                                         @endif
-                                    </div>
-                                @endforeach
+                                    @elseif($criterion->application_status && $criterion->application_status->value === 'industry-check-revision')
+                                        @if($this->canSubmitCriterion($criterion, 'industry'))
+                                            <button
+                                                wire:click="submitCriterionForCheck({{ $criterion->id }}, 'industry')"
+                                                wire:confirm="Отправить критерий на отраслевую проверку?"
+                                                class="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-paper-plane mr-2"></i>
+                                                Отправить на отраслевую проверку
+                                            </button>
+                                        @endif
+                                    @elseif($criterion->application_status && $criterion->application_status->value === 'control-check-revision')
+                                        @if($this->canSubmitCriterion($criterion, 'control'))
+                                            <button
+                                                wire:click="submitCriterionForCheck({{ $criterion->id }}, 'control')"
+                                                wire:confirm="Отправить критерий на контрольную проверку?"
+                                                class="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-paper-plane mr-2"></i>
+                                                Отправить на контрольную проверку
+                                            </button>
+                                        @endif
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
                         <!-- Documents by Requirements -->
                         @if(!empty($licenceRequirementsByCategory))
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                            <div class="space-y-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                                    Документы по требованиям
+                                    Требования к документам
                                 </h3>
 
                                 @foreach($licenceRequirementsByCategory as $documentId => $data)
                                     @php
                                         $document = $data['document'];
-                                        $applicationDocuments = $this->getDocumentsForRequirement($data['requirements'][0] ?? null);
+                                        $requirements = $data['requirements'];
+                                        $requirement = collect($requirements)->first();
+                                        $uploadedDocs = $this->getUploadedDocumentsForRequirement($documentId);
                                     @endphp
 
-                                    @if($document)
-                                    <div class="mb-6">
-                                        <div class="flex items-center mb-3">
-                                            <i class="fas fa-file-alt text-blue-500 mr-2"></i>
-                                            <h4 class="text-md font-medium text-gray-900 dark:text-gray-100">
-                                                {{ $document->title_ru }}
-                                            </h4>
-                                            <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                                                ({{ $applicationDocuments->count() }} документов)
-                                            </span>
+                                    @if($document && $requirement)
+                                    <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                                        <!-- Document Header -->
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex-1">
+                                                <div class="flex items-center mb-2">
+                                                    <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">
+                                                        {{ $document->title_ru }}
+                                                    </h4>
+                                                    @if($requirement['is_required'])
+                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs font-medium">
+                                                            Обязательно
+                                                        </span>
+                                                    @else
+                                                        <span class="ml-2 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">
+                                                            Необязательно
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                @if($document->description_ru)
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                                                        {{ $document->description_ru }}
+                                                    </p>
+                                                @endif
+                                                <div class="flex items-center space-x-4 ml-6 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                    @if(!empty($requirement['allowed_extensions']))
+                                                        <span>
+                                                            <i class="fas fa-file-code mr-1"></i>
+                                                            Форматы: {{ is_array($requirement['allowed_extensions']) ? implode(', ', $requirement['allowed_extensions']) : $requirement['allowed_extensions'] }}
+                                                        </span>
+                                                    @endif
+                                                    @if($requirement['max_file_size_mb'])
+                                                        <span>
+                                                            <i class="fas fa-weight mr-1"></i>
+                                                            Макс. размер: {{ $requirement['max_file_size_mb'] }} МБ
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            @if($this->canUploadForCriterion($criterion))
+                                                <button
+                                                    wire:click="openUploadModal({{ $criterion->id }}, {{ $requirement['id'] }})"
+                                                    class="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-upload mr-2"></i>
+                                                    Загрузить
+                                                </button>
+                                            @endif
                                         </div>
 
-                                        <!-- Requirements for this document -->
-                                        <div class="space-y-3 ml-6">
-                                            @foreach($data['requirements'] as $requirementData)
-                                                @php
-                                                    $requirement = (object) $requirementData;
-                                                @endphp
-                                                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                                                    <div class="flex items-center justify-between mb-3">
-                                                        <div>
-                                                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                                {{ $requirement->is_required ? 'Обязательно' : 'Необязательно' }}
-                                                            </span>
-                                                            @if($requirement->max_file_size_mb)
-                                                                <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                                                                    Макс. размер: {{ $requirement->max_file_size_mb }} МБ
-                                                                </span>
+                                        <!-- Uploaded Documents List -->
+                                        <div class="mt-4 space-y-2">
+                                            @if(!empty($uploadedDocs))
+                                                @foreach($uploadedDocs as $appDoc)
+                                                    @php
+                                                        $doc = is_array($appDoc) ? (object)$appDoc : $appDoc;
+                                                    @endphp
+                                                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                        <div class="flex items-center flex-1">
+                                                            <i class="fas fa-file text-gray-400 mr-3"></i>
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center">
+                                                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                                        {{ $doc->title ?? 'Документ' }}
+                                                                    </span>
+                                                                    @if($doc->is_first_passed === false)
+                                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs">
+                                                                            <i class="fas fa-times mr-1"></i>Не прошел первичную
+                                                                        </span>
+                                                                    @elseif($doc->is_industry_passed === false)
+                                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs">
+                                                                            <i class="fas fa-times mr-1"></i>Не прошел отраслевую
+                                                                        </span>
+                                                                    @elseif($doc->is_final_passed === false)
+                                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs">
+                                                                            <i class="fas fa-times mr-1"></i>Не прошел контрольную
+                                                                        </span>
+                                                                    @elseif($doc->is_first_passed === null && $doc->is_industry_passed === null && $doc->is_final_passed === null)
+                                                                        <span class="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs">
+                                                                            <i class="fas fa-clock mr-1"></i>Ожидает проверки
+                                                                        </span>
+                                                                    @elseif($doc->is_first_passed === true && $doc->is_industry_passed === true && $doc->is_final_passed === true)
+                                                                        <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-xs">
+                                                                            <i class="fas fa-check mr-1"></i>Принято
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+                                                                @if($doc->info)
+                                                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $doc->info }}</p>
+                                                                @endif
+                                                                <div class="flex items-center space-x-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                                    <span>
+                                                                        <i class="fas fa-user mr-1"></i>{{ $doc->uploaded_by ?? 'Неизвестно' }}
+                                                                    </span>
+                                                                    <span>
+                                                                        <i class="fas fa-clock mr-1"></i>{{ isset($doc->created_at) ? (is_string($doc->created_at) ? $doc->created_at : $doc->created_at->format('d.m.Y H:i')) : '-' }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex items-center space-x-2 ml-4">
+                                                            @if($doc->file_url)
+                                                                <a href="{{ Storage::url($doc->file_url) }}" target="_blank" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2">
+                                                                    <i class="fas fa-download"></i>
+                                                                </a>
+                                                            @endif
+                                                            @if($this->canUploadForCriterion($criterion) && $doc->is_first_passed === null && $doc->is_industry_passed === null && $doc->is_final_passed === null)
+                                                                <button
+                                                                    wire:click="openEditModal({{ $doc->id }})"
+                                                                    class="text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 p-2"
+                                                                    title="Редактировать">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </button>
+                                                                <button
+                                                                    wire:click="deleteDocument({{ $doc->id }})"
+                                                                    wire:confirm="Вы уверены, что хотите удалить этот документ?"
+                                                                    class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-2"
+                                                                    title="Удалить">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
                                                             @endif
                                                         </div>
                                                     </div>
-
-                                                    <!-- Uploaded Documents -->
-                                                    <div class="space-y-2">
-                                                        @foreach($applicationDocuments as $appDoc)
-                                                            <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
-                                                                <div class="flex items-center">
-                                                                    <i class="fas fa-file text-gray-400 mr-2"></i>
-                                                                    <span class="text-sm text-gray-900 dark:text-gray-100">
-                                                                        {{ $appDoc->pivot->title ?? $appDoc->title_ru ?? 'Документ' }}
-                                                                    </span>
-                                                                </div>
-                                                                <div class="flex items-center space-x-2">
-                                                                    @if($appDoc->pivot->file_url)
-                                                                        <a href="{{ $appDoc->pivot->file_url }}" target="_blank" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-                                                                            <i class="fas fa-download"></i>
-                                                                        </a>
-                                                                    @endif
-                                                                    <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                                        {{ $appDoc->pivot->created_at->format('d.m.Y H:i') }}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-
-                                                        @if($applicationDocuments->isEmpty())
-                                                            <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
-                                                                Документы еще не загружены
-                                                            </div>
-                                                        @endif
-                                                    </div>
+                                                @endforeach
+                                            @else
+                                                <div class="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">
+                                                    <i class="fas fa-inbox text-3xl mb-2"></i>
+                                                    <p>Документы еще не загружены</p>
                                                 </div>
-                                            @endforeach
+                                            @endif
                                         </div>
                                     </div>
                                     @endif
                                 @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-12">
+                                <div class="bg-gray-100 dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-folder-open text-gray-400 text-3xl"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                    Нет требований
+                                </h3>
+                                <p class="text-gray-500 dark:text-gray-400">
+                                    Для этой категории не определены требования к документам.
+                                </p>
                             </div>
                         @endif
                     @endif
@@ -269,40 +389,218 @@
         </div>
 
         <!-- Upload Modal -->
-        @if($showUploadModal)
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4">
+        @if($showUploadModal && $selectedRequirement && $selectedCriterion)
+            <div class="fixed inset-0  bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeUploadModal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Загрузка документов
+                                Загрузка документа
                             </h3>
                             <button wire:click="closeUploadModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
 
-                        @if($selectedCriterion)
-                            <div class="mb-4">
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    Загрузка документов для критерия:
-                                    <span class="font-medium">{{ $selectedCriterion->category_document->title_ru }}</span>
-                                </p>
-                            </div>
-                        @endif
+                        <form wire:submit.prevent="uploadDocument">
+                            <div class="space-y-4">
+                                <!-- Document Info -->
+                                <div class="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
+                                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        {{ $selectedRequirement['document']['title_ru'] ?? 'Документ' }}
+                                    </p>
+                                    @if(!empty($selectedRequirement['allowed_extensions']))
+                                        <p class="text-xs text-blue-600 dark:text-blue-300 mt-1 wrap-break-word">
+                                            Форматы: {{ is_array($selectedRequirement['allowed_extensions']) ? implode(', ', $selectedRequirement['allowed_extensions']) : $selectedRequirement['allowed_extensions'] }}
+                                        </p>
+                                    @endif
+                                    @if(isset($selectedRequirement['max_file_size_mb']))
+                                        <p class="text-xs text-blue-600 dark:text-blue-300">
+                                            Макс. размер: {{ $selectedRequirement['max_file_size_mb'] }} МБ
+                                        </p>
+                                    @endif
+                                </div>
 
-                        <div class="flex justify-end space-x-3">
-                            <button wire:click="closeUploadModal" class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
-                                Отмена
-                            </button>
-                            <button class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                                Загрузить
-                            </button>
-                        </div>
+                                <!-- File Upload -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Файл <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="file"
+                                        wire:model="uploadFile"
+                                        class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                    @error('uploadFile')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+
+                                    <!-- Upload Progress -->
+                                    <div wire:loading wire:target="uploadFile" class="mt-2">
+                                        <div class="flex items-center text-sm text-blue-600 dark:text-blue-400">
+                                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                                            Загрузка файла...
+                                        </div>
+                                    </div>
+
+                                    @if($uploadFile)
+                                        <p class="mt-1 text-xs text-green-600 dark:text-green-400" wire:loading.remove wire:target="uploadFile">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Файл выбран
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <!-- Title -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Название документа <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        wire:model="uploadTitle"
+                                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        placeholder="Введите название документа"
+                                    >
+                                    @error('uploadTitle')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Info -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Дополнительная информация
+                                    </label>
+                                    <textarea
+                                        wire:model="uploadInfo"
+                                        rows="3"
+                                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        placeholder="Введите дополнительную информацию (необязательно)"
+                                    ></textarea>
+                                    @error('uploadInfo')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 mt-6">
+                                <button
+                                    type="button"
+                                    wire:click="closeUploadModal"
+                                    class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium">
+                                    Отмена
+                                </button>
+                                <button
+                                    type="submit"
+                                    wire:loading.attr="disabled"
+                                    wire:target="uploadFile,uploadDocument"
+                                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-upload mr-2"></i>
+                                    <span wire:loading.remove wire:target="uploadFile,uploadDocument">Загрузить</span>
+                                    <span wire:loading wire:target="uploadFile,uploadDocument">
+                                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                                        Загрузка...
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         @endif
+
+        <!-- Edit Modal -->
+        @if($showEditModal && $editingDocument)
+            <div class="fixed inset-0  bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeEditModal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                Редактирование документа
+                            </h3>
+                            <button wire:click="closeEditModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <form wire:submit.prevent="updateDocument">
+                            <div class="space-y-4">
+                                <!-- Current File Info -->
+                                <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                                    <p class="text-sm text-gray-800 dark:text-gray-200">
+                                        <i class="fas fa-file mr-2"></i>
+                                        Текущий файл: {{ basename($editingDocument->file_url) }}
+                                    </p>
+                                </div>
+
+                                <!-- Replace File (Optional) -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Заменить файл (необязательно)
+                                    </label>
+                                    <input
+                                        type="file"
+                                        wire:model="uploadFile"
+                                        class="block w-full text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                    @if($uploadFile)
+                                        <p class="mt-1 text-xs text-green-600 dark:text-green-400">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Новый файл будет загружен
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <!-- Title -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Название документа <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        wire:model="uploadTitle"
+                                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    >
+                                    @error('uploadTitle')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <!-- Info -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Дополнительная информация
+                                    </label>
+                                    <textarea
+                                        wire:model="uploadInfo"
+                                        rows="3"
+                                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    ></textarea>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3 mt-6">
+                                <button
+                                    type="button"
+                                    wire:click="closeEditModal"
+                                    class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium">
+                                    Отмена
+                                </button>
+                                <button
+                                    type="submit"
+                                    class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium rounded-lg transition-colors inline-flex items-center">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Сохранить
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @else
         <div class="text-center py-12">
             <div class="bg-gray-100 dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
