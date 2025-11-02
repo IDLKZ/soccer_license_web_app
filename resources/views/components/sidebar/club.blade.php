@@ -24,16 +24,12 @@
                     <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Лицензирование</p>
                 </div>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-file-alt w-5 text-center text-yellow-400 group-hover:text-yellow-300"></i>
+                <a href="{{ route('club.applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-applications*') ? 'bg-green-800 text-white' : '' }}">
+                    <i class="fas fa-file-alt w-5 text-center text-yellow-400 group-hover:text-yellow-300 {{ request()->is('my-applications*') ? 'text-yellow-300' : '' }}"></i>
                     <span class="ml-3 font-medium">Мои заявки</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-plus-circle w-5 text-center text-blue-400 group-hover:text-blue-300"></i>
-                    <span class="ml-3 font-medium">Новая заявка</span>
-                </a>
-
+    
                 <a href="{{ route('club.licences') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-licences*') || request()->is('licence/*') ? 'bg-green-800 text-white' : '' }}">
                     <i class="fas fa-certificate w-5 text-center text-purple-400 group-hover:text-purple-300 {{ request()->is('my-licences*') || request()->is('licence/*') ? 'text-purple-300' : '' }}"></i>
                     <span class="ml-3 font-medium">Мои лицензии</span>

@@ -611,6 +611,48 @@ class PermissionSeeder extends Seeder
                 'value' => 'delete-licence-deadlines',
                 'is_system' => true,
             ],
+
+            // Applications
+            [
+                'title_ru' => 'Просмотр заявок',
+                'title_kk' => 'Өтінімдерді көру',
+                'title_en' => 'View Applications',
+                'description_ru' => 'Разрешение на просмотр заявок на лицензирование',
+                'description_kk' => 'Лицензиялау үшін өтінімдерді көру рұқсаты',
+                'description_en' => 'Permission to view licensing applications',
+                'value' => 'view-applications',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Создание заявок',
+                'title_kk' => 'Өтінімдерді жасау',
+                'title_en' => 'Create Applications',
+                'description_ru' => 'Разрешение на создание новых заявок на лицензирование',
+                'description_kk' => 'Жаңа лицензиялау өтінімдерін жасау рұқсаты',
+                'description_en' => 'Permission to create new licensing applications',
+                'value' => 'create-applications',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Управление заявками',
+                'title_kk' => 'Өтінімдерді басқару',
+                'title_en' => 'Manage Applications',
+                'description_ru' => 'Разрешение на редактирование заявок на лицензирование',
+                'description_kk' => 'Лицензиялау өтінімдерін өңдеу рұқсаты',
+                'description_en' => 'Permission to edit licensing applications',
+                'value' => 'manage-applications',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Удаление заявок',
+                'title_kk' => 'Өтінімдерді жою',
+                'title_en' => 'Delete Applications',
+                'description_ru' => 'Разрешение на удаление заявок на лицензирование',
+                'description_kk' => 'Лицензиялау өтінімдерін жою рұқсаты',
+                'description_en' => 'Permission to delete licensing applications',
+                'value' => 'delete-applications',
+                'is_system' => true,
+            ],
         ];
 
         foreach ($permissions as $permission) {

@@ -34,6 +34,7 @@ use Illuminate\Notifications\Notifiable;
  * @property Carbon|null $updated_at
  *
  * @property Role|null $role
+ * @property Club|null $club
  * @property Collection|ClubTeam[] $club_teams
  *
  * @package App\Models
@@ -75,6 +76,11 @@ class User extends Authenticatable
 	public function role()
 	{
 		return $this->belongsTo(Role::class);
+	}
+
+	public function club()
+	{
+		return $this->belongsTo(Club::class);
 	}
 
 	public function club_teams()

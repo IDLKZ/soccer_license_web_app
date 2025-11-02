@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Club
- * 
+ *
  * @property int $id
  * @property string|null $image_url
  * @property int|null $parent_id
@@ -36,7 +36,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $verified
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Club|null $club
  * @property ClubType|null $club_type
  * @property Collection|ClubTeam[] $club_teams

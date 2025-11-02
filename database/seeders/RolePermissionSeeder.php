@@ -84,10 +84,56 @@ class RolePermissionSeeder extends Seeder
                 'manage-club-teams',
                 'delete-club-teams',
                 'apply-for-license',
+                'view-applications',
+                'create-applications',
+                'manage-applications',
             ])->pluck('id')->toArray();
 
             // Sync permissions to club administrator role
             $clubAdministratorRole->permissions()->syncWithoutDetaching($clubPermissions);
+        }
+
+        // Get Legal Specialist Role
+        $legalSpecialistRole = Role::where('value', RoleConstants::LEGAL_SPECIALIST_VALUE)->first();
+
+        if ($legalSpecialistRole) {
+            // Get specific permissions for legal specialists
+            $legalSpecialistPermissions = Permission::whereIn('value', [
+                'view-applications',
+                'manage-applications',
+            ])->pluck('id')->toArray();
+
+            // Sync permissions to legal specialist role
+            $legalSpecialistRole->permissions()->syncWithoutDetaching($legalSpecialistPermissions);
+        }
+
+        // Get Financial Specialist Role
+        $financialSpecialistRole = Role::where('value', RoleConstants::FINANCIAL_SPECIALIST_VALUE)->first();
+
+        if ($financialSpecialistRole) {
+            // Get specific permissions for financial specialists
+            $financialSpecialistPermissions = Permission::whereIn('value', [
+                'view-applications',
+                'manage-applications',
+            ])->pluck('id')->toArray();
+
+            // Sync permissions to financial specialist role
+            $financialSpecialistRole->permissions()->syncWithoutDetaching($financialSpecialistPermissions);
+        }
+
+        // Get Sporting Director Role
+        $sportingDirectorRole = Role::where('value', RoleConstants::SPORTING_DIRECTOR_VALUE)->first();
+
+        if ($sportingDirectorRole) {
+            // Get specific permissions for sporting directors
+            $sportingDirectorPermissions = Permission::whereIn('value', [
+                'view-applications',
+                'create-applications',
+                'manage-applications',
+            ])->pluck('id')->toArray();
+
+            // Sync permissions to sporting director role
+            $sportingDirectorRole->permissions()->syncWithoutDetaching($sportingDirectorPermissions);
         }
     }
 }
