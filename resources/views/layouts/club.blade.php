@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>Панель управления - {{ config('app.name', 'Laravel') }}</title>
 
     <!-- Theme Script (Prevent Flash) -->
     <script>
@@ -36,11 +36,12 @@
         <!-- Main Content -->
         <div class="flex-1 lg:ml-64">
             <!-- Header -->
-            <x-header title="@yield('title', 'Панель управления')" />
+            <x-header title="Панель управления" />
 
             <!-- Page Content -->
             <main class="p-6">
                 @yield('content')
+                {{ $slot ?? '' }}
             </main>
         </div>
     </div>

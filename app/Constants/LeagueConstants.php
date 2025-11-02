@@ -10,13 +10,15 @@ class LeagueConstants
     public const SECOND_LEAGUE_ID = 3;
     public const WOMAN_LEAGUE_ID = 4;
     public const YOUTH_LEAGUE_ID = 5;
+    public const U21_LEAGUE_ID = 5;
 
     // League Values (slugs)
     public const PREMIER_LEAGUE_VALUE = 'premier-league';
     public const FIRST_LEAGUE_VALUE = 'first-league';
     public const SECOND_LEAGUE_VALUE = 'second-league';
-    public const WOMEN_LEAGUE_VALUE = 'women-league';
+    public const WOMAN_LEAGUE_VALUE = 'women-league';
     public const YOUTH_LEAGUE_VALUE = 'youth-league';
+    public const U21_LEAGUE_VALUE = 'youth-league';
 
     /**
      * Get all leagues as array

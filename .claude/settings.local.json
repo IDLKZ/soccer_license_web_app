@@ -5,7 +5,10 @@
       "Bash(composer require:*)",
       "Bash(npm install:*)",
       "Bash(npx tailwindcss:*)",
-      "Bash(composer dump-autoload:*)"
+      "Bash(composer dump-autoload:*)",
+      "Bash(php -r:*)",
+      "Bash(curl:*)",
+      "Bash(php -l:*)"
     ],
     "deny": [],
     "ask": []

@@ -15,6 +15,9 @@ use App\Livewire\Admin\ClubTeamManagement;
 use App\Livewire\Admin\LicenceManagement;
 use App\Livewire\Admin\LicenceRequirementManagement;
 use App\Livewire\Admin\LicenceDeadlineManagement;
+use App\Livewire\Club\MyClubs;
+use App\Livewire\Club\MyLicences;
+use App\Livewire\Club\SingleLicenceDetail;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -44,6 +47,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/application-status-categories', ApplicationStatusCategoryManagement::class)->name('application-status-categories');
         Route::get('/application-statuses', ApplicationStatusManagement::class)->name('application-statuses');
     });
+
+    // Club routes
+    Route::get('/club-management', MyClubs::class)->name('club.management');
+    Route::get('/my-licences', MyLicences::class)->name('club.licences');
+    Route::get('/licence/{id}', SingleLicenceDetail::class)->name('club.licence-detail');
 
     // Logout
     Route::post('/logout', function () {

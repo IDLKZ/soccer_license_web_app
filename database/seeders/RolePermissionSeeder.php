@@ -68,5 +68,26 @@ class RolePermissionSeeder extends Seeder
             // Sync permissions to licensing department role
             $licensingDepartmentRole->permissions()->syncWithoutDetaching($licensingPermissions);
         }
+
+        // Get Club Administrator Role
+        $clubAdministratorRole = Role::where('value', RoleConstants::CLUB_ADMINISTRATOR_VALUE)->first();
+
+        if ($clubAdministratorRole) {
+            // Get specific permissions for club administrators
+            $clubPermissions = Permission::whereIn('value', [
+                'view-clubs',
+                'create-clubs',
+                'manage-clubs',
+                'delete-clubs',
+                'view-club-teams',
+                'create-club-teams',
+                'manage-club-teams',
+                'delete-club-teams',
+                'apply-for-license',
+            ])->pluck('id')->toArray();
+
+            // Sync permissions to club administrator role
+            $clubAdministratorRole->permissions()->syncWithoutDetaching($clubPermissions);
+        }
     }
 }

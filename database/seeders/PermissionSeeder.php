@@ -558,6 +558,18 @@ class PermissionSeeder extends Seeder
                 'value' => 'delete-licence-requirements',
                 'is_system' => true,
             ],
+            // Application for License Permission
+            [
+                'title_ru' => 'Подача заявки на лицензию',
+                'title_kk' => 'Лицензияға өтінім беру',
+                'title_en' => 'Apply for License',
+                'description_ru' => 'Разрешение на подачу заявок на получение лицензии',
+                'description_kk' => 'Лицензия алу үшін өтінімдер беру рұқсаты',
+                'description_en' => 'Permission to submit license applications',
+                'value' => 'apply-for-license',
+                'is_system' => true,
+            ],
+
             // Licence Deadlines
             [
                 'title_ru' => 'Просмотр дедлайнов лицензий',
