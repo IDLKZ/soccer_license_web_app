@@ -58,9 +58,9 @@ class MyApplicationDetail extends Component
     #[Validate('nullable|string|max:1000')]
     public $uploadInfo = '';
 
-    public function mount($id)
+    public function mount($application_id)
     {
-        $this->applicationId = $id;
+        $this->applicationId = $application_id;
         $this->loadApplication();
 
         if (!$this->application) {

@@ -8,7 +8,10 @@
       "Bash(composer dump-autoload:*)",
       "Bash(php -r:*)",
       "Bash(curl:*)",
-      "Bash(php -l:*)"
+      "Bash(php -l:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

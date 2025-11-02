@@ -54,7 +54,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Club routes
     Route::get('/club-management', MyClubs::class)->name('club.management');
     Route::get('/my-applications', MyApplications::class)->name('club.applications');
-    Route::get('/my-application-detail/{id}', MyApplicationDetail::class)->name('club.application-detail');
+    Route::get('/my-application-detail/{application_id}', MyApplicationDetail::class)->name('my-application-detail');
     Route::get('/my-criterias', MyCriterias::class)->name('club.criterias');
     Route::get('/my-licences', MyLicences::class)->name('club.licences');
     Route::get('/licence/{id}', SingleLicenceDetail::class)->name('club.licence-detail');
