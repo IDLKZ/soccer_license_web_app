@@ -6,6 +6,7 @@ use App\Constants\ApplicationStatusConstants;
 use App\Constants\RoleConstants;
 use App\Models\Application;
 use App\Models\ApplicationCriterion;
+use App\Models\ApplicationReport;
 use App\Models\ApplicationStatus;
 use App\Models\ApplicationStatusCategory;
 use App\Models\ApplicationStep;
@@ -26,6 +27,7 @@ class ApplicationCriterionObserver
         if ($applicationCriterion->status_id) {
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
+            $this->createApplicationReportIfAwaitingControlCheck($applicationCriterion);
         }
     }
 
@@ -38,6 +40,7 @@ class ApplicationCriterionObserver
         if ($applicationCriterion->isDirty('status_id')) {
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
+            $this->createApplicationReportIfAwaitingControlCheck($applicationCriterion);
         }
     }
 
@@ -120,6 +123,46 @@ class ApplicationCriterionObserver
             Log::info("ApplicationStep created for criterion #{$applicationCriterion->id} with status '{$applicationCriterion->application_status->value}'");
         } catch (\Exception $e) {
             Log::error("Failed to create ApplicationStep for criterion #{$applicationCriterion->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Create ApplicationReport when status changes to awaiting-control-check
+     */
+    private function createApplicationReportIfAwaitingControlCheck(ApplicationCriterion $applicationCriterion): void
+    {
+        if (!$applicationCriterion->application_status) {
+            return;
+        }
+
+        $statusValue = $applicationCriterion->application_status->value;
+
+        // Check if status is awaiting-control-check
+        if ($statusValue !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE) {
+            return;
+        }
+
+        try {
+            // Check if report already exists for this criterion to avoid duplicates
+            $existingReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
+                ->where('criteria_id', $applicationCriterion->id)
+                ->first();
+
+            if ($existingReport) {
+                Log::info("ApplicationReport already exists for criterion #{$applicationCriterion->id}, skipping creation.");
+                return;
+            }
+
+            // Create ApplicationReport with status = true
+            ApplicationReport::create([
+                'application_id' => $applicationCriterion->application_id,
+                'criteria_id' => $applicationCriterion->id,
+                'status' => true
+            ]);
+
+            Log::info("ApplicationReport created for criterion #{$applicationCriterion->id} with awaiting-control-check status");
+        } catch (\Exception $e) {
+            Log::error("Failed to create ApplicationReport for criterion #{$applicationCriterion->id}: " . $e->getMessage());
         }
     }
 
