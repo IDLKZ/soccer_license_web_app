@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $license_id
  * @property int|null $club_id
  * @property int|null $category_id
+ * @property bool|null $can_reupload_after_ending
+ * @property array|null $can_reupload_after_endings_doc_ids
  * @property bool $is_ready
  * @property bool|null $is_active
  * @property Carbon|null $deadline
@@ -45,6 +47,8 @@ class Application extends Model
 		'license_id' => 'int',
 		'club_id' => 'int',
 		'category_id' => 'int',
+		'can_reupload_after_ending' => 'bool',
+		'can_reupload_after_endings_doc_ids' => 'json',
 		'is_ready' => 'bool',
 		'is_active' => 'bool',
 		'deadline' => 'datetime'
@@ -55,6 +59,8 @@ class Application extends Model
 		'license_id',
 		'club_id',
 		'category_id',
+		'can_reupload_after_ending',
+		'can_reupload_after_endings_doc_ids',
 		'is_ready',
 		'is_active',
 		'deadline'

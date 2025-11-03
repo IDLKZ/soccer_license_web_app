@@ -7,7 +7,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -23,13 +23,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * 
+ * @property Collection|Licence[] $licences
  *
  * @package App\Models
  */
 class Season extends Model
 {
-	use Sluggable;
-
 	protected $table = 'seasons';
 
 	protected $casts = [
@@ -48,18 +48,6 @@ class Season extends Model
 		'is_active'
 	];
 
-	public function sluggable(): array
-	{
-		return [
-			'value' => [
-				'source' => 'title_ru'
-			]
-		];
-	}
-
-	/**
-	 * Get the licences for the season.
-	 */
 	public function licences()
 	{
 		return $this->hasMany(Licence::class);

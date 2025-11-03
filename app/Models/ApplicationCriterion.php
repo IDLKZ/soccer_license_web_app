@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class ApplicationCriterion
- *
+ * 
  * @property int $id
  * @property int|null $application_id
  * @property int|null $category_id
@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array|null $can_reupload_after_endings_doc_ids
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- *
+ * 
  * @property Application|null $application
  * @property CategoryDocument|null $category_document
  * @property User|null $user

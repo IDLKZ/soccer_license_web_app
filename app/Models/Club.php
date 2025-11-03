@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Club
- *
+ * 
  * @property int $id
  * @property string|null $image_url
  * @property int|null $parent_id
@@ -36,11 +36,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $verified
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- *
+ * 
  * @property Club|null $club
  * @property ClubType|null $club_type
+ * @property Collection|Application[] $applications
  * @property Collection|ClubTeam[] $club_teams
  * @property Collection|Club[] $clubs
+ * @property Collection|LicenceDeadline[] $licence_deadlines
  *
  * @package App\Models
  */
@@ -88,6 +90,11 @@ class Club extends Model
 		return $this->belongsTo(ClubType::class, 'type_id');
 	}
 
+	public function applications()
+	{
+		return $this->hasMany(Application::class);
+	}
+
 	public function club_teams()
 	{
 		return $this->hasMany(ClubTeam::class);
@@ -98,8 +105,8 @@ class Club extends Model
 		return $this->hasMany(Club::class, 'parent_id');
 	}
 
-	public function parent()
+	public function licence_deadlines()
 	{
-		return $this->belongsTo(Club::class, 'parent_id');
+		return $this->hasMany(LicenceDeadline::class);
 	}
 }

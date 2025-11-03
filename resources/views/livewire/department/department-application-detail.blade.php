@@ -28,7 +28,7 @@
                         </h1>
                     </div>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        Просмотр заявки на лицензирование
+                        Проверка и утверждение документов
                     </p>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -129,6 +129,126 @@
             </div>
         </div>
 
+        <!-- Final Decision Progress (2.4.1) -->
+        @php
+            $finalStats = $this->getFinalDecisionStats();
+            $showFinalProgress = $finalStats['awaiting'] > 0;
+        @endphp
+
+        @if($showFinalProgress)
+        <div class="mb-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900 dark:to-purple-900 rounded-xl p-6 border border-indigo-200 dark:border-indigo-700">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        <i class="fas fa-clock mr-2 text-indigo-600 dark:text-indigo-400"></i>
+                        Прогресс финального решения
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Критериев на этапе финального решения: <span class="font-bold">{{ $finalStats['awaiting'] }}/{{ $finalStats['total'] }}</span>
+                    </p>
+                </div>
+                @if($this->canMakeFinalDecision())
+                    <button
+                        wire:click="openFinalDecisionModal"
+                        class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-flex items-center">
+                        <i class="fas fa-gavel mr-2"></i>
+                        Принять финальное решение
+                    </button>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        <!-- Application Status Change Buttons (2.4.3) -->
+        @php
+            $allCriteria = \App\Models\ApplicationCriterion::with('application_status')
+                ->where('application_id', $application->id)
+                ->get();
+            $allInFinalStatus = $allCriteria->every(function($c) {
+                return in_array($c->application_status->value ?? '', [
+                    'fully-approved',
+                    'partially-approved',
+                    'revoked'
+                ]);
+            });
+        @endphp
+
+        @if($allInFinalStatus && !in_array($application->application_status_category->value, ['approved', 'revoked']))
+        <div class="mb-6 bg-green-50 dark:bg-green-900 rounded-xl p-6 border border-green-200 dark:border-green-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                <i class="fas fa-check-double mr-2 text-green-600 dark:text-green-400"></i>
+                Все критерии получили финальное решение
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Теперь вы можете изменить общий статус заявки:</p>
+
+            <!-- Decision Selection -->
+            <div class="mb-4 space-y-3">
+                <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'approved' ? 'border-green-500 bg-green-100 dark:bg-green-800' : 'border-gray-300 dark:border-gray-600' }}">
+                    <input type="radio" wire:model.live="applicationFinalDecision" value="approved" class="mt-1 mr-3">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия одобрена</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Все требования выполнены, лицензия выдается</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'partially-approved' ? 'border-yellow-500 bg-yellow-100 dark:bg-yellow-800' : 'border-gray-300 dark:border-gray-600' }}">
+                    <input type="radio" wire:model.live="applicationFinalDecision" value="partially-approved" class="mt-1 mr-3">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">Одобрено частично</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Лицензия выдается с условием повторной загрузки документов</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'revoked' ? 'border-red-500 bg-red-100 dark:bg-red-800' : 'border-gray-300 dark:border-gray-600' }}">
+                    <input type="radio" wire:model.live="applicationFinalDecision" value="revoked" class="mt-1 mr-3">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия отозвана</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Лицензия отзывается</div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Documents for reupload (only for partially-approved) -->
+            @if($applicationFinalDecision === 'partially-approved')
+                @php
+                    $availableDocsForApp = \App\Models\LicenceRequirement::with('document')
+                        ->where('licence_id', $application->license_id)
+                        ->get()
+                        ->pluck('document')
+                        ->unique('id');
+                @endphp
+                <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                    <label class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                        Документы для повторной загрузки <span class="text-red-500">*</span>
+                    </label>
+                    <div class="max-h-60 overflow-y-auto space-y-2 bg-white dark:bg-gray-800 rounded p-3">
+                        @foreach($availableDocsForApp as $doc)
+                            <label class="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    wire:model="applicationReuploadDocIds"
+                                    value="{{ $doc->id }}"
+                                    class="mr-2 rounded">
+                                <span class="text-sm text-gray-900 dark:text-gray-100">{{ $doc->title_ru }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Submit Button -->
+            @if($applicationFinalDecision)
+                <button
+                    wire:click="changeApplicationStatus"
+                    wire:confirm="Вы уверены, что хотите изменить статус заявки?"
+                    class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Применить решение
+                </button>
+            @endif
+        </div>
+        @endif
+
         <!-- Tabs Section -->
         @if(!empty($criteriaTabs))
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
@@ -160,34 +280,136 @@
                     @endphp
 
                     @if($activeCategory && $criterion)
-                        <!-- Criterion Status Info (No action buttons for department) -->
-                        <div class="mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                                        Статус критерия: {{ $activeCategory['title'] }}
-                                    </h3>
-                                    <div class="flex items-center space-x-4">
-                                        <span class="{{ $this->getCriterionStatusColor($criterion) }} px-3 py-1 rounded-full text-xs font-medium">
-                                            @if(!$criterion->is_ready)
-                                                <i class="fas fa-clock mr-1"></i> Не готово
-                                            @elseif($criterion->is_first_passed === false || $criterion->is_industry_passed === false || $criterion->is_final_passed === false)
-                                                <i class="fas fa-exclamation-triangle mr-1"></i> Требует исправлений
-                                            @elseif($criterion->is_first_passed === null || $criterion->is_industry_passed === null || $criterion->is_final_passed === null)
-                                                <i class="fas fa-spinner mr-1"></i> На проверке
-                                            @else
-                                                <i class="fas fa-check-circle mr-1"></i> Принято
-                                            @endif
-                                        </span>
-                                        <span class="text-sm text-gray-600 dark:text-gray-400">
-                                            {{ $criterion->application_status->title_ru ?? 'Не определен' }}
-                                        </span>
-                                    </div>
+                        <!-- Criterion Status and Actions -->
+                        <div class="mb-6 bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                    Статус критерия: {{ $activeCategory['title'] }}
+                                </h3>
+                                <div class="flex items-center space-x-4">
+                                    <span class="{{ $this->getCriterionStatusColor($criterion) }} px-3 py-1 rounded-full text-xs font-medium">
+                                        @if(!$criterion->is_ready)
+                                            <i class="fas fa-clock mr-1"></i> Не готово
+                                        @elseif($criterion->is_first_passed === false || $criterion->is_industry_passed === false || $criterion->is_final_passed === false)
+                                            <i class="fas fa-exclamation-triangle mr-1"></i> Требует исправлений
+                                        @elseif($criterion->is_first_passed === null || $criterion->is_industry_passed === null || $criterion->is_final_passed === null)
+                                            <i class="fas fa-spinner mr-1"></i> На проверке
+                                        @else
+                                            <i class="fas fa-check-circle mr-1"></i> Принято
+                                        @endif
+                                    </span>
+                                    <span class="text-sm text-gray-600 dark:text-gray-400">
+                                        {{ $criterion->application_status->title_ru ?? 'Не определен' }}
+                                    </span>
                                 </div>
                             </div>
+
+                            <!-- Review Actions based on status -->
+                            @if($this->canReviewCriterion($criterion))
+                                @php
+                                    $statusValue = $criterion->application_status->value ?? null;
+                                @endphp
+
+                                <!-- Comment field for criterion -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                        Комментарий по критерию
+                                    </label>
+                                    <textarea
+                                        wire:model="criterionComment"
+                                        rows="3"
+                                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        placeholder="Введите общий комментарий по критерию..."></textarea>
+                                </div>
+
+                                <!-- Action buttons based on status - ONLY show if all documents reviewed -->
+                                @if($this->allDocumentsReviewed($criterion->id))
+                                    <div class="flex items-center space-x-3">
+                                        @if($statusValue === 'awaiting-first-check')
+                                            <button
+                                                wire:click="submitFirstCheck({{ $criterion->id }}, 'revision')"
+                                                wire:confirm="Отправить на доработку?"
+                                                class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-undo mr-2"></i>
+                                                Отправить на доработку
+                                            </button>
+                                            <button
+                                                wire:click="submitFirstCheck({{ $criterion->id }}, 'approve')"
+                                                wire:confirm="Отправить на отраслевое рассмотрение?"
+                                                class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-arrow-right mr-2"></i>
+                                                Отправить на отраслевое рассмотрение
+                                            </button>
+                                        @elseif($statusValue === 'awaiting-industry-check')
+                                            <button
+                                                wire:click="submitIndustryCheck({{ $criterion->id }}, 'revision')"
+                                                wire:confirm="Отправить на доработку?"
+                                                class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-undo mr-2"></i>
+                                                Отправить на доработку
+                                            </button>
+                                            <button
+                                                wire:click="submitIndustryCheck({{ $criterion->id }}, 'approve')"
+                                                wire:confirm="Отправить на контрольное рассмотрение?"
+                                                class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-arrow-right mr-2"></i>
+                                                Отправить на контрольное рассмотрение
+                                            </button>
+                                        @elseif($statusValue === 'awaiting-control-check')
+                                            <button
+                                                wire:click="submitControlCheck({{ $criterion->id }}, 'revision')"
+                                                wire:confirm="Отправить на доработку?"
+                                                class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-undo mr-2"></i>
+                                                Отправить на доработку
+                                            </button>
+                                            <button
+                                                wire:click="submitControlCheck({{ $criterion->id }}, 'approve')"
+                                                wire:confirm="Отправить на финальное решение?"
+                                                class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-arrow-right mr-2"></i>
+                                                Отправить на финальное решение
+                                            </button>
+                                        @endif
+                                    </div>
+                                @else
+                                    <div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+                                        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                            <i class="fas fa-info-circle mr-2"></i>
+                                            Необходимо принять решение по всем документам перед отправкой критерия на следующий этап.
+                                        </p>
+                                    </div>
+                                @endif
+                            @endif
+
+                            <!-- Upgrade to Fully Approved (2.4.4) -->
+                            @if($application->application_status_category->value === 'approved' &&
+                                $criterion->application_status &&
+                                $criterion->application_status->value === 'partially-approved')
+                                <div class="mt-4 bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                                                <i class="fas fa-arrow-up text-blue-600 dark:text-blue-400 mr-2"></i>
+                                                Изменить на полностью одобренный
+                                            </h4>
+                                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                                                Этот критерий одобрен частично. Если требования выполнены, вы можете изменить статус на "Полностью одобрено".
+                                            </p>
+                                            <button
+                                                wire:click="upgradeCriterionToFullyApproved({{ $criterion->id }})"
+                                                wire:confirm="Вы уверены, что хотите изменить статус критерия на 'Полностью одобрено'?"
+                                                class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                <i class="fas fa-check-double mr-2"></i>
+                                                Изменить на полностью одобренный
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
 
-                        <!-- Documents by Requirements (View only - no upload) -->
+                        <!-- Documents by Requirements -->
                         @if(!empty($licenceRequirementsByCategory))
                             <div class="space-y-6">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
@@ -204,7 +426,7 @@
 
                                     @if($document && $requirement)
                                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                                        <!-- Document Header (No upload button for department) -->
+                                        <!-- Document Header -->
                                         <div class="flex items-start justify-between mb-4">
                                             <div class="flex-1">
                                                 <div class="flex items-center mb-2">
@@ -244,63 +466,152 @@
                                             </div>
                                         </div>
 
-                                        <!-- Uploaded Documents List (View and Download only) -->
-                                        <div class="mt-4 space-y-2">
+                                        <!-- Uploaded Documents List with Review Buttons -->
+                                        <div class="mt-4 space-y-3">
                                             @if(!empty($uploadedDocs))
                                                 @foreach($uploadedDocs as $appDoc)
                                                     @php
                                                         $doc = is_array($appDoc) ? (object)$appDoc : $appDoc;
+                                                        $statusValue = $criterion->application_status->value ?? null;
+
+                                                        // Determine if can review based on status (п. 2.1.1.1, 2.2.1.1, 2.3.1.1)
+                                                        $canReviewThisDoc = false;
+                                                        if ($statusValue === 'awaiting-first-check' &&
+                                                            $doc->is_first_passed === null &&
+                                                            $doc->is_industry_passed === null &&
+                                                            $doc->is_final_passed === null) {
+                                                            $canReviewThisDoc = $this->canReviewCriterion($criterion);
+                                                        } elseif ($statusValue === 'awaiting-industry-check' &&
+                                                                  $doc->is_first_passed === true &&
+                                                                  $doc->is_industry_passed === null &&
+                                                                  $doc->is_final_passed === null) {
+                                                            $canReviewThisDoc = $this->canReviewCriterion($criterion);
+                                                        } elseif ($statusValue === 'awaiting-control-check' &&
+                                                                  $doc->is_first_passed === true &&
+                                                                  $doc->is_industry_passed === true &&
+                                                                  $doc->is_final_passed === null) {
+                                                            $canReviewThisDoc = $this->canReviewCriterion($criterion);
+                                                        }
+
+                                                        $hasDecision = isset($reviewDecisions[$doc->id]);
+                                                        $decision = $hasDecision ? $reviewDecisions[$doc->id] : null;
                                                     @endphp
-                                                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                                        <div class="flex items-center flex-1">
-                                                            <i class="fas fa-file text-gray-400 mr-3"></i>
-                                                            <div class="flex-1">
-                                                                <div class="flex items-center">
-                                                                    <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                                        {{ $doc->title ?? 'Документ' }}
-                                                                    </span>
-                                                                    @if($doc->is_first_passed === false)
-                                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs">
-                                                                            <i class="fas fa-times mr-1"></i>Не прошел первичную
+                                                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                        <div class="flex items-start justify-between">
+                                                            <div class="flex items-start flex-1">
+                                                                <i class="fas fa-file text-gray-400 mr-3 mt-1"></i>
+                                                                <div class="flex-1">
+                                                                    <div class="flex items-center mb-2">
+                                                                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                                            {{ $doc->title ?? 'Документ' }}
                                                                         </span>
-                                                                    @elseif($doc->is_industry_passed === false)
-                                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs">
-                                                                            <i class="fas fa-times mr-1"></i>Не прошел отраслевую
-                                                                        </span>
-                                                                    @elseif($doc->is_final_passed === false)
-                                                                        <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs">
-                                                                            <i class="fas fa-times mr-1"></i>Не прошел контрольную
-                                                                        </span>
-                                                                    @elseif($doc->is_first_passed === null && $doc->is_industry_passed === null && $doc->is_final_passed === null)
-                                                                        <span class="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs">
-                                                                            <i class="fas fa-clock mr-1"></i>Ожидает проверки
-                                                                        </span>
-                                                                    @elseif($doc->is_first_passed === true && $doc->is_industry_passed === true && $doc->is_final_passed === true)
-                                                                        <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-xs">
-                                                                            <i class="fas fa-check mr-1"></i>Принято
-                                                                        </span>
+
+                                                                        <!-- Status badges -->
+                                                                        @if($doc->is_first_passed === false)
+                                                                            <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-times mr-1"></i>Не прошел первичную
+                                                                            </span>
+                                                                        @elseif($doc->is_industry_passed === false)
+                                                                            <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-times mr-1"></i>Не прошел отраслевую
+                                                                            </span>
+                                                                        @elseif($doc->is_final_passed === false)
+                                                                            <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-times mr-1"></i>Не прошел контрольную
+                                                                            </span>
+                                                                        @elseif($doc->is_first_passed === null && $doc->is_industry_passed === null && $doc->is_final_passed === null)
+                                                                            <span class="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-clock mr-1"></i>Ожидает проверки
+                                                                            </span>
+                                                                        @elseif($doc->is_first_passed === true && $doc->is_industry_passed === true && $doc->is_final_passed === true)
+                                                                            <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-check mr-1"></i>Все этапы пройдены
+                                                                            </span>
+                                                                        @elseif($doc->is_first_passed === true && $doc->is_industry_passed === null)
+                                                                            <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-check mr-1"></i>Прошел первичную
+                                                                            </span>
+                                                                        @elseif($doc->is_first_passed === true && $doc->is_industry_passed === true && $doc->is_final_passed === null)
+                                                                            <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-2 py-1 rounded text-xs font-medium">
+                                                                                <i class="fas fa-check mr-1"></i>Прошел первичную и отраслевую
+                                                                            </span>
+                                                                        @endif
+
+                                                                        <!-- Temporary decision badge -->
+                                                                        @if($hasDecision)
+                                                                            <span class="ml-2 {{ $decision['decision'] ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }} px-2 py-1 rounded text-xs">
+                                                                                <i class="fas {{ $decision['decision'] ? 'fa-check' : 'fa-times' }} mr-1"></i>
+                                                                                {{ $decision['decision'] ? 'Будет принят' : 'Будет отклонен' }}
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+
+                                                                    @if($doc->info)
+                                                                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ $doc->info }}</p>
                                                                     @endif
-                                                                </div>
-                                                                @if($doc->info)
-                                                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $doc->info }}</p>
-                                                                @endif
-                                                                <div class="flex items-center space-x-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                                    <span>
-                                                                        <i class="fas fa-user mr-1"></i>{{ $doc->uploaded_by ?? 'Неизвестно' }}
-                                                                    </span>
-                                                                    <span>
-                                                                        <i class="fas fa-clock mr-1"></i>{{ isset($doc->created_at) ? (is_string($doc->created_at) ? $doc->created_at : $doc->created_at->format('d.m.Y H:i')) : '-' }}
-                                                                    </span>
+
+                                                                    <!-- Show existing comments -->
+                                                                    @if($doc->first_comment)
+                                                                        <div class="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900 rounded text-xs">
+                                                                            <span class="font-medium">Комментарий первичной проверки:</span> {{ $doc->first_comment }}
+                                                                        </div>
+                                                                    @endif
+                                                                    @if($doc->industry_comment)
+                                                                        <div class="mt-2 p-2 bg-orange-50 dark:bg-orange-900 rounded text-xs">
+                                                                            <span class="font-medium">Комментарий отраслевой проверки:</span> {{ $doc->industry_comment }}
+                                                                        </div>
+                                                                    @endif
+                                                                    @if($doc->control_comment)
+                                                                        <div class="mt-2 p-2 bg-purple-50 dark:bg-purple-900 rounded text-xs">
+                                                                            <span class="font-medium">Комментарий контрольной проверки:</span> {{ $doc->control_comment }}
+                                                                        </div>
+                                                                    @endif
+
+                                                                    <!-- Temporary comment -->
+                                                                    @if($hasDecision && $decision['comment'])
+                                                                        <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs">
+                                                                            <span class="font-medium">Новый комментарий:</span> {{ $decision['comment'] }}
+                                                                        </div>
+                                                                    @endif
+
+                                                                    <div class="flex items-center space-x-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                                        <span>
+                                                                            <i class="fas fa-user mr-1"></i>{{ $doc->uploaded_by ?? 'Неизвестно' }}
+                                                                        </span>
+                                                                        <span>
+                                                                            <i class="fas fa-clock mr-1"></i>{{ isset($doc->created_at) ? (is_string($doc->created_at) ? $doc->created_at : $doc->created_at->format('d.m.Y H:i')) : '-' }}
+                                                                        </span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                        <!-- Only view/download button for department users -->
-                                                        <div class="flex items-center space-x-2 ml-4">
-                                                            @if($doc->file_url)
-                                                                <a href="{{ Storage::url($doc->file_url) }}" target="_blank" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 p-2" title="Просмотр/Скачать">
-                                                                    <i class="fas fa-download"></i>
-                                                                </a>
-                                                            @endif
+
+                                                            <!-- Action buttons -->
+                                                            <div class="flex items-center space-x-2 ml-4">
+                                                                <!-- Download button -->
+                                                                @if($doc->file_url)
+                                                                    <a href="{{ Storage::url($doc->file_url) }}" target="_blank"
+                                                                       class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 p-2"
+                                                                       title="Просмотр/Скачать">
+                                                                        <i class="fas fa-download"></i>
+                                                                    </a>
+                                                                @endif
+
+                                                                <!-- Review buttons (if can review) -->
+                                                                @if($canReviewThisDoc)
+                                                                    <button
+                                                                        wire:click="openAcceptModal({{ $doc->id }}, '{{ addslashes($doc->title ?? 'Документ') }}')"
+                                                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs inline-flex items-center"
+                                                                        title="Принять">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                    <button
+                                                                        wire:click="openRejectModal({{ $doc->id }}, '{{ addslashes($doc->title ?? 'Документ') }}')"
+                                                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs inline-flex items-center"
+                                                                        title="Отклонить">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 @endforeach
@@ -346,6 +657,133 @@
             </p>
         </div>
         @endif
+
+        <!-- Final Decision Modal (2.4.2) -->
+        @if($showFinalDecisionModal)
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeFinalDecisionModal">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                <i class="fas fa-gavel mr-2 text-indigo-600"></i>
+                                Финальное решение по заявке
+                            </h3>
+                            <button wire:click="closeFinalDecisionModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <i class="fas fa-times text-xl"></i>
+                            </button>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Decisions and Comments by Criterion -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+                                    Решение и комментарий по каждому критерию <span class="text-red-500">*</span>
+                                </label>
+                                <div class="space-y-4 max-h-[600px] overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                                    @foreach($allCriteriaForFinalDecision as $criterion)
+                                        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-700">
+                                            <!-- Criterion Header -->
+                                            <div class="flex items-start justify-between mb-3">
+                                                <div class="flex-1">
+                                                    <div class="font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                                                        {{ $criterion['category_document']['title_ru'] ?? 'Критерий' }}
+                                                    </div>
+                                                    @if(isset($criterion['application_status']))
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                            Текущий статус: {{ $criterion['application_status']['title_ru'] ?? '' }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <!-- Decision Selection -->
+                                            <div class="mb-3">
+                                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Решение <span class="text-red-500">*</span>
+                                                </label>
+                                                <div class="space-y-2">
+                                                    <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer {{ ($finalDecisionsByCriterion[$criterion['id']] ?? '') === 'fully-approved' ? 'border-green-500 bg-green-50 dark:bg-green-900' : 'border-gray-300 dark:border-gray-600' }}">
+                                                        <input type="radio" wire:model="finalDecisionsByCriterion.{{ $criterion['id'] }}" value="fully-approved" class="mt-1 mr-2">
+                                                        <div class="flex-1">
+                                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Полностью одобрено</div>
+                                                            <div class="text-xs text-gray-600 dark:text-gray-400">Критерий полностью соответствует требованиям</div>
+                                                        </div>
+                                                    </label>
+
+                                                    <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer {{ ($finalDecisionsByCriterion[$criterion['id']] ?? '') === 'partially-approved' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900' : 'border-gray-300 dark:border-gray-600' }}">
+                                                        <input type="radio" wire:model="finalDecisionsByCriterion.{{ $criterion['id'] }}" value="partially-approved" class="mt-1 mr-2">
+                                                        <div class="flex-1">
+                                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Одобрено частично</div>
+                                                            <div class="text-xs text-gray-600 dark:text-gray-400">Требуется повторная загрузка документов</div>
+                                                        </div>
+                                                    </label>
+
+                                                    <label class="flex items-start p-3 border-2 rounded-lg cursor-pointer {{ ($finalDecisionsByCriterion[$criterion['id']] ?? '') === 'revoked' ? 'border-red-500 bg-red-50 dark:bg-red-900' : 'border-gray-300 dark:border-gray-600' }}">
+                                                        <input type="radio" wire:model="finalDecisionsByCriterion.{{ $criterion['id'] }}" value="revoked" class="mt-1 mr-2">
+                                                        <div class="flex-1">
+                                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">Отозвано</div>
+                                                            <div class="text-xs text-gray-600 dark:text-gray-400">Критерий не соответствует требованиям</div>
+                                                        </div>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <!-- Documents for reupload (only for partially-approved) -->
+                                            @if(($finalDecisionsByCriterion[$criterion['id']] ?? '') === 'partially-approved')
+                                                <div class="mb-3 p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                                                    <label class="block text-xs font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                                        Документы для повторной загрузки <span class="text-red-500">*</span>
+                                                    </label>
+                                                    <div class="max-h-40 overflow-y-auto space-y-1">
+                                                        @foreach($availableDocumentsForReupload as $doc)
+                                                            <label class="flex items-center">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    wire:model="reuploadDocumentIdsByCriterion.{{ $criterion['id'] }}"
+                                                                    value="{{ $doc['id'] }}"
+                                                                    class="mr-2">
+                                                                <span class="text-xs text-gray-900 dark:text-gray-100">{{ $doc['title_ru'] }}</span>
+                                                            </label>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <!-- Comment -->
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Комментарий <span class="text-red-500">*</span>
+                                                </label>
+                                                <textarea
+                                                    wire:model="finalCommentsByCriterion.{{ $criterion['id'] }}"
+                                                    rows="3"
+                                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                                                    placeholder="Введите комментарий по этому критерию..."></textarea>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3 mt-6">
+                            <button
+                                type="button"
+                                wire:click="closeFinalDecisionModal"
+                                class="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium">
+                                Отмена
+                            </button>
+                            <button
+                                wire:click="submitFinalDecision"
+                                class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors inline-flex items-center">
+                                <i class="fas fa-check mr-2"></i>
+                                Принять решение
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     @else
     <div class="text-center py-12">
         <div class="bg-gray-100 dark:bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -364,5 +802,96 @@
             </a>
         </div>
     </div>
+    @endif
+
+    <!-- Accept Modal -->
+    @if($showAcceptModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeAcceptModal">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-all">
+                <div class="p-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
+                            <i class="fas fa-check-circle text-green-600 dark:text-green-400 text-4xl"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center mb-2">
+                        Принять документ?
+                    </h3>
+
+                    <p class="text-gray-600 dark:text-gray-400 text-center mb-6">
+                        Вы уверены, что хотите <span class="font-semibold text-green-600 dark:text-green-400">принять</span> документ<br>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">"{{ $currentDocumentTitle }}"</span>?
+                    </p>
+
+                    <div class="flex items-center space-x-3">
+                        <button
+                            wire:click="closeAcceptModal"
+                            class="flex-1 px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium border border-gray-300 dark:border-gray-600 rounded-lg transition-colors">
+                            Отмена
+                        </button>
+                        <button
+                            wire:click="confirmAccept"
+                            class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center">
+                            <i class="fas fa-check mr-2"></i>
+                            Принять
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Reject Modal -->
+    @if($showRejectModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeRejectModal">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-all">
+                <div class="p-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="bg-red-100 dark:bg-red-900 rounded-full p-4">
+                            <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-4xl"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center mb-2">
+                        Отклонить документ?
+                    </h3>
+
+                    <p class="text-gray-600 dark:text-gray-400 text-center mb-6">
+                        Укажите причину отклонения документа<br>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">"{{ $currentDocumentTitle }}"</span>
+                    </p>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            Причина отклонения <span class="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            wire:model="rejectComment"
+                            rows="4"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            placeholder="Введите причину отклонения документа..."
+                            autofocus></textarea>
+                        @error('rejectComment')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button
+                            wire:click="closeRejectModal"
+                            class="flex-1 px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium border border-gray-300 dark:border-gray-600 rounded-lg transition-colors">
+                            Отмена
+                        </button>
+                        <button
+                            wire:click="confirmReject"
+                            class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center">
+                            <i class="fas fa-times mr-2"></i>
+                            Отклонить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 </div>

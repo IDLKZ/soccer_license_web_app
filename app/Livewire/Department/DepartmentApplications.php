@@ -272,6 +272,44 @@ class DepartmentApplications extends Component
         }
     }
 
+    // Get criteria grouped by status for an application
+    public function getCriteriaByStatus($application)
+    {
+        $criteria = $application->application_criteria;
+
+        return [
+            'total' => $criteria->count(),
+            'by_status' => $criteria->groupBy(function($criterion) {
+                return $criterion->application_status->value ?? 'unknown';
+            })->map(function($group) {
+                return [
+                    'count' => $group->count(),
+                    'status' => $group->first()->application_status ?? null
+                ];
+            })->toArray()
+        ];
+    }
+
+    // Get status badge color for application status value
+    public function getStatusBadgeColor($statusValue)
+    {
+        return match($statusValue) {
+            'awaiting-documents' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            'awaiting-first-check' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            'first-check-revision' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            'awaiting-industry-check' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            'industry-check-revision' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            'awaiting-control-check' => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+            'control-check-revision' => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            'awaiting-final-decision' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            'fully-approved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            'partially-approved' => 'bg-lime-100 text-lime-800 dark:bg-lime-900 dark:text-lime-200',
+            'revoked' => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+        };
+    }
+
     public function render()
     {
         return view('livewire.department.department-applications')

@@ -7,7 +7,6 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -41,8 +40,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ApplicationStatusCategory extends Model
 {
-	use Sluggable;
-
 	protected $table = 'application_status_categories';
 
 	protected $casts = [
@@ -90,14 +87,5 @@ class ApplicationStatusCategory extends Model
 	public function applications()
 	{
 		return $this->hasMany(Application::class, 'category_id');
-	}
-
-	public function sluggable(): array
-	{
-		return [
-			'value' => [
-				'source' => 'title_ru'
-			]
-		];
 	}
 }

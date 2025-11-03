@@ -205,25 +205,56 @@
                             <div class="mb-4">
                                 <div class="flex items-center mb-3">
                                     <i class="fas fa-tasks text-blue-500 mr-2"></i>
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Статус критериев</span>
-                                    <span class="ml-auto text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $application->application_criteria->where('is_ready', true)->count() }} / {{ $application->application_criteria->count() }} готово
-                                    </span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Критерии ({{ $application->application_criteria->count() }})</span>
                                 </div>
 
                                 <div class="space-y-2">
                                     @foreach($application->application_criteria as $criterion)
-                                        <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg">
-                                            <div class="flex items-center flex-1">
-                                                <span class="text-sm text-gray-900 dark:text-gray-100 truncate mr-2">
+                                        <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                                            <div class="flex flex-col flex-1 mr-2">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                                     {{ $criterion->category_document->title_ru ?? 'Критерий' }}
                                                 </span>
+                                                @if($criterion->application_status)
+                                                    <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                        {{ $criterion->application_status->title_ru }}
+                                                    </span>
+                                                @endif
                                             </div>
-                                            <span class="{{ $this->getCriterionStatusColor($criterion) }} px-2 py-1 rounded text-xs font-medium">
-                                                {{ $this->getCriterionStatusText($criterion) }}
-                                            </span>
+                                            <div class="flex items-center space-x-2">
+                                                @if($criterion->application_status)
+                                                    <span class="{{ $this->getStatusBadgeColor($criterion->application_status->value) }} px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
+                                                        @if(str_contains($criterion->application_status->value, 'revision'))
+                                                            <i class="fas fa-undo mr-1"></i>
+                                                        @elseif(str_contains($criterion->application_status->value, 'awaiting'))
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                        @elseif(str_contains($criterion->application_status->value, 'approved'))
+                                                            <i class="fas fa-check mr-1"></i>
+                                                        @elseif($criterion->application_status->value === 'rejected' || $criterion->application_status->value === 'revoked')
+                                                            <i class="fas fa-times mr-1"></i>
+                                                        @endif
+                                                        {{ $criterion->application_status->title_ru }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endforeach
+                                </div>
+
+                                <!-- Criteria Summary -->
+                                @php
+                                    $criteriaStats = $this->getCriteriaByStatus($application);
+                                @endphp
+                                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($criteriaStats['by_status'] as $statusValue => $data)
+                                            @if($data['status'])
+                                                <span class="{{ $this->getStatusBadgeColor($statusValue) }} px-2 py-1 rounded text-xs">
+                                                    {{ $data['status']->title_ru }}: {{ $data['count'] }}
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                             @endif

@@ -7,7 +7,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -26,13 +26,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $level
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * 
+ * @property Collection|Licence[] $licences
  *
  * @package App\Models
  */
 class League extends Model
 {
-	use Sluggable;
-
 	protected $table = 'leagues';
 
 	protected $casts = [
@@ -53,12 +53,8 @@ class League extends Model
 		'level'
 	];
 
-	public function sluggable(): array
+	public function licences()
 	{
-		return [
-			'value' => [
-				'source' => 'title_ru'
-			]
-		];
+		return $this->hasMany(Licence::class);
 	}
 }

@@ -7,7 +7,6 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,6 +28,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * 
+ * @property Collection|ClubTeam[] $club_teams
  * @property Collection|Permission[] $permissions
  * @property Collection|User[] $users
  *
@@ -36,8 +36,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Role extends Model
 {
-	use Sluggable;
-
 	protected $table = 'roles';
 
 	protected $casts = [
@@ -61,6 +59,11 @@ class Role extends Model
 		'is_administrative'
 	];
 
+	public function club_teams()
+	{
+		return $this->hasMany(ClubTeam::class);
+	}
+
 	public function permissions()
 	{
 		return $this->belongsToMany(Permission::class, 'role_permission')
@@ -71,14 +74,5 @@ class Role extends Model
 	public function users()
 	{
 		return $this->hasMany(User::class);
-	}
-
-	public function sluggable(): array
-	{
-		return [
-			'value' => [
-				'source' => 'title_ru'
-			]
-		];
 	}
 }

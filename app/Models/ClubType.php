@@ -7,7 +7,6 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,8 +31,6 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ClubType extends Model
 {
-	use Sluggable;
-
 	protected $table = 'club_types';
 
 	protected $casts = [
@@ -54,14 +51,5 @@ class ClubType extends Model
 	public function clubs()
 	{
 		return $this->hasMany(Club::class, 'type_id');
-	}
-
-	public function sluggable(): array
-	{
-		return [
-			'value' => [
-				'source' => 'title_ru'
-			]
-		];
 	}
 }

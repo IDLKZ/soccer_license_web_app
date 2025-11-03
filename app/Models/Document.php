@@ -7,7 +7,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
-use Cviebrock\EloquentSluggable\Sluggable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -28,13 +28,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon|null $updated_at
  * 
  * @property CategoryDocument|null $category_document
+ * @property Collection|Application[] $applications
+ * @property Collection|LicenceRequirement[] $licence_requirements
  *
  * @package App\Models
  */
 class Document extends Model
 {
-	use Sluggable;
-
 	protected $table = 'documents';
 
 	protected $casts = [
@@ -60,12 +60,15 @@ class Document extends Model
 		return $this->belongsTo(CategoryDocument::class, 'category_id');
 	}
 
-	public function sluggable(): array
+	public function applications()
 	{
-		return [
-			'value' => [
-				'source' => 'title_ru'
-			]
-		];
+		return $this->belongsToMany(Application::class, 'application_documents')
+					->withPivot('id', 'category_id', 'file_url', 'uploaded_by_id', 'uploaded_by', 'first_checked_by_id', 'first_checked_by', 'checked_by_id', 'checked_by', 'control_checked_by_id', 'control_checked_by', 'is_first_passed', 'is_industry_passed', 'is_final_passed', 'title', 'info', 'first_comment', 'industry_comment', 'control_comment', 'deadline')
+					->withTimestamps();
+	}
+
+	public function licence_requirements()
+	{
+		return $this->hasMany(LicenceRequirement::class);
 	}
 }

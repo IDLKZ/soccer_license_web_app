@@ -220,9 +220,15 @@
                                                     {{ $criterion->category_document->title_ru ?? 'Критерий' }}
                                                 </span>
                                             </div>
-                                            <span class="{{ $this->getCriterionStatusColor($criterion) }} px-2 py-1 rounded text-xs font-medium">
-                                                {{ $this->getCriterionStatusText($criterion) }}
-                                            </span>
+                                            @if($criterion->application_status)
+                                                <span class="{{ $this->getCriterionStatusColor($criterion) }} px-2 py-1 rounded text-xs font-medium">
+                                                    {{ $criterion->application_status->title_ru }}
+                                                </span>
+                                            @else
+                                                <span class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 px-2 py-1 rounded text-xs font-medium">
+                                                    Нет статуса
+                                                </span>
+                                            @endif
                                         </div>
                                     @endforeach
 
