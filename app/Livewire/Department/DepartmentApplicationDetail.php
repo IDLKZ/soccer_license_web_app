@@ -129,6 +129,13 @@ class DepartmentApplicationDetail extends Component
                 $category = $criterion->category_document;
                 $categoryRoles = $category->roles ?? [];
 
+                // Ensure categoryRoles is always an array
+                if (is_string($categoryRoles)) {
+                    $categoryRoles = json_decode($categoryRoles, true) ?? [];
+                } elseif (!is_array($categoryRoles)) {
+                    $categoryRoles = [];
+                }
+
                 // Department users must have their role in the allowed roles
                 return !empty($categoryRoles) && $userRole && in_array($userRole, $categoryRoles);
             })
