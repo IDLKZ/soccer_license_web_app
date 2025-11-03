@@ -39,8 +39,6 @@ class DepartmentApplications extends Component
     public function mount()
     {
         $user = Auth::user();
-        $this->canView = $user->can('view-applications');
-
         // Initialize collections
         $this->applications = collect();
         $this->pendingApplications = collect();

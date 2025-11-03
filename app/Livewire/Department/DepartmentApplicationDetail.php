@@ -834,6 +834,14 @@ class DepartmentApplicationDetail extends Component
         });
     }
 
+    // Get available final decisions based on criteria statuses
+    public function getAvailableFinalDecisions()
+    {
+        // Regardless of criteria statuses, both options are always available
+        // The decision is up to the responsible person
+        return ['approved', 'revoked'];
+    }
+
     // Change application status (2.4.3)
     public function changeApplicationStatus()
     {
@@ -847,18 +855,12 @@ class DepartmentApplicationDetail extends Component
             return;
         }
 
-        // Validate partially-approved requires documents
-        if ($this->applicationFinalDecision === 'partially-approved' && empty($this->applicationReuploadDocIds)) {
-            toastr()->error('Для частичного одобрения необходимо указать документы для повторной загрузки.');
-            return;
-        }
-
+        
         try {
             DB::beginTransaction();
 
             $categoryValue = match($this->applicationFinalDecision) {
                 'approved' => ApplicationStatusCategoryConstants::APPROVED_VALUE,
-                'partially-approved' => ApplicationStatusCategoryConstants::APPROVED_VALUE, // Still approved, but with conditions
                 'revoked' => ApplicationStatusCategoryConstants::REVOKED_VALUE,
                 default => null
             };
@@ -871,23 +873,14 @@ class DepartmentApplicationDetail extends Component
             $category = \App\Models\ApplicationStatusCategory::where('value', $categoryValue)->first();
 
             // Update application
-            $updateData = [
+            $this->application->update([
                 'category_id' => $category->id
-            ];
-
-            // If partially-approved, set reupload fields
-            if ($this->applicationFinalDecision === 'partially-approved') {
-                $updateData['can_reupload_after_ending'] = true;
-                $updateData['can_reupload_after_endings_doc_ids'] = $this->applicationReuploadDocIds;
-            }
-
-            $this->application->update($updateData);
+            ]);
 
             DB::commit();
 
             toastr()->success('Статус заявки изменен.');
             $this->applicationFinalDecision = '';
-            $this->applicationReuploadDocIds = [];
             $this->loadApplication();
             $this->loadTabsAndRequirements();
 

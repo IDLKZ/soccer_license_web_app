@@ -181,6 +181,43 @@
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-4">Теперь вы можете изменить общий статус заявки:</p>
 
+            @php
+                $allCriteria = \App\Models\ApplicationCriterion::with('application_status')
+                    ->where('application_id', $application->id)
+                    ->get();
+
+                $statusSummary = [];
+                foreach ($allCriteria as $criterion) {
+                    if ($criterion->application_status) {
+                        $status = $criterion->application_status->value;
+                        if (!isset($statusSummary[$status])) {
+                            $statusSummary[$status] = 0;
+                        }
+                        $statusSummary[$status]++;
+                    }
+                }
+
+                $summaryText = 'Статусы критериев: ';
+                $parts = [];
+                if (isset($statusSummary['fully-approved'])) {
+                    $parts[] = "полностью одобрено: {$statusSummary['fully-approved']}";
+                }
+                if (isset($statusSummary['partially-approved'])) {
+                    $parts[] = "частично одобрено: {$statusSummary['partially-approved']}";
+                }
+                if (isset($statusSummary['revoked'])) {
+                    $parts[] = "отозвано: {$statusSummary['revoked']}";
+                }
+                $summaryText .= implode(', ', $parts) . '. Выбор решения за ответственным сотрудником.';
+            @endphp
+
+            <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-700">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    {{ $summaryText }}
+                </p>
+            </div>
+
             <!-- Decision Selection -->
             <div class="mb-4 space-y-3">
                 <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'approved' ? 'border-green-500 bg-green-100 dark:bg-green-800' : 'border-gray-300 dark:border-gray-600' }}">
@@ -188,14 +225,6 @@
                     <div class="flex-1">
                         <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия одобрена</div>
                         <div class="text-sm text-gray-600 dark:text-gray-400">Все требования выполнены, лицензия выдается</div>
-                    </div>
-                </label>
-
-                <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'partially-approved' ? 'border-yellow-500 bg-yellow-100 dark:bg-yellow-800' : 'border-gray-300 dark:border-gray-600' }}">
-                    <input type="radio" wire:model.live="applicationFinalDecision" value="partially-approved" class="mt-1 mr-3">
-                    <div class="flex-1">
-                        <div class="font-semibold text-gray-900 dark:text-gray-100">Одобрено частично</div>
-                        <div class="text-sm text-gray-600 dark:text-gray-400">Лицензия выдается с условием повторной загрузки документов</div>
                     </div>
                 </label>
 
@@ -207,34 +236,6 @@
                     </div>
                 </label>
             </div>
-
-            <!-- Documents for reupload (only for partially-approved) -->
-            @if($applicationFinalDecision === 'partially-approved')
-                @php
-                    $availableDocsForApp = \App\Models\LicenceRequirement::with('document')
-                        ->where('licence_id', $application->license_id)
-                        ->get()
-                        ->pluck('document')
-                        ->unique('id');
-                @endphp
-                <div class="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                    <label class="block text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                        Документы для повторной загрузки <span class="text-red-500">*</span>
-                    </label>
-                    <div class="max-h-60 overflow-y-auto space-y-2 bg-white dark:bg-gray-800 rounded p-3">
-                        @foreach($availableDocsForApp as $doc)
-                            <label class="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    wire:model="applicationReuploadDocIds"
-                                    value="{{ $doc->id }}"
-                                    class="mr-2 rounded">
-                                <span class="text-sm text-gray-900 dark:text-gray-100">{{ $doc->title_ru }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
 
             <!-- Submit Button -->
             @if($applicationFinalDecision)
