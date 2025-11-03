@@ -31,6 +31,7 @@ class RolePermissionSeeder extends Seeder
         if ($licensingDepartmentRole) {
             // Get specific permissions for licensing department
             $licensingPermissions = Permission::whereIn('value', [
+                'view-clubs',
                 'view-category-documents',
                 'create-category-documents',
                 'manage-category-documents',
@@ -63,6 +64,8 @@ class RolePermissionSeeder extends Seeder
                 'create-licence-deadlines',
                 'manage-licence-deadlines',
                 'delete-licence-deadlines',
+                'view-applications',
+                'manage-applications',
             ])->pluck('id')->toArray();
 
             // Sync permissions to licensing department role

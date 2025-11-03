@@ -18,17 +18,10 @@
                     <i class="fas fa-chart-line w-5 text-center text-indigo-400 group-hover:text-indigo-300"></i>
                     <span class="ml-3 font-medium">Панель управления</span>
                 </a>
-
-                <!-- Заявки -->
+                <!-- Справочники -->
                 <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Лицензирование</p>
+                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Бизнес процессы</p>
                 </div>
-
-                <a href="{{ route('department.applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->is('department-applications*') ? 'bg-indigo-800 text-white' : '' }}">
-                    <i class="fas fa-file-alt w-5 text-center text-yellow-400 group-hover:text-yellow-300 {{ request()->is('department-applications*') ? 'text-yellow-300' : '' }}"></i>
-                    <span class="ml-3 font-medium">Заявки</span>
-                </a>
-
                 <a href="{{ route('department.criterias') }}" class="flex items-center justify-between px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->is('department-criterias*') ? 'bg-indigo-800 text-white' : '' }}">
                     <div class="flex items-center">
                         <i class="fas fa-tasks w-5 text-center text-blue-400 group-hover:text-blue-300 {{ request()->is('department-criterias*') ? 'text-blue-300' : '' }}"></i>
@@ -41,6 +34,78 @@
                         <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ $criteriaCount }}</span>
                     @endif
                 </a>
+                <a href="{{ route('department.applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->is('department-applications*') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-clipboard-list w-5 text-center text-teal-400 group-hover:text-teal-300 {{ request()->is('department-applications*') ? 'text-teal-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Заявки</span>
+                </a>
+
+                <div class="pt-4 pb-2">
+                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Справочные данные</p>
+                </div>
+                @can('view-clubs')
+                <a href="{{ route('admin.clubs') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.clubs') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-futbol w-5 text-center text-orange-400 group-hover:text-orange-300 {{ request()->routeIs('admin.clubs') ? 'text-orange-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Клубы</span>
+                </a>
+                @endcan
+
+                @can('view-club-teams')
+                <a href="{{ route('admin.club-teams') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.club-teams') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-users w-5 text-center text-emerald-400 group-hover:text-emerald-300 {{ request()->routeIs('admin.club-teams') ? 'text-emerald-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Составы команд</span>
+                </a>
+                @endcan
+
+                @can('view-category-documents')
+                <a href="{{ route('admin.category-documents') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.category-documents') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-folder-open w-5 text-center text-purple-400 group-hover:text-purple-300 {{ request()->routeIs('admin.category-documents') ? 'text-purple-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Категории документов</span>
+                </a>
+                @endcan
+
+                @can('view-documents')
+                <a href="{{ route('admin.documents') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.documents') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-file-alt w-5 text-center text-cyan-400 group-hover:text-cyan-300 {{ request()->routeIs('admin.documents') ? 'text-cyan-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Документы</span>
+                </a>
+                @endcan
+
+                @can('view-licences')
+                <a href="{{ route('admin.licences') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.licences') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-certificate w-5 text-center text-pink-400 group-hover:text-pink-300 {{ request()->routeIs('admin.licences') ? 'text-pink-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Лицензии</span>
+                </a>
+                @endcan
+
+                @can('view-licence-requirements')
+                <a href="{{ route('admin.licence-requirements') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.licence-requirements') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-list-check w-5 text-center text-purple-400 group-hover:text-purple-300 {{ request()->routeIs('admin.licence-requirements') ? 'text-purple-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Требования к лицензиям</span>
+                </a>
+                @endcan
+
+                @can('view-licence-deadlines')
+                <a href="{{ route('admin.licence-deadlines') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.licence-deadlines') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-calendar-days w-5 text-center text-orange-400 group-hover:text-orange-300 {{ request()->routeIs('admin.licence-deadlines') ? 'text-orange-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Дедлайны лицензий</span>
+                </a>
+                @endcan
+
+                @can('view-application-status-categories')
+                <a href="{{ route('admin.application-status-categories') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.application-status-categories') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-tasks w-5 text-center text-red-400 group-hover:text-red-300 {{ request()->routeIs('admin.application-status-categories') ? 'text-red-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Категории статусов</span>
+                </a>
+                @endcan
+
+                @can('view-application-statuses')
+                <a href="{{ route('admin.application-statuses') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.application-statuses') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-list-check w-5 text-center text-amber-400 group-hover:text-amber-300 {{ request()->routeIs('admin.application-statuses') ? 'text-amber-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Статусы заявок</span>
+                </a>
+                @endcan
+
+
 
             </div>
         </nav>

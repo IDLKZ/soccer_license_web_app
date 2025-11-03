@@ -353,6 +353,20 @@ class MyClubs extends Component
         session()->flash('message', 'Клуб успешно удален');
     }
 
+    public function leaveClub($clubId)
+    {
+        $club = Club::findOrFail($clubId);
+        $this->checkClubAccess($club);
+
+        // Remove user from club_teams
+        ClubTeam::where('club_id', $club->id)
+            ->where('user_id', auth()->id())
+            ->delete();
+
+        $this->loadRelationships();
+        session()->flash('message', 'Вы вышли из клуба "' . $club->short_name_ru . '"');
+    }
+
     /**
      * Check if current user has access to the club
      */

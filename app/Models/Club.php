@@ -85,6 +85,11 @@ class Club extends Model
 		return $this->belongsTo(Club::class, 'parent_id');
 	}
 
+	public function parent()
+	{
+		return $this->belongsTo(Club::class, 'parent_id');
+	}
+
 	public function club_type()
 	{
 		return $this->belongsTo(ClubType::class, 'type_id');

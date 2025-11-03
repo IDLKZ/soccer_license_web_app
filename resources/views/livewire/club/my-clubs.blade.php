@@ -195,6 +195,14 @@
                         </button>
                         @endif
 
+                        <!-- Leave Club Button -->
+                        <button wire:click="leaveClub({{ $club->id }})"
+                                class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold text-sm"
+                                onclick="return confirm('Вы уверены, что хотите выйти из клуба &quot;{{ $club->short_name_ru }}&quot;? Вы потеряете доступ к управлению этим клубом.')">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            Выйти
+                        </button>
+
                         @if($canDelete)
                         <button wire:click="deleteClub({{ $club->id }})"
                                 class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
