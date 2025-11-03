@@ -68,6 +68,10 @@ class DepartmentApplicationDetail extends Component
     public $showDocumentInfoModal = false;
     public $viewingDocument = null;
 
+    // Reject application modal
+    public $showRejectApplicationModal = false;
+    public $rejectApplicationComment = '';
+
     public function mount($application_id)
     {
         $this->applicationId = $application_id;
@@ -1035,6 +1039,99 @@ class DepartmentApplicationDetail extends Component
     {
         $this->showDocumentInfoModal = false;
         $this->viewingDocument = null;
+    }
+
+    public function canRejectApplication()
+    {
+        if (!$this->application || !$this->application->application_status_category) {
+            return false;
+        }
+
+        $categoryValue = $this->application->application_status_category->value;
+
+        // Check if application is in one of the allowed statuses
+        $allowedStatuses = [
+            ApplicationStatusCategoryConstants::FIRST_CHECK_VALUE,
+            ApplicationStatusCategoryConstants::INDUSTRY_CHECK_VALUE,
+            ApplicationStatusCategoryConstants::CONTROL_CHECK_VALUE,
+            ApplicationStatusCategoryConstants::FINAL_DECISION_VALUE,
+        ];
+
+        if (!in_array($categoryValue, $allowedStatuses)) {
+            return false;
+        }
+
+        // Check if user's role is in the category's role_values
+        $user = auth()->user();
+        if (!$user || !$user->role) {
+            return false;
+        }
+
+        $categoryRoleValues = $this->application->application_status_category->role_values ?? [];
+
+        // Decode if it's a string
+        if (is_string($categoryRoleValues)) {
+            $categoryRoleValues = json_decode($categoryRoleValues, true) ?? [];
+        }
+
+        return in_array($user->role->value, $categoryRoleValues);
+    }
+
+    public function openRejectApplicationModal()
+    {
+        if (!$this->canRejectApplication()) {
+            toastr()->error('У вас нет прав для отказа этой заявки.');
+            return;
+        }
+
+        $this->rejectApplicationComment = '';
+        $this->showRejectApplicationModal = true;
+    }
+
+    public function closeRejectApplicationModal()
+    {
+        $this->showRejectApplicationModal = false;
+        $this->rejectApplicationComment = '';
+    }
+
+    public function rejectApplication()
+    {
+        if (!$this->canRejectApplication()) {
+            toastr()->error('У вас нет прав для отказа этой заявки.');
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update application category to rejected
+            $this->application->category_id = ApplicationStatusCategoryConstants::REJECTED_ID;
+            $this->application->save();
+
+            // Update all application criteria to rejected status
+            $rejectedStatusId = ApplicationStatusConstants::REJECTED_ID;
+
+            ApplicationCriterion::where('application_id', $this->application->id)
+                ->update([
+                    'status_id' => $rejectedStatusId,
+                    'last_comment' => $this->rejectApplicationComment ?: 'Заявка отклонена'
+                ]);
+
+            DB::commit();
+
+            toastr()->success('Заявка успешно отклонена.');
+
+            $this->closeRejectApplicationModal();
+
+            // Reload application
+            $this->loadApplication();
+            $this->loadTabsAndRequirements();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error rejecting application: ' . $e->getMessage());
+            toastr()->error('Произошла ошибка при отказе заявки.');
+        }
     }
 
     public function render()

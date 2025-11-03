@@ -36,6 +36,15 @@
                         <i class="fas fa-info-circle mr-2"></i>
                         {{ $application->application_status_category->title_ru }}
                     </span>
+
+                    @if($this->canRejectApplication())
+                        <button
+                            wire:click="openRejectApplicationModal"
+                            class="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            Отказать заявку
+                        </button>
+                    @endif
                 </div>
             </div>
 
@@ -1168,6 +1177,85 @@
                             class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
                         <i class="fas fa-times mr-2"></i>
                         Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Reject Application Modal -->
+    @if($showRejectApplicationModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="bg-red-100 dark:bg-red-900 p-3 rounded-lg mr-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                Отказать заявку
+                            </h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Подтверждение отказа заявки #{{ $application->id }}
+                            </p>
+                        </div>
+                    </div>
+                    <button wire:click="closeRejectApplicationModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
+                                    Вы уверены?
+                                </h3>
+                                <div class="mt-2 text-sm text-red-700 dark:text-red-400">
+                                    <p>Это действие отклонит всю заявку и все её критерии.</p>
+                                    <p class="mt-1">Заявка получит статус "Отказано", и все критерии будут отклонены.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comment field -->
+                    <div>
+                        <label for="rejectApplicationComment" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Комментарий (необязательно)
+                        </label>
+                        <textarea
+                            wire:model="rejectApplicationComment"
+                            id="rejectApplicationComment"
+                            rows="4"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                   focus:ring-2 focus:ring-red-500 focus:border-red-500
+                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                   placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Укажите причину отказа (необязательно)..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        wire:click="closeRejectApplicationModal"
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Отмена
+                    </button>
+                    <button
+                        wire:click="rejectApplication"
+                        class="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                        <i class="fas fa-ban mr-2"></i>
+                        Отказать заявку
                     </button>
                 </div>
             </div>
