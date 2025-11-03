@@ -151,7 +151,13 @@ class MyApplicationDetail extends Component
                 }
                 $category = $criterion->category_document;
                 $categoryRoles = $category->roles ?? [];
-                return empty($categoryRoles) || ($userRole && in_array($userRole, $categoryRoles));
+
+                // Ensure categoryRoles is an array
+                if (is_string($categoryRoles)) {
+                    $categoryRoles = json_decode($categoryRoles, true) ?? [];
+                }
+
+                return empty($categoryRoles) || ($userRole && is_array($categoryRoles) && in_array($userRole, $categoryRoles));
             })
             ->groupBy('category_id')
             ->map(function($criteria, $categoryId) {
@@ -222,7 +228,15 @@ class MyApplicationDetail extends Component
 
         $user = Auth::user();
         $userRole = $user->role ? $user->role->value : null;
-        return $userRole && in_array($userRole, $category->roles);
+
+        $categoryRoles = $category->roles ?? [];
+
+        // Ensure categoryRoles is an array
+        if (is_string($categoryRoles)) {
+            $categoryRoles = json_decode($categoryRoles, true) ?? [];
+        }
+
+        return $userRole && is_array($categoryRoles) && in_array($userRole, $categoryRoles);
     }
 
     public function canUploadDocuments($criterion)
@@ -731,7 +745,12 @@ class MyApplicationDetail extends Component
         // roles is a JSON array of role values (slugs)
         $allowedRoleValues = $categoryDocument->roles ?? [];
 
-        if (!empty($allowedRoleValues) && !in_array($user->role->value, $allowedRoleValues)) {
+        // Ensure allowedRoleValues is an array
+        if (is_string($allowedRoleValues)) {
+            $allowedRoleValues = json_decode($allowedRoleValues, true) ?? [];
+        }
+
+        if (!empty($allowedRoleValues) && is_array($allowedRoleValues) && !in_array($user->role->value, $allowedRoleValues)) {
             return false;
         }
 
