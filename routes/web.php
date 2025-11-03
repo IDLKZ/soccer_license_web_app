@@ -21,6 +21,8 @@ use App\Livewire\Club\SingleLicenceDetail;
 use App\Livewire\Club\MyApplications;
 use App\Livewire\Club\MyApplicationDetail;
 use App\Livewire\Club\MyCriterias;
+use App\Livewire\Department\DepartmentApplications;
+use App\Livewire\Department\DepartmentApplicationDetail;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -58,6 +60,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/my-criterias', MyCriterias::class)->name('club.criterias');
     Route::get('/my-licences', MyLicences::class)->name('club.licences');
     Route::get('/licence/{id}', SingleLicenceDetail::class)->name('club.licence-detail');
+
+    // Department routes
+    Route::get('/department-applications', DepartmentApplications::class)->name('department.applications');
+    Route::get('/department-application-detail/{application_id}', DepartmentApplicationDetail::class)->name('department-application-detail');
 
     // Logout
     Route::post('/logout', function () {

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class ApplicationCriterion
- * 
+ *
  * @property int $id
  * @property int|null $application_id
  * @property int|null $category_id
@@ -27,13 +27,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $control_checked_by
  * @property bool $is_ready
  * @property bool|null $is_first_passed
+ * @property string|null $first_comment
  * @property bool|null $is_industry_passed
+ * @property string|null $industry_comment
  * @property bool|null $is_final_passed
+ * @property string|null $final_comment
+ * @property string|null $last_comment
  * @property bool|null $can_reupload_after_ending
  * @property array|null $can_reupload_after_endings_doc_ids
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Application|null $application
  * @property CategoryDocument|null $category_document
  * @property User|null $user
@@ -77,8 +81,12 @@ class ApplicationCriterion extends Model
 		'control_checked_by',
 		'is_ready',
 		'is_first_passed',
+		'first_comment',
 		'is_industry_passed',
+		'industry_comment',
 		'is_final_passed',
+		'final_comment',
+		'last_comment',
 		'can_reupload_after_ending',
 		'can_reupload_after_endings_doc_ids'
 	];

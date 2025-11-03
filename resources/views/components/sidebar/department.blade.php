@@ -21,75 +21,14 @@
 
                 <!-- Заявки -->
                 <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Работа с заявками</p>
+                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Лицензирование</p>
                 </div>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-inbox w-5 text-center text-yellow-400 group-hover:text-yellow-300"></i>
-                    <span class="ml-3 font-medium">Входящие</span>
-                    <span class="ml-auto bg-yellow-500 text-white text-xs font-semibold px-2 py-1 rounded-full">5</span>
+                <a href="{{ route('department.applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->is('department-applications*') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-file-alt w-5 text-center text-yellow-400 group-hover:text-yellow-300 {{ request()->is('department-applications*') ? 'text-yellow-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Заявки</span>
                 </a>
 
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-tasks w-5 text-center text-blue-400 group-hover:text-blue-300"></i>
-                    <span class="ml-3 font-medium">В работе</span>
-                    <span class="ml-auto bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded-full">3</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-check-circle w-5 text-center text-green-400 group-hover:text-green-300"></i>
-                    <span class="ml-3 font-medium">Проверенные</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-undo w-5 text-center text-orange-400 group-hover:text-orange-300"></i>
-                    <span class="ml-3 font-medium">На доработку</span>
-                </a>
-
-                <!-- Документы -->
-                <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Документы</p>
-                </div>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-folder-open w-5 text-center text-cyan-400 group-hover:text-cyan-300"></i>
-                    <span class="ml-3 font-medium">Все документы</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-file-pdf w-5 text-center text-red-400 group-hover:text-red-300"></i>
-                    <span class="ml-3 font-medium">Требования</span>
-                </a>
-
-                <!-- Отчеты -->
-                <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Отчетность</p>
-                </div>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-chart-bar w-5 text-center text-purple-400 group-hover:text-purple-300"></i>
-                    <span class="ml-3 font-medium">Статистика</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-file-alt w-5 text-center text-pink-400 group-hover:text-pink-300"></i>
-                    <span class="ml-3 font-medium">Отчеты</span>
-                </a>
-
-                <!-- Справочники -->
-                <div class="pt-4 pb-2">
-                    <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Справочники</p>
-                </div>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-futbol w-5 text-center text-teal-400 group-hover:text-teal-300"></i>
-                    <span class="ml-3 font-medium">Клубы</span>
-                </a>
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
-                    <i class="fas fa-certificate w-5 text-center text-indigo-400 group-hover:text-indigo-300"></i>
-                    <span class="ml-3 font-medium">Лицензии</span>
-                </a>
             </div>
         </nav>
 
