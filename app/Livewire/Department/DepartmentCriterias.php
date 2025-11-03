@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Livewire\Club;
+namespace App\Livewire\Department;
 
 use App\Models\ApplicationCriterion;
-use App\Models\ClubTeam;
+use App\Models\ApplicationStatus;
 use App\Models\CategoryDocument;
-use App\Models\Application;
 use Livewire\Component;
 use Livewire\Attributes\Locked;
 
-class MyCriterias extends Component
+class DepartmentCriterias extends Component
 {
     // Tab states
     public $activeTab = 'active';
@@ -21,7 +20,7 @@ class MyCriterias extends Component
     // Data collections
     public $criterias;
     public $activeCriterias;
-    public $inReviewCriterias;
+    public $revisionCriterias;
     public $approvedCriterias;
     public $rejectedCriterias;
 
@@ -31,25 +30,16 @@ class MyCriterias extends Component
     // Statistics
     public $stats = [
         'active' => 0,
-        'in_review' => 0,
+        'revision' => 0,
         'approved' => 0,
         'rejected' => 0
     ];
 
-    // Status groups
-    private $activeStatuses = [
-        'awaiting-documents',
+    // Status groups for department (different from club)
+    private $revisionStatuses = [
         'first-check-revision',
         'industry-check-revision',
-        'control-check-revision',
-        'partially-approved'
-    ];
-
-    private $inReviewStatuses = [
-        'awaiting-first-check',
-        'awaiting-industry-check',
-        'awaiting-control-check',
-        'awaiting-final-decision'
+        'control-check-revision'
     ];
 
     private $approvedStatuses = [
@@ -68,13 +58,13 @@ class MyCriterias extends Component
 
     public function mount()
     {
-        $this->authorize('view-applications');
-
         $user = auth()->user();
+        $this->canView = $user->can('view-applications');
+
         // Initialize collections
         $this->criterias = collect();
         $this->activeCriterias = collect();
-        $this->inReviewCriterias = collect();
+        $this->revisionCriterias = collect();
         $this->approvedCriterias = collect();
         $this->rejectedCriterias = collect();
 
@@ -86,26 +76,18 @@ class MyCriterias extends Component
     {
         $user = auth()->user();
 
-        // Get application and category IDs for user
-        $clubIds = $this->getUserClubIds();
+        // Get category IDs where user's role is allowed (пункт 2)
         $categoryIds = $this->getUserCategoryIds();
 
-        if (empty($clubIds) || empty($categoryIds)) {
+        // Get status IDs where user's role is allowed (пункт 3)
+        $activeStatusIds = $this->getUserActiveStatusIds();
+
+        if (empty($categoryIds)) {
             $this->setEmptyCollections();
             return;
         }
 
-        // Get application IDs for user's clubs
-        $applicationIds = Application::whereIn('club_id', $clubIds)
-            ->pluck('id')
-            ->toArray();
-
-        if (empty($applicationIds)) {
-            $this->setEmptyCollections();
-            return;
-        }
-
-        // Base query
+        // Base query with access control (пункт 2)
         $baseQuery = ApplicationCriterion::with([
             'application.licence.season',
             'application.licence.league',
@@ -113,8 +95,7 @@ class MyCriterias extends Component
             'category_document',
             'application_status'
         ])
-        ->whereIn('application_id', $applicationIds)
-        ->whereIn('category_id', $categoryIds);
+        ->whereIn('category_id', $categoryIds); // Обязательный пункт 2
 
         // Apply search filter
         if ($this->search) {
@@ -142,22 +123,24 @@ class MyCriterias extends Component
         // Get all criteria
         $allCriterias = $baseQuery->get();
 
-        // Filter by status groups
-        $this->activeCriterias = $allCriterias->filter(function($criteria) {
-            return $criteria->application_status &&
-                   in_array($criteria->application_status->value, $this->activeStatuses);
+        // Вкладка "Активные" (пункт 4)
+        $this->activeCriterias = $allCriterias->filter(function($criteria) use ($activeStatusIds) {
+            return $criteria->status_id && in_array($criteria->status_id, $activeStatusIds);
         });
 
-        $this->inReviewCriterias = $allCriterias->filter(function($criteria) {
+        // Вкладка "На доработке" (пункт 5)
+        $this->revisionCriterias = $allCriterias->filter(function($criteria) {
             return $criteria->application_status &&
-                   in_array($criteria->application_status->value, $this->inReviewStatuses);
+                   in_array($criteria->application_status->value, $this->revisionStatuses);
         });
 
+        // Вкладка "Одобрено" (пункт 6)
         $this->approvedCriterias = $allCriterias->filter(function($criteria) {
             return $criteria->application_status &&
                    in_array($criteria->application_status->value, $this->approvedStatuses);
         });
 
+        // Вкладка "Отказано" (пункт 7)
         $this->rejectedCriterias = $allCriterias->filter(function($criteria) {
             return $criteria->application_status &&
                    in_array($criteria->application_status->value, $this->rejectedStatuses);
@@ -167,32 +150,34 @@ class MyCriterias extends Component
         $this->setActiveCriterias();
     }
 
-    private function getUserClubIds()
-    {
-        $user = auth()->user();
-        $clubIds = [];
-
-        // Get clubs directly associated with user
-        if ($user->club_id) {
-            $clubIds[] = $user->club_id;
-        }
-
-        // Get clubs through club teams
-        $clubTeams = ClubTeam::where('user_id', $user->id)->get();
-        foreach ($clubTeams as $team) {
-            if ($team->club_id && !in_array($team->club_id, $clubIds)) {
-                $clubIds[] = $team->club_id;
-            }
-        }
-
-        return array_unique($clubIds);
-    }
-
+    /**
+     * Get category IDs where user's role is in category_documents.roles (пункт 2)
+     */
     private function getUserCategoryIds()
     {
         $user = auth()->user();
 
+        if (!$user->role) {
+            return [];
+        }
+
         return CategoryDocument::whereJsonContains('roles', $user->role->value)
+            ->pluck('id')
+            ->toArray();
+    }
+
+    /**
+     * Get status IDs where user's role is in application_statuses.role_values (пункт 3 & 4)
+     */
+    private function getUserActiveStatusIds()
+    {
+        $user = auth()->user();
+
+        if (!$user->role) {
+            return [];
+        }
+
+        return ApplicationStatus::whereJsonContains('role_values', $user->role->value)
             ->pluck('id')
             ->toArray();
     }
@@ -200,7 +185,7 @@ class MyCriterias extends Component
     private function setEmptyCollections()
     {
         $this->activeCriterias = collect();
-        $this->inReviewCriterias = collect();
+        $this->revisionCriterias = collect();
         $this->approvedCriterias = collect();
         $this->rejectedCriterias = collect();
         $this->setActiveCriterias();
@@ -212,8 +197,8 @@ class MyCriterias extends Component
             case 'active':
                 $this->criterias = $this->activeCriterias;
                 break;
-            case 'in_review':
-                $this->criterias = $this->inReviewCriterias;
+            case 'revision':
+                $this->criterias = $this->revisionCriterias;
                 break;
             case 'approved':
                 $this->criterias = $this->approvedCriterias;
@@ -253,8 +238,8 @@ class MyCriterias extends Component
         switch ($this->activeTab) {
             case 'active':
                 return $this->activeCriterias->count();
-            case 'in_review':
-                return $this->inReviewCriterias->count();
+            case 'revision':
+                return $this->revisionCriterias->count();
             case 'approved':
                 return $this->approvedCriterias->count();
             case 'rejected':
@@ -295,7 +280,7 @@ class MyCriterias extends Component
     {
         $this->stats = [
             'active' => $this->activeCriterias->count(),
-            'in_review' => $this->inReviewCriterias->count(),
+            'revision' => $this->revisionCriterias->count(),
             'approved' => $this->approvedCriterias->count(),
             'rejected' => $this->rejectedCriterias->count()
         ];
@@ -317,16 +302,14 @@ class MyCriterias extends Component
 
     public function getCriteriaStatusColor($statusValue)
     {
-        if (in_array($statusValue, $this->activeStatuses)) {
-            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-        } elseif (in_array($statusValue, $this->inReviewStatuses)) {
-            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+        if (in_array($statusValue, $this->revisionStatuses)) {
+            return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
         } elseif (in_array($statusValue, $this->approvedStatuses)) {
             return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
         } elseif (in_array($statusValue, $this->rejectedStatuses)) {
             return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
         } else {
-            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
         }
     }
 
@@ -337,7 +320,7 @@ class MyCriterias extends Component
             'first-check-revision' => 'fas fa-exclamation-triangle',
             'industry-check-revision' => 'fas fa-exclamation-triangle',
             'control-check-revision' => 'fas fa-exclamation-triangle',
-            'partially-approved' => 'fas fa-check-half',
+            'partially-approved' => 'fas fa-check-circle-half',
             'awaiting-first-check' => 'fas fa-search',
             'awaiting-industry-check' => 'fas fa-industry',
             'awaiting-control-check' => 'fas fa-clipboard-check',
@@ -350,22 +333,13 @@ class MyCriterias extends Component
     }
 
     /**
-     * Get count of criteria checks for badge
+     * Get count of criteria for badge (пункт 3)
      */
     public static function getCriteriaCheckCount()
     {
-        $userId = auth()->id();
-
-        if (!$userId) {
-            return 0;
-        }
-
         $user = auth()->user();
 
-        // Get club IDs where user is a member
-        $clubIds = ClubTeam::where('user_id', $userId)->pluck('club_id')->toArray();
-
-        if (empty($clubIds)) {
+        if (!$user || !$user->role) {
             return 0;
         }
 
@@ -378,35 +352,24 @@ class MyCriterias extends Component
             return 0;
         }
 
-        // Get application IDs for user's clubs
-        $applicationIds = Application::whereIn('club_id', $clubIds)
+        // Get status IDs where user's role is allowed
+        $statusIds = ApplicationStatus::whereJsonContains('role_values', $user->role->value)
             ->pluck('id')
             ->toArray();
 
-        if (empty($applicationIds)) {
+        if (empty($statusIds)) {
             return 0;
         }
 
-        $activeStatuses = [
-            'awaiting-documents',
-            'first-check-revision',
-            'industry-check-revision',
-            'control-check-revision',
-            'partially-approved'
-        ];
-
-        // Count criteria that match all conditions
-        return ApplicationCriterion::whereIn('application_id', $applicationIds)
-            ->whereIn('category_id', $categoryIds)
-            ->whereHas('application_status', function ($query) use ($activeStatuses) {
-                $query->whereIn('value', $activeStatuses);
-            })
+        // Count criteria that match both conditions (пункт 3)
+        return ApplicationCriterion::whereIn('category_id', $categoryIds)
+            ->whereIn('status_id', $statusIds)
             ->count();
     }
 
     public function render()
     {
-        return view('livewire.club.my-criterias')
+        return view('livewire.department.department-criterias')
             ->layout(get_user_layout());
     }
 }

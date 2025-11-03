@@ -42,7 +42,6 @@ class MyApplications extends Component
         $this->authorize('view-applications');
 
         $user = Auth::user();
-        $this->canView = $user->can('view-applications');
 
         // Initialize collections
         $this->applications = collect();

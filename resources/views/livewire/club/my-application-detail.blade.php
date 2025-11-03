@@ -218,6 +218,63 @@
                                     @endif
                                 </div>
                             </div>
+
+                            <!-- Comments from Reviews -->
+                            @if($criterion->first_comment || $criterion->industry_comment || $criterion->final_comment || $criterion->last_comment)
+                                <div class="mt-4 space-y-3">
+                                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        <i class="fas fa-comments mr-2"></i>Комментарии от проверяющих
+                                    </h4>
+
+                                    @if($criterion->first_comment)
+                                        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-3 rounded">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-search text-blue-600 dark:text-blue-400 mt-1 mr-2"></i>
+                                                <div class="flex-1">
+                                                    <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">Первичная проверка:</p>
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $criterion->first_comment }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if($criterion->industry_comment)
+                                        <div class="bg-orange-50 dark:bg-orange-900/20 border-l-4 border-orange-500 p-3 rounded">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-industry text-orange-600 dark:text-orange-400 mt-1 mr-2"></i>
+                                                <div class="flex-1">
+                                                    <p class="text-xs font-semibold text-orange-800 dark:text-orange-300 mb-1">Отраслевая проверка:</p>
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $criterion->industry_comment }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if($criterion->final_comment)
+                                        <div class="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 p-3 rounded">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-clipboard-check text-purple-600 dark:text-purple-400 mt-1 mr-2"></i>
+                                                <div class="flex-1">
+                                                    <p class="text-xs font-semibold text-purple-800 dark:text-purple-300 mb-1">Контрольная проверка:</p>
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $criterion->final_comment }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if($criterion->last_comment)
+                                        <div class="bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500 p-3 rounded">
+                                            <div class="flex items-start">
+                                                <i class="fas fa-gavel text-indigo-600 dark:text-indigo-400 mt-1 mr-2"></i>
+                                                <div class="flex-1">
+                                                    <p class="text-xs font-semibold text-indigo-800 dark:text-indigo-300 mb-1">Финальное решение:</p>
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300">{{ $criterion->last_comment }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Documents by Requirements -->
@@ -234,7 +291,6 @@
                                         $requirement = collect($requirements)->first();
                                         $uploadedDocs = $this->getUploadedDocumentsForRequirement($documentId);
                                     @endphp
-
                                     @if($document && $requirement)
                                     <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                                         <!-- Document Header -->
@@ -275,7 +331,7 @@
                                                     @endif
                                                 </div>
                                             </div>
-                                            @if($this->canUploadForCriterion($criterion))
+                                            @if($this->canUploadDocument($criterion, $documentId))
                                                 <button
                                                     wire:click="openUploadModal({{ $criterion->id }}, {{ $requirement['id'] }})"
                                                     class="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
@@ -292,7 +348,7 @@
                                                     @php
                                                         $doc = is_array($appDoc) ? (object)$appDoc : $appDoc;
                                                     @endphp
-                                                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                                                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 transition-colors cursor-pointer" wire:click="openDocumentInfoModal({{ $doc->id }})">
                                                         <div class="flex items-center flex-1">
                                                             <i class="fas fa-file text-gray-400 mr-3"></i>
                                                             <div class="flex-1">
@@ -321,6 +377,25 @@
                                                                             <i class="fas fa-check mr-1"></i>Принято
                                                                         </span>
                                                                     @endif
+
+                                                                    @php
+                                                                        // Check if document needs reupload for partially-approved status
+                                                                        $statusValue = $criterion->application_status->value ?? null;
+                                                                        $needsReupload = false;
+                                                                        if ($statusValue === 'partially-approved') {
+                                                                            $reuploadDocIds = $criterion->can_reupload_after_endings_doc_ids ?? [];
+                                                                            if (is_string($reuploadDocIds)) {
+                                                                                $reuploadDocIds = json_decode($reuploadDocIds, true) ?? [];
+                                                                            }
+                                                                            $needsReupload = in_array($doc->document_id ?? null, $reuploadDocIds);
+                                                                        }
+                                                                    @endphp
+
+                                                                    @if($needsReupload)
+                                                                        <span class="ml-2 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-2 py-1 rounded text-xs">
+                                                                            <i class="fas fa-redo mr-1"></i>Требуется перезагрузка
+                                                                        </span>
+                                                                    @endif
                                                                 </div>
                                                                 @if($doc->info)
                                                                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $doc->info }}</p>
@@ -335,13 +410,13 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="flex items-center space-x-2 ml-4">
+                                                        <div class="flex items-center space-x-2 ml-4" onclick="event.stopPropagation()">
                                                             @if($doc->file_url)
                                                                 <a href="{{ Storage::url($doc->file_url) }}" target="_blank" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-2">
                                                                     <i class="fas fa-download"></i>
                                                                 </a>
                                                             @endif
-                                                            @if($this->canUploadForCriterion($criterion) && $doc->is_first_passed === null && $doc->is_industry_passed === null && $doc->is_final_passed === null)
+                                                            @if($this->canEditOrDeleteDocument($criterion, $doc))
                                                                 <button
                                                                     wire:click="openEditModal({{ $doc->id }})"
                                                                     class="text-yellow-600 hover:text-yellow-700 dark:text-yellow-400 dark:hover:text-yellow-300 p-2"
@@ -632,5 +707,226 @@
             </a>
         </div>
     </div>
+    @endif
+
+    <!-- Document Info Modal -->
+    @if($showDocumentInfoModal && $viewingDocument)
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg mr-4">
+                            <i class="fas fa-file-alt text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">
+                                Информация о документе
+                            </h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Подробная информация и статусы проверок
+                            </p>
+                        </div>
+                    </div>
+                    <button wire:click="closeDocumentInfoModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                    <!-- Document Details -->
+                    <div class="space-y-6">
+                        <!-- Basic Information -->
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                Основная информация
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Название документа</label>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->title }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Тип документа</label>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->document->title_ru ?? '-' }}</p>
+                                </div>
+                                @if($viewingDocument->info)
+                                    <div class="md:col-span-2">
+                                        <label class="text-xs text-gray-500 dark:text-gray-400">Дополнительная информация</label>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->info }}</p>
+                                    </div>
+                                @endif
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Загружено пользователем</label>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->user->name ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Дата загрузки</label>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->created_at->format('d.m.Y H:i') }}</p>
+                                </div>
+                                @if($viewingDocument->file_url)
+                                    <div class="md:col-span-2">
+                                        <label class="text-xs text-gray-500 dark:text-gray-400">Файл</label>
+                                        <div class="flex items-center mt-1">
+                                            <i class="fas fa-paperclip text-gray-400 mr-2"></i>
+                                            <a href="{{ Storage::url($viewingDocument->file_url) }}" target="_blank"
+                                               class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                                                Скачать документ
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Application Information -->
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                <i class="fas fa-building text-green-500 mr-2"></i>
+                                Информация о заявке
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Клуб</label>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->application->club->short_name_ru ?? '-' }}</p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Лицензия</label>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->application->licence->title_ru ?? '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review Statuses -->
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                <i class="fas fa-clipboard-check text-purple-500 mr-2"></i>
+                                Статусы проверок
+                            </h4>
+                            <div class="space-y-4">
+                                <!-- First Check -->
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mr-3">
+                                        @if($viewingDocument->is_first_passed === null)
+                                            <div class="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                                                <i class="fas fa-clock text-blue-600 dark:text-blue-400"></i>
+                                            </div>
+                                        @elseif($viewingDocument->is_first_passed === true)
+                                            <div class="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                                                <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                            </div>
+                                        @else
+                                            <div class="bg-red-100 dark:bg-red-900/50 p-2 rounded-full">
+                                                <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-1">
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Первичная проверка</span>
+                                            @if($viewingDocument->is_first_passed === null)
+                                                <span class="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-1 rounded text-xs">Ожидает</span>
+                                            @elseif($viewingDocument->is_first_passed === true)
+                                                <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-2 py-1 rounded text-xs">Одобрено</span>
+                                            @else
+                                                <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 px-2 py-1 rounded text-xs">Отклонено</span>
+                                            @endif
+                                        </div>
+                                        @if($viewingDocument->first_comment)
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-2 rounded mt-1">
+                                                {{ $viewingDocument->first_comment }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Industry Check -->
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mr-3">
+                                        @if($viewingDocument->is_industry_passed === null)
+                                            <div class="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                                                <i class="fas fa-clock text-blue-600 dark:text-blue-400"></i>
+                                            </div>
+                                        @elseif($viewingDocument->is_industry_passed === true)
+                                            <div class="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                                                <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                            </div>
+                                        @else
+                                            <div class="bg-red-100 dark:bg-red-900/50 p-2 rounded-full">
+                                                <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-1">
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Отраслевая проверка</span>
+                                            @if($viewingDocument->is_industry_passed === null)
+                                                <span class="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-1 rounded text-xs">Ожидает</span>
+                                            @elseif($viewingDocument->is_industry_passed === true)
+                                                <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-2 py-1 rounded text-xs">Одобрено</span>
+                                            @else
+                                                <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 px-2 py-1 rounded text-xs">Отклонено</span>
+                                            @endif
+                                        </div>
+                                        @if($viewingDocument->industry_comment)
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-2 rounded mt-1">
+                                                {{ $viewingDocument->industry_comment }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Final Check -->
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mr-3">
+                                        @if($viewingDocument->is_final_passed === null)
+                                            <div class="bg-blue-100 dark:bg-blue-900/50 p-2 rounded-full">
+                                                <i class="fas fa-clock text-blue-600 dark:text-blue-400"></i>
+                                            </div>
+                                        @elseif($viewingDocument->is_final_passed === true)
+                                            <div class="bg-green-100 dark:bg-green-900/50 p-2 rounded-full">
+                                                <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                                            </div>
+                                        @else
+                                            <div class="bg-red-100 dark:bg-red-900/50 p-2 rounded-full">
+                                                <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-1">
+                                            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Контрольная проверка</span>
+                                            @if($viewingDocument->is_final_passed === null)
+                                                <span class="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-1 rounded text-xs">Ожидает</span>
+                                            @elseif($viewingDocument->is_final_passed === true)
+                                                <span class="ml-2 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 px-2 py-1 rounded text-xs">Одобрено</span>
+                                            @else
+                                                <span class="ml-2 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 px-2 py-1 rounded text-xs">Отклонено</span>
+                                            @endif
+                                        </div>
+                                        @if($viewingDocument->final_comment)
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-2 rounded mt-1">
+                                                {{ $viewingDocument->final_comment }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button wire:click="closeDocumentInfoModal"
+                            class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
     @endif
 </div>

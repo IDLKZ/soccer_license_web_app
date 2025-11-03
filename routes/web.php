@@ -23,6 +23,7 @@ use App\Livewire\Club\MyApplicationDetail;
 use App\Livewire\Club\MyCriterias;
 use App\Livewire\Department\DepartmentApplications;
 use App\Livewire\Department\DepartmentApplicationDetail;
+use App\Livewire\Department\DepartmentCriterias;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -64,6 +65,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Department routes
     Route::get('/department-applications', DepartmentApplications::class)->name('department.applications');
     Route::get('/department-application-detail/{application_id}', DepartmentApplicationDetail::class)->name('department-application-detail');
+    Route::get('/department-criterias', DepartmentCriterias::class)->name('department.criterias');
 
     // Logout
     Route::post('/logout', function () {

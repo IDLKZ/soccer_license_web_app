@@ -29,6 +29,19 @@
                     <span class="ml-3 font-medium">Заявки</span>
                 </a>
 
+                <a href="{{ route('department.criterias') }}" class="flex items-center justify-between px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->is('department-criterias*') ? 'bg-indigo-800 text-white' : '' }}">
+                    <div class="flex items-center">
+                        <i class="fas fa-tasks w-5 text-center text-blue-400 group-hover:text-blue-300 {{ request()->is('department-criterias*') ? 'text-blue-300' : '' }}"></i>
+                        <span class="ml-3 font-medium">Мои критерии</span>
+                    </div>
+                    @php
+                        $criteriaCount = \App\Livewire\Department\DepartmentCriterias::getCriteriaCheckCount();
+                    @endphp
+                    @if($criteriaCount > 0)
+                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ $criteriaCount }}</span>
+                    @endif
+                </a>
+
             </div>
         </nav>
 

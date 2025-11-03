@@ -23,7 +23,7 @@ class ApplicationCriterionObserver
     public function created(ApplicationCriterion $applicationCriterion): void
     {
         // Check if the new criterion has a status that should update the application
-        if ($applicationCriterion->application_status_id) {
+        if ($applicationCriterion->status_id) {
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
         }
@@ -34,8 +34,8 @@ class ApplicationCriterionObserver
      */
     public function updated(ApplicationCriterion $applicationCriterion): void
     {
-        // Check if application_status_id was changed
-        if ($applicationCriterion->isDirty('application_status_id')) {
+        // Check if status_id was changed
+        if ($applicationCriterion->isDirty('status_id')) {
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
         }
@@ -48,7 +48,14 @@ class ApplicationCriterionObserver
     {
         $application = $applicationCriterion->application;
 
-        if (!$application || !$applicationCriterion->application_status) {
+        if (!$application) {
+            return;
+        }
+
+        // Reload the application_status relationship to get the NEW status
+        $applicationCriterion->load('application_status');
+
+        if (!$applicationCriterion->application_status) {
             return;
         }
 
@@ -67,13 +74,15 @@ class ApplicationCriterionObserver
         }
 
         // Get the status category for the current status
-        $status = ApplicationStatus::where('value', $statusValue)->first();
+        $status = ApplicationStatus::with('application_status_category')
+            ->where('value', $statusValue)
+            ->first();
 
-        if (!$status || !$status->category) {
+        if (!$status || !$status->application_status_category) {
             return;
         }
 
-        $newCategoryId = $status->category->id;
+        $newCategoryId = $status->application_status_category->id;
         $currentCategoryId = $application->category_id;
 
         // Only update if moving forward (category_id should increase)
@@ -101,7 +110,7 @@ class ApplicationCriterionObserver
             ApplicationStep::create([
                 'application_id' => $applicationCriterion->application_id,
                 'application_criteria_id' => $applicationCriterion->id,
-                'status_id' => $applicationCriterion->application_status_id,
+                'status_id' => $applicationCriterion->status_id,
                 'responsible_id' => $this->getResponsibleUser($applicationCriterion),
                 'responsible_by' => $this->getResponsibleBy($applicationCriterion),
                 'is_passed' => $this->determineStepStatus($applicationCriterion),
@@ -247,7 +256,7 @@ class ApplicationCriterionObserver
         };
     }
 
-    
+
     /**
      * Handle the ApplicationCriterion "deleted" event.
      */

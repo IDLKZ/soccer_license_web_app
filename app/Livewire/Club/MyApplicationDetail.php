@@ -48,6 +48,10 @@ class MyApplicationDetail extends Component
     public $selectedRequirement = null;
     public $editingDocument = null;
 
+    // Document info modal
+    public $showDocumentInfoModal = false;
+    public $viewingDocument = null;
+
     // Upload form data
     #[Validate('required|file|max:102400')] // Max 100MB as fallback
     public $uploadFile = null;
@@ -269,12 +273,6 @@ class MyApplicationDetail extends Component
             return;
         }
 
-        // Check if user can upload for this criterion
-        if (!$this->canUploadForCriterion($criterion)) {
-            toastr()->error('Загрузка документов для этого критерия недоступна.');
-            return;
-        }
-
         // Find requirement by ID
         $requirement = LicenceRequirement::with(['document'])->find($requirementId);
 
@@ -282,6 +280,13 @@ class MyApplicationDetail extends Component
             toastr()->error('Требование не найдено.');
             return;
         }
+
+        // Check if user can upload for this criterion and specific document
+        if (!$this->canUploadForCriterion($criterion, $requirement->document_id)) {
+            toastr()->error('Загрузка документов для этого критерия недоступна.');
+            return;
+        }
+
         $this->resetUploadForm();
         // Store as arrays for Livewire compatibility
         $this->selectedCriterion = $criterion->toArray();
@@ -320,6 +325,29 @@ class MyApplicationDetail extends Component
         $this->showEditModal = false;
         $this->editingDocument = null;
         $this->resetUploadForm();
+    }
+
+    public function openDocumentInfoModal($documentId)
+    {
+        $this->viewingDocument = ApplicationDocument::with([
+            'document',
+            'user',
+            'application.club',
+            'application.licence'
+        ])->find($documentId);
+
+        if (!$this->viewingDocument) {
+            toastr()->error('Документ не найден.');
+            return;
+        }
+
+        $this->showDocumentInfoModal = true;
+    }
+
+    public function closeDocumentInfoModal()
+    {
+        $this->showDocumentInfoModal = false;
+        $this->viewingDocument = null;
     }
 
     private function resetUploadForm()
@@ -680,7 +708,7 @@ class MyApplicationDetail extends Component
 
     // Helper methods for authorization and business logic
 
-    private function canUploadForCriterion($criterion)
+    private function canUploadForCriterion($criterion, $documentId = null)
     {
         if (!$criterion || !$criterion->application_status) {
             return false;
@@ -710,7 +738,7 @@ class MyApplicationDetail extends Component
         // Check criterion status
         $statusValue = $criterion->application_status->value ?? null;
 
-        // Can upload in these statuses
+        // Standard statuses where upload is allowed
         $allowedStatuses = [
             ApplicationStatusConstants::AWAITING_DOCUMENTS_VALUE,
             ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE,
@@ -718,7 +746,30 @@ class MyApplicationDetail extends Component
             ApplicationStatusConstants::CONTROL_CHECK_REVISION_VALUE,
         ];
 
-        return in_array($statusValue, $allowedStatuses);
+        // If status is in standard allowed statuses, return true
+        if (in_array($statusValue, $allowedStatuses)) {
+            return true;
+        }
+
+        // If status is partially-approved, check if specific document can be reuploaded
+        if ($statusValue === ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE) {
+            // If no documentId provided, cannot upload (need to check specific document)
+            if ($documentId === null) {
+                return false;
+            }
+
+            // Check if document is in the reupload list
+            $reuploadDocIds = $criterion->can_reupload_after_endings_doc_ids ?? [];
+
+            // Decode if it's a string
+            if (is_string($reuploadDocIds)) {
+                $reuploadDocIds = json_decode($reuploadDocIds, true) ?? [];
+            }
+
+            return in_array($documentId, $reuploadDocIds);
+        }
+
+        return false;
     }
 
     private function canEditDocument($document, $criterion = null)
@@ -835,6 +886,43 @@ class MyApplicationDetail extends Component
         }
 
         return $this->uploadedDocumentsByCategory[$documentId];
+    }
+
+    public function canUploadDocument($criterion, $documentId)
+    {
+        return $this->canUploadForCriterion($criterion, $documentId);
+    }
+
+    public function canEditOrDeleteDocument($criterion, $doc)
+    {
+        // Convert to object if array
+        $document = is_array($doc) ? (object)$doc : $doc;
+
+        // Check if criterion allows upload for this document
+        if (!$this->canUploadForCriterion($criterion, $document->document_id ?? null)) {
+            return false;
+        }
+
+        // Get criterion status
+        $statusValue = $criterion->application_status->value ?? null;
+
+        // For partially-approved status, check if document is in reupload list
+        if ($statusValue === ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE) {
+            $reuploadDocIds = $criterion->can_reupload_after_endings_doc_ids ?? [];
+
+            // Decode if it's a string
+            if (is_string($reuploadDocIds)) {
+                $reuploadDocIds = json_decode($reuploadDocIds, true) ?? [];
+            }
+
+            // Can edit/delete if document is in reupload list
+            return in_array($document->document_id ?? null, $reuploadDocIds);
+        }
+
+        // For other statuses, can only edit/delete if document hasn't been reviewed yet
+        return $document->is_first_passed === null &&
+               $document->is_industry_passed === null &&
+               $document->is_final_passed === null;
     }
 
     public function render()

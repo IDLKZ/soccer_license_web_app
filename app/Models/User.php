@@ -9,8 +9,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Auth\Authenticatable;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Foundation\Auth\User as AuthenticatableUser;
 use Illuminate\Notifications\Notifiable;
 use App\Constants\RoleConstants;
 
@@ -45,9 +44,9 @@ use App\Constants\RoleConstants;
  *
  * @package App\Models
  */
-class User extends Model implements AuthenticatableContract
+class User extends AuthenticatableUser
 {
-    use Authenticatable, Notifiable;
+    use Notifiable;
 
     protected $table = 'users';
 

@@ -64,6 +64,10 @@ class DepartmentApplicationDetail extends Component
     public $applicationFinalDecision = ''; // approved, partially-approved, revoked
     public $applicationReuploadDocIds = []; // For partially-approved application
 
+    // Document info modal
+    public $showDocumentInfoModal = false;
+    public $viewingDocument = null;
+
     public function mount($application_id)
     {
         $this->applicationId = $application_id;
@@ -1008,6 +1012,29 @@ class DepartmentApplicationDetail extends Component
         }
 
         return $this->uploadedDocumentsByCategory[$documentId];
+    }
+
+    public function openDocumentInfoModal($documentId)
+    {
+        $this->viewingDocument = ApplicationDocument::with([
+            'document',
+            'user',
+            'application.club',
+            'application.licence'
+        ])->find($documentId);
+
+        if (!$this->viewingDocument) {
+            toastr()->error('Документ не найден.');
+            return;
+        }
+
+        $this->showDocumentInfoModal = true;
+    }
+
+    public function closeDocumentInfoModal()
+    {
+        $this->showDocumentInfoModal = false;
+        $this->viewingDocument = null;
     }
 
     public function render()
