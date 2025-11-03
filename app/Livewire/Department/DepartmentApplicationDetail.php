@@ -214,7 +214,12 @@ class DepartmentApplicationDetail extends Component
         $status = $criterion->application_status;
         $roleValues = $status->role_values ?? [];
 
-        return $userRole && in_array($userRole, $roleValues);
+        // Ensure role_values is an array
+        if (is_string($roleValues)) {
+            $roleValues = json_decode($roleValues, true) ?? [];
+        }
+
+        return $userRole && is_array($roleValues) && in_array($userRole, $roleValues);
     }
 
     // Set temporary review decision for a document
@@ -1081,7 +1086,7 @@ class DepartmentApplicationDetail extends Component
             $categoryRoleValues = json_decode($categoryRoleValues, true) ?? [];
         }
 
-        return in_array($user->role->value, $categoryRoleValues);
+        return is_array($categoryRoleValues) && in_array($user->role->value, $categoryRoleValues);
     }
 
     public function openRejectApplicationModal()
