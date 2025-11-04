@@ -61,14 +61,14 @@ class LeagueManagement extends Component
 
     public function mount()
     {
-        // Authorization - temporarily disabled for testing
-        // $this->authorize('view-leagues');
+        // Authorization
+        $this->authorize('view-leagues');
 
-        // Set permissions - temporary for testing
+        // Set permissions
         $user = auth()->user();
-        $this->canCreateLeagues = true; // $user ? $user->can('create-leagues') : false;
-        $this->canEditLeagues = true; // $user ? $user->can('manage-leagues') : false;
-        $this->canDeleteLeagues = true; // $user ? $user->can('delete-leagues') : false;
+        $this->canCreateLeagues = $user ? $user->can('create-leagues') : false;
+        $this->canEditLeagues = $user ? $user->can('manage-leagues') : false;
+        $this->canDeleteLeagues = $user ? $user->can('delete-leagues') : false;
     }
 
     public function updatedSearch()
@@ -121,7 +121,7 @@ class LeagueManagement extends Component
     // League CRUD Methods
     public function createLeague()
     {
-        // $this->authorize('create-leagues'); // Temporary disabled for testing
+        $this->authorize('create-leagues');
 
         $this->validate([
             'titleRu' => 'required|string|max:255',
@@ -149,7 +149,7 @@ class LeagueManagement extends Component
     public function editLeague($leagueId)
     {
         $league = League::findOrFail($leagueId);
-        // $this->authorize('manage-leagues'); // Temporary disabled for testing
+        $this->authorize('manage-leagues');
 
         $this->editingLeagueId = $league->id;
         $this->titleRu = $league->title_ru;
@@ -166,7 +166,7 @@ class LeagueManagement extends Component
 
     public function updateLeague()
     {
-        // $this->authorize('manage-leagues'); // Temporary disabled for testing
+        $this->authorize('manage-leagues');
 
         $league = League::findOrFail($this->editingLeagueId);
 
@@ -197,7 +197,7 @@ class LeagueManagement extends Component
 
     public function deleteLeague($leagueId)
     {
-        // $this->authorize('delete-leagues'); // Temporary disabled for testing
+        $this->authorize('delete-leagues');
 
         $league = League::findOrFail($leagueId);
 
@@ -215,7 +215,7 @@ class LeagueManagement extends Component
 
     public function toggleLeagueStatus($leagueId)
     {
-        // $this->authorize('manage-leagues'); // Temporary disabled for testing
+        $this->authorize('manage-leagues');
 
         $league = League::findOrFail($leagueId);
         $league->is_active = !$league->is_active;

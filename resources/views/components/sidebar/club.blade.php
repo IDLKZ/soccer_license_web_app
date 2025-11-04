@@ -4,14 +4,14 @@
         <div class="flex items-center justify-center h-20 border-b border-green-700 dark:border-green-800">
             <div class="flex items-center">
                 <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-futbol text-white text-xl"></i>
+                    <img src="{{ asset('logo_kff.png') }}" alt="KFF Logo" class="w-8 h-8 object-contain">
                 </div>
                 <span class="ml-3 text-xl font-bold text-white">Клуб</span>
             </div>
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto py-6 px-3">
+        <nav class="flex-1 overflow-y-auto py-6 px-3 scrollbar-thin scrollbar-thumb-green-600 dark:scrollbar-thumb-green-700 scrollbar-track-green-800 dark:scrollbar-track-green-900 hover:scrollbar-thumb-green-500 dark:hover:scrollbar-thumb-green-600">
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
@@ -26,7 +26,7 @@
 
                 <a href="{{ route('club.applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-applications*') ? 'bg-green-800 text-white' : '' }}">
                     <i class="fas fa-file-alt w-5 text-center text-yellow-400 group-hover:text-yellow-300 {{ request()->is('my-applications*') ? 'text-yellow-300' : '' }}"></i>
-                    <span class="ml-3 font-medium">Мои заявки</span>
+                    <span class="ml-3 font-medium">Мои заявки на лицензирование</span>
                 </a>
 
                 <a href="{{ route('club.criterias') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-criterias*') ? 'bg-green-800 text-white' : '' }}">
@@ -44,7 +44,7 @@
 
                 <a href="{{ route('club.licences') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('my-licences*') || request()->is('licence/*') ? 'bg-green-800 text-white' : '' }}">
                     <i class="fas fa-certificate w-5 text-center text-purple-400 group-hover:text-purple-300 {{ request()->is('my-licences*') || request()->is('licence/*') ? 'text-purple-300' : '' }}"></i>
-                    <span class="ml-3 font-medium">Мои лицензии</span>
+                    <span class="ml-3 font-medium">Подать заявку на лицензию</span>
                     @php
                         $activeLicencesCount = \App\Livewire\Club\MyLicences::getActiveLicencesCount();
                     @endphp
@@ -54,8 +54,8 @@
                     </span>
                     @endif
                 </a>
-                <a href="/club-management" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->is('club-management') ? 'bg-green-800 text-white' : '' }}">
-                    <i class="fas fa-building w-5 text-center text-indigo-400 group-hover:text-indigo-300 {{ request()->is('club-management') ? 'text-indigo-300' : '' }}"></i>
+                <a href="{{ route('club.club-management') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('club.club-management') ? 'bg-green-800 text-white' : '' }}">
+                    <i class="fas fa-building w-5 text-center text-indigo-400 group-hover:text-indigo-300 {{ request()->routeIs('club.club-management') ? 'text-indigo-300' : '' }}"></i>
                     <span class="ml-3 font-medium">Мои клубы</span>
                 </a>
             </div>

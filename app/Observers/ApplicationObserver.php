@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Constants\ApplicationStatusCategoryConstants;
 use App\Models\Application;
+use App\Models\ApplicationSolution;
 use App\Models\ApplicationStatusCategory;
 use App\Models\LicenseCertificate;
 use Illuminate\Support\Facades\Log;
@@ -59,7 +60,10 @@ class ApplicationObserver
 
                 return;
             }
-
+            //Create ApplicationSolution
+            ApplicationSolution::create([
+                'application_id' => $application->id,
+            ]);
             // Create LicenseCertificate
             LicenseCertificate::create([
                 'application_id' => $application->id,

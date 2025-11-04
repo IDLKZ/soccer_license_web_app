@@ -188,7 +188,7 @@
 
             <!-- Category Tabs -->
             <div class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-                <div class="flex overflow-x-auto px-6 py-2 space-x-2">
+                <div class="flex overflow-x-auto px-6 py-2 space-x-2 scrollbar-thin scrollbar-thumb-purple-600 dark:scrollbar-thumb-purple-700 scrollbar-track-purple-100 dark:scrollbar-track-purple-900 hover:scrollbar-thumb-purple-500 dark:hover:scrollbar-thumb-purple-600">
                     @foreach($categories as $category)
                     <button wire:click="switchCategory({{ $category->id }})"
                             class="flex-shrink-0 px-6 py-3 rounded-t-lg font-bold transition-all duration-300 {{ $activeCategory == $category->id ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 border-t-4 border-purple-500' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
@@ -247,9 +247,9 @@
                                 </p>
 
                                 @if($requirement->document->description_ru)
-                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
+                                <div class="text-sm mb-3 leading-relaxed prose-content">
                                     {!! $requirement->document->description_ru !!}
-                                </p>
+                                </div>
                                 @endif
 
                                 <!-- File Requirements -->
@@ -306,7 +306,7 @@
 
     <!-- Application Submission Modal -->
     @if($showApplicationModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 z-50 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen px-4 sm:p-0">
             <!-- Background overlay -->
             <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80" wire:click="closeApplicationModal"></div>

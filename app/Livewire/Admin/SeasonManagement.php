@@ -55,14 +55,14 @@ class SeasonManagement extends Component
 
     public function mount()
     {
-        // Authorization - temporarily disabled for testing
-        // $this->authorize('view-seasons');
+        // Authorization
+        $this->authorize('view-seasons');
 
-        // Set permissions - temporary for testing
+        // Set permissions
         $user = auth()->user();
-        $this->canCreateSeasons = true; // $user ? $user->can('create-seasons') : false;
-        $this->canEditSeasons = true; // $user ? $user->can('manage-seasons') : false;
-        $this->canDeleteSeasons = true; // $user ? $user->can('delete-seasons') : false;
+        $this->canCreateSeasons = $user ? $user->can('create-seasons') : false;
+        $this->canEditSeasons = $user ? $user->can('manage-seasons') : false;
+        $this->canDeleteSeasons = $user ? $user->can('delete-seasons') : false;
     }
 
     public function updatedSearch()
@@ -112,7 +112,7 @@ class SeasonManagement extends Component
     // Season CRUD Methods
     public function createSeason()
     {
-        // $this->authorize('create-seasons'); // Temporary disabled for testing
+        $this->authorize('create-seasons');
 
         $this->validate([
             'titleRu' => 'required|string|max:255',
@@ -137,7 +137,7 @@ class SeasonManagement extends Component
     public function editSeason($seasonId)
     {
         $season = Season::findOrFail($seasonId);
-        // $this->authorize('manage-seasons'); // Temporary disabled for testing
+        $this->authorize('manage-seasons');
 
         $this->editingSeasonId = $season->id;
         $this->titleRu = $season->title_ru;
@@ -152,7 +152,7 @@ class SeasonManagement extends Component
 
     public function updateSeason()
     {
-        // $this->authorize('manage-seasons'); // Temporary disabled for testing
+        $this->authorize('manage-seasons');
 
         $season = Season::findOrFail($this->editingSeasonId);
 
@@ -180,7 +180,7 @@ class SeasonManagement extends Component
 
     public function deleteSeason($seasonId)
     {
-        // $this->authorize('delete-seasons'); // Temporary disabled for testing
+        $this->authorize('delete-seasons');
 
         $season = Season::findOrFail($seasonId);
 
@@ -197,7 +197,7 @@ class SeasonManagement extends Component
 
     public function toggleSeasonStatus($seasonId)
     {
-        // $this->authorize('manage-seasons'); // Temporary disabled for testing
+        $this->authorize('manage-seasons');
 
         $season = Season::findOrFail($seasonId);
         $season->is_active = !$season->is_active;

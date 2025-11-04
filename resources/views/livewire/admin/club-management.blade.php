@@ -196,8 +196,11 @@
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center">
-                                        @if($club->image_url)
-                                            <img class="h-10 w-10 rounded-full object-cover" src="{{ $club->image_url }}" alt="{{ $club->short_name_ru }}">
+                                        @php
+                                            $photoUrl = $this->getClubPhotoUrl($club);
+                                        @endphp
+                                        @if($photoUrl)
+                                            <img class="h-10 w-10 rounded-full object-cover" src="{{ $photoUrl }}" alt="{{ $club->short_name_ru }}">
                                         @else
                                             <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                                                 <span class="text-white font-semibold text-sm">
@@ -401,6 +404,38 @@
                 </div>
 
                 <form wire:submit="createClub" class="p-6 space-y-6">
+                    <!-- Photo Upload -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">Фото клуба</h4>
+
+                        <div class="flex justify-center">
+                            <div class="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden">
+                                @if($photo)
+                                    <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="w-full h-full object-cover">
+                                @else
+                                    <div class="text-center">
+                                        <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Логотип</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Логотип клуба (опционально)
+                            </label>
+                            <input type="file"
+                                   wire:model="photo"
+                                   accept="image/*"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/20 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40">
+                            @error('photo') <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span> @enderror
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Максимальный размер: 2MB. Форматы: JPG, PNG, GIF</p>
+                        </div>
+                    </div>
+
                     <!-- Basic Information -->
                     <div class="space-y-4">
                         <h4 class="text-sm font-medium text-gray-900 dark:text-white">Основная информация</h4>
@@ -707,6 +742,45 @@
                 </div>
 
                 <form wire:submit="updateClub" class="p-6 space-y-6">
+                    @php
+                        $editingClub = \App\Models\Club::find($editingClubId);
+                        $currentPhotoUrl = $editingClub ? $this->getClubPhotoUrl($editingClub) : null;
+                    @endphp
+
+                    <!-- Photo Upload -->
+                    <div class="space-y-4">
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">Фото клуба</h4>
+
+                        <div class="flex justify-center">
+                            <div class="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden">
+                                @if($photo)
+                                    <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="w-full h-full object-cover">
+                                @elseif($currentPhotoUrl)
+                                    <img src="{{ $currentPhotoUrl }}" alt="Current photo" class="w-full h-full object-cover">
+                                @else
+                                    <div class="text-center">
+                                        <svg class="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Логотип</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Логотип клуба (опционально)
+                            </label>
+                            <input type="file"
+                                   wire:model="photo"
+                                   accept="image/*"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/20 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40">
+                            @error('photo') <span class="text-red-500 dark:text-red-400 text-sm">{{ $message }}</span> @enderror
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Максимальный размер: 2MB. Форматы: JPG, PNG, GIF</p>
+                        </div>
+                    </div>
+
                     <!-- Basic Information -->
                     <div class="space-y-4">
                         <h4 class="text-sm font-medium text-gray-900 dark:text-white">Основная информация</h4>

@@ -116,7 +116,7 @@
     @if($criterias->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($criterias as $criteria)
-                <a href="{{ route('department-application-detail', $criteria->application_id) }}"
+                <a href="{{ route('department.application.detail', $criteria->application_id) }}"
                    class="block relative bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900/30
                           rounded-xl shadow-lg border border-slate-200 dark:border-blue-800/50
                           hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-300 overflow-hidden group">
@@ -133,11 +133,11 @@
                                     </p>
                                 @endif
                             </div>
-                            <div class="{{ $this->getCriteriaStatusColor($criteria->application_status->value) }}
-                                        px-2 py-1 rounded-full text-xs font-medium ml-2 flex-shrink-0">
-                                <i class="{{ $this->getCriteriaStatusIcon($criteria->application_status->value) }} mr-1"></i>
-                                {{ $criteria->application_status->title_ru }}
-                            </div>
+                        </div>
+                        <div class="{{ $this->getCriteriaStatusColor($criteria->application_status->value) }}
+                                        px-2 py-2 rounded-full text-xs font-medium  my-3 flex-shrink-0">
+                            <i class="{{ $this->getCriteriaStatusIcon($criteria->application_status->value) }} mr-1"></i>
+                            {{ $criteria->application_status->title_ru }}
                         </div>
 
                         <!-- Application Info -->
@@ -178,29 +178,6 @@
                         <!-- Readiness Indicator -->
                         <div class="mt-4 pt-4 border-t border-slate-200 dark:border-blue-800/40">
                             <div class="space-y-2">
-                                <!-- Primary Readiness -->
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-500 dark:text-gray-400">
-                                        Готовность:
-                                    </span>
-                                    <div class="flex items-center">
-                                        @if($criteria->is_ready && $criteria->is_final_passed == null)
-                                            <span class="text-sm font-medium text-green-600 dark:text-green-400">
-                                                Готов к проверке
-                                            </span>
-                                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
-                                        @elseif(!$criteria->is_ready && $criteria->is_final_passed == 1)
-                                            <span class="text-sm font-medium text-green-600 dark:text-green-400">Готово</span>
-                                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
-                                        @else
-                                            <span class="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                                                Требует доработки
-                                            </span>
-                                            <i class="fas fa-exclamation-circle text-yellow-500 ml-2"></i>
-                                        @endif
-                                    </div>
-                                </div>
-
                                 <!-- First Check Status -->
                                 <div class="flex items-center justify-between">
                                     <span class="text-xs text-gray-400 dark:text-gray-500">

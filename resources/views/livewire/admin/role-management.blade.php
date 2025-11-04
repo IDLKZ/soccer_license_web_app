@@ -439,31 +439,15 @@
                                 </div>
                             </div>
 
-                            <!-- Value and Options -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Значение (уникальное)*
-                                    </label>
-                                    <input type="text"
-                                           wire:model="roleValue"
-                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
-                                    @error('roleValue') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Права доступа</label>
-                                    <div class="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md">
-                                        @foreach($availablePermissions as $permission)
-                                        <label class="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
-                                            <input type="checkbox"
-                                                   wire:model="rolePermissions"
-                                                   value="{{ $permission->id }}"
-                                                   class="mr-2 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $permission->title_ru }}</span>
-                                        </label>
-                                        @endforeach
-                                    </div>
-                                </div>
+                            <!-- Value -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Значение (уникальное)*
+                                </label>
+                                <input type="text"
+                                       wire:model="roleValue"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                                @error('roleValue') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Checkboxes -->
@@ -492,6 +476,36 @@
                                         <span class="text-sm text-gray-700 dark:text-gray-300">Административная</span>
                                     </label>
                                 </div>
+                            </div>
+
+                            <!-- Permissions -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                    <i class="fas fa-key mr-2 text-blue-500 dark:text-blue-400"></i>
+                                    Права доступа
+                                </label>
+                                <div class="max-h-64 overflow-y-auto border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                        @foreach($availablePermissions as $permission)
+                                        <label class="flex items-start p-3 hover:bg-white dark:hover:bg-gray-600 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-blue-300 dark:hover:border-blue-600">
+                                            <input type="checkbox"
+                                                   wire:model="rolePermissions"
+                                                   value="{{ $permission->id }}"
+                                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 rounded">
+                                            <div class="flex-1">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $permission->title_ru }}</span>
+                                                @if($permission->description_ru)
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ Str::limit($permission->description_ru, 50) }}</p>
+                                                @endif
+                                            </div>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Выбрано: <span class="font-semibold" x-text="$wire.rolePermissions.length">0</span> прав
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -593,31 +607,15 @@
                                 </div>
                             </div>
 
-                            <!-- Value and Options -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Значение (уникальное)*
-                                    </label>
-                                    <input type="text"
-                                           wire:model="roleValue"
-                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
-                                    @error('roleValue') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Права доступа</label>
-                                    <div class="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-md">
-                                        @foreach($availablePermissions as $permission)
-                                        <label class="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
-                                            <input type="checkbox"
-                                                   wire:model="rolePermissions"
-                                                   value="{{ $permission->id }}"
-                                                   class="mr-2 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $permission->title_ru }}</span>
-                                        </label>
-                                        @endforeach
-                                    </div>
-                                </div>
+                            <!-- Value -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Значение (уникальное)*
+                                </label>
+                                <input type="text"
+                                       wire:model="roleValue"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                                @error('roleValue') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                             </div>
 
                             <!-- Checkboxes -->
@@ -646,6 +644,36 @@
                                         <span class="text-sm text-gray-700 dark:text-gray-300">Административная</span>
                                     </label>
                                 </div>
+                            </div>
+
+                            <!-- Permissions -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                    <i class="fas fa-key mr-2 text-blue-500 dark:text-blue-400"></i>
+                                    Права доступа
+                                </label>
+                                <div class="max-h-64 overflow-y-auto border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                        @foreach($availablePermissions as $permission)
+                                        <label class="flex items-start p-3 hover:bg-white dark:hover:bg-gray-600 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-blue-300 dark:hover:border-blue-600">
+                                            <input type="checkbox"
+                                                   wire:model="rolePermissions"
+                                                   value="{{ $permission->id }}"
+                                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400 rounded">
+                                            <div class="flex-1">
+                                                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $permission->title_ru }}</span>
+                                                @if($permission->description_ru)
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ Str::limit($permission->description_ru, 50) }}</p>
+                                                @endif
+                                            </div>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Выбрано: <span class="font-semibold" x-text="$wire.rolePermissions.length">0</span> прав
+                                </p>
                             </div>
                         </div>
                     </div>

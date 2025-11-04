@@ -11,6 +11,8 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 #[Title('Управление требованиями к лицензиям')]
 class LicenceRequirementManagement extends Component
@@ -63,10 +65,57 @@ class LicenceRequirementManagement extends Component
     #[Locked]
     public $canDelete = false;
 
+    /**
+     * Override validate method to show validation errors via toastr
+     */
+    public function validate($rules = null, $messages = [], $attributes = [])
+    {
+        try {
+            return parent::validate($rules, $messages, $attributes);
+        } catch (ValidationException $e) {
+            $this->showValidationErrorsViaToastr($e);
+            throw $e;
+        }
+    }
+
+    /**
+     * Show validation errors via toastr with grouping
+     */
+    private function showValidationErrorsViaToastr(ValidationException $e)
+    {
+        $errors = $e->validator->errors();
+
+        // Group errors by field
+        $groupedErrors = [];
+        $allErrors = $errors->all();
+
+        if (count($allErrors) === 1) {
+            // Single error - show directly
+            $this->dispatch('showMessage', [
+                'type' => 'error',
+                'message' => $allErrors[0]
+            ]);
+        } else {
+            // Multiple errors - show grouped
+            $this->dispatch('showMessage', [
+                'type' => 'error',
+                'message' => 'Исправьте следующие ошибки (' . count($allErrors) . '):'
+            ]);
+
+            // Show individual errors with slight delay
+            foreach ($allErrors as $index => $error) {
+                $this->dispatch('showMessage', [
+                    'type' => 'error',
+                    'message' => '• ' . $error
+                ]);
+            }
+        }
+    }
+
     public function mount()
     {
         // Authorization
-        // $this->authorize('view-licence-requirements');
+        $this->authorize('view-licence-requirements');
 
         // Set permissions
         $user = auth()->user();
@@ -193,6 +242,28 @@ class LicenceRequirementManagement extends Component
             'maxFileSizeMb' => 'required|numeric|min:0.1',
         ]);
 
+        // Custom validation: Check for duplicate document_id within the same licence
+        if ($this->documentId) {
+            $existingRequirement = LicenceRequirement::where('licence_id', $this->licenceId)
+                ->where('document_id', $this->documentId)
+                ->first();
+
+            if ($existingRequirement) {
+                $document = Document::find($this->documentId);
+                $documentName = $document ? $document->title_ru : 'Документ';
+
+                $this->addError('documentId', "Документ '{$documentName}' уже добавлен к этой лицензии");
+
+                // Show toastr notification
+                $this->dispatch('showMessage', [
+                    'type' => 'error',
+                    'message' => "Документ '{$documentName}' уже добавлен к этой лицензии"
+                ]);
+
+                return;
+            }
+        }
+
         LicenceRequirement::create([
             'licence_id' => $this->licenceId,
             'category_id' => $this->categoryId ?: null,
@@ -204,6 +275,12 @@ class LicenceRequirementManagement extends Component
 
         $this->resetForm();
         session()->flash('message', 'Требование успешно создано');
+
+        // Show toastr notification
+        $this->dispatch('showMessage', [
+            'type' => 'success',
+            'message' => 'Требование успешно создано'
+        ]);
     }
 
     public function editRequirement($requirementId)
@@ -245,6 +322,29 @@ class LicenceRequirementManagement extends Component
             'maxFileSizeMb' => 'required|numeric|min:0.1',
         ]);
 
+        // Custom validation: Check for duplicate document_id within the same licence (excluding current requirement)
+        if ($this->documentId) {
+            $existingRequirement = LicenceRequirement::where('licence_id', $this->licenceId)
+                ->where('document_id', $this->documentId)
+                ->where('id', '!=', $this->editingRequirementId)
+                ->first();
+
+            if ($existingRequirement) {
+                $document = Document::find($this->documentId);
+                $documentName = $document ? $document->title_ru : 'Документ';
+
+                $this->addError('documentId', "Документ '{$documentName}' уже добавлен к этой лицензии");
+
+                // Show toastr notification
+                $this->dispatch('showMessage', [
+                    'type' => 'error',
+                    'message' => "Документ '{$documentName}' уже добавлен к этой лицензии"
+                ]);
+
+                return;
+            }
+        }
+
         $requirement->update([
             'licence_id' => $this->licenceId,
             'category_id' => $this->categoryId ?: null,
@@ -256,6 +356,12 @@ class LicenceRequirementManagement extends Component
 
         $this->resetForm();
         session()->flash('message', 'Требование успешно обновлено');
+
+        // Show toastr notification
+        $this->dispatch('showMessage', [
+            'type' => 'success',
+            'message' => 'Требование успешно обновлено'
+        ]);
     }
 
     public function deleteRequirement($requirementId)
@@ -266,6 +372,12 @@ class LicenceRequirementManagement extends Component
         $requirement->delete();
 
         session()->flash('message', 'Требование успешно удалено');
+
+        // Show toastr notification
+        $this->dispatch('showMessage', [
+            'type' => 'success',
+            'message' => 'Требование успешно удалено'
+        ]);
     }
 
     public function closeCreateModal()

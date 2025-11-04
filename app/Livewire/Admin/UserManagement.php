@@ -5,15 +5,18 @@ namespace App\Livewire\Admin;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 #[Title('Управление пользователями')]
 class UserManagement extends Component
 {
+    use WithFileUploads;
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
@@ -58,6 +61,9 @@ class UserManagement extends Component
 
     #[Validate('nullable|string|min:8')]
     public $password = '';
+
+    #[Validate('nullable|image|max:2048')]
+    public $photo = '';
 
     public $isActive = true;
     public $verified = false;
@@ -156,7 +162,7 @@ class UserManagement extends Component
             'password' => 'required|string|min:8',
         ]);
 
-        User::create([
+        $userData = [
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
             'patronymic' => $this->patronymic,
@@ -169,9 +175,17 @@ class UserManagement extends Component
             'password' => Hash::make($this->password),
             'is_active' => (bool) $this->isActive,
             'verified' => (bool) $this->verified,
-        ]);
+        ];
 
-        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'showCreateModal', 'isActive', 'verified']);
+        // Handle photo upload
+        if ($this->photo) {
+            $photoPath = $this->photo->store('users/photos', 'public');
+            $userData['image_url'] = $photoPath;
+        }
+
+        User::create($userData);
+
+        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'photo', 'showCreateModal', 'isActive', 'verified']);
         session()->flash('message', 'Пользователь успешно создан');
     }
 
@@ -193,6 +207,7 @@ class UserManagement extends Component
         $this->isActive = $user->is_active;
         $this->verified = $user->verified;
         $this->password = '';
+        $this->photo = '';
 
         $this->showEditModal = true;
     }
@@ -231,9 +246,19 @@ class UserManagement extends Component
             $userData['password'] = Hash::make($this->password);
         }
 
+        // Handle photo upload
+        if ($this->photo) {
+            // Delete old photo if exists
+            if ($user->image_url) {
+                Storage::disk('public')->delete($user->image_url);
+            }
+            $photoPath = $this->photo->store('users/photos', 'public');
+            $userData['image_url'] = $photoPath;
+        }
+
         $user->update($userData);
 
-        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'showEditModal', 'editingUserId', 'isActive', 'verified']);
+        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'photo', 'showEditModal', 'editingUserId', 'isActive', 'verified']);
         session()->flash('message', 'Пользователь успешно обновлен');
     }
 
@@ -247,6 +272,11 @@ class UserManagement extends Component
         if ($user->id === auth()->id()) {
             session()->flash('error', 'Нельзя удалить свою учетную запись');
             return;
+        }
+
+        // Delete user photo if exists
+        if ($user->image_url) {
+            Storage::disk('public')->delete($user->image_url);
         }
 
         $user->delete();
@@ -275,13 +305,21 @@ class UserManagement extends Component
     public function closeCreateModal()
     {
         $this->showCreateModal = false;
-        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'isActive', 'verified']);
+        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'photo', 'isActive', 'verified']);
     }
 
     public function closeEditModal()
     {
         $this->showEditModal = false;
-        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'editingUserId', 'isActive', 'verified']);
+        $this->reset(['firstName', 'lastName', 'patronymic', 'email', 'phone', 'username', 'iin', 'position', 'roleId', 'password', 'photo', 'editingUserId', 'isActive', 'verified']);
+    }
+
+    public function getUserPhotoUrl($user)
+    {
+        if ($user->image_url) {
+            return Storage::url($user->image_url);
+        }
+        return null;
     }
 
     public function render()

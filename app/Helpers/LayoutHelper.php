@@ -15,24 +15,28 @@ if (!function_exists('get_user_layout')) {
         }
 
         $user = auth()->user();
-        $roleValue = $user->role->value ?? null;
+        $role = $user->role;
 
-        return match ($roleValue) {
-            RoleConstants::ADMIN_ROLE_VALUE => 'layouts.admin',
+        if (!$role) {
+            return 'layouts.guest';
+        }
 
-            RoleConstants::CLUB_ADMINISTRATOR_VALUE,
-            RoleConstants::LEGAL_SPECIALIST_VALUE,
-            RoleConstants::FINANCIAL_SPECIALIST_VALUE,
-            RoleConstants::SPORTING_DIRECTOR_VALUE => 'layouts.club',
+        // Admin layout
+        if ($role->value === RoleConstants::ADMIN_ROLE_VALUE) {
+            return 'layouts.admin';
+        }
 
-            RoleConstants::LICENSING_DEPARTMENT_VALUE,
-            RoleConstants::LEGAL_DEPARTMENT_VALUE,
-            RoleConstants::FINANCE_DEPARTMENT_VALUE,
-            RoleConstants::INFRASTRUCTURE_DEPARTMENT_VALUE,
-            RoleConstants::CONTROL_DEPARTMENT_VALUE => 'layouts.department',
+        // Department layout (administrative roles except admin)
+        if ($role->is_administrative && $role->value !== RoleConstants::ADMIN_ROLE_VALUE) {
+            return 'layouts.department';
+        }
 
-            default => 'layouts.guest',
-        };
+        // Club layout (non-administrative roles)
+        if (!$role->is_administrative) {
+            return 'layouts.club';
+        }
+
+        return 'layouts.guest';
     }
 }
 

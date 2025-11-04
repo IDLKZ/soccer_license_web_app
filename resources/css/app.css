@@ -11,3 +11,327 @@
 }
 
 @variant dark (&:where(.dark, .dark *));
+
+/* Custom Scrollbar Styles */
+@layer utilities {
+    /* Thin scrollbar */
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    /* Scrollbar track colors */
+    .scrollbar-track-gray-200::-webkit-scrollbar-track {
+        background-color: rgb(229 231 235);
+    }
+
+    .scrollbar-track-gray-800::-webkit-scrollbar-track {
+        background-color: rgb(31 41 55);
+    }
+
+    .scrollbar-track-green-800::-webkit-scrollbar-track {
+        background-color: rgb(22 101 52);
+    }
+
+    .scrollbar-track-green-900::-webkit-scrollbar-track {
+        background-color: rgb(20 83 45);
+    }
+
+    .scrollbar-track-blue-100::-webkit-scrollbar-track {
+        background-color: rgb(219 234 254);
+    }
+
+    .scrollbar-track-blue-900::-webkit-scrollbar-track {
+        background-color: rgb(30 58 138);
+    }
+
+    .scrollbar-track-indigo-100::-webkit-scrollbar-track {
+        background-color: rgb(224 231 255);
+    }
+
+    .scrollbar-track-indigo-800::-webkit-scrollbar-track {
+        background-color: rgb(55 48 163);
+    }
+
+    .scrollbar-track-indigo-900::-webkit-scrollbar-track {
+        background-color: rgb(49 46 129);
+    }
+
+    .scrollbar-track-purple-100::-webkit-scrollbar-track {
+        background-color: rgb(243 232 255);
+    }
+
+    .scrollbar-track-purple-900::-webkit-scrollbar-track {
+        background-color: rgb(88 28 135);
+    }
+
+    /* Scrollbar thumb colors */
+    .scrollbar-thumb-gray-400::-webkit-scrollbar-thumb {
+        background-color: rgb(156 163 175);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-gray-500::-webkit-scrollbar-thumb {
+        background-color: rgb(107 114 128);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+        background-color: rgb(75 85 99);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-green-500::-webkit-scrollbar-thumb {
+        background-color: rgb(34 197 94);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-green-600::-webkit-scrollbar-thumb {
+        background-color: rgb(22 163 74);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-green-700::-webkit-scrollbar-thumb {
+        background-color: rgb(21 128 61);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-blue-500::-webkit-scrollbar-thumb {
+        background-color: rgb(59 130 246);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-blue-600::-webkit-scrollbar-thumb {
+        background-color: rgb(37 99 235);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-blue-700::-webkit-scrollbar-thumb {
+        background-color: rgb(29 78 216);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-indigo-500::-webkit-scrollbar-thumb {
+        background-color: rgb(99 102 241);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-indigo-600::-webkit-scrollbar-thumb {
+        background-color: rgb(79 70 229);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-indigo-700::-webkit-scrollbar-thumb {
+        background-color: rgb(67 56 202);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-purple-500::-webkit-scrollbar-thumb {
+        background-color: rgb(168 85 247);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-purple-600::-webkit-scrollbar-thumb {
+        background-color: rgb(147 51 234);
+        border-radius: 4px;
+    }
+
+    .scrollbar-thumb-purple-700::-webkit-scrollbar-thumb {
+        background-color: rgb(126 34 206);
+        border-radius: 4px;
+    }
+
+    /* Hover effects */
+    .hover\:scrollbar-thumb-gray-500:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(107 114 128);
+    }
+
+    .hover\:scrollbar-thumb-green-500:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(34 197 94);
+    }
+
+    .hover\:scrollbar-thumb-green-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(22 163 74);
+    }
+
+    .hover\:scrollbar-thumb-blue-500:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(59 130 246);
+    }
+
+    .hover\:scrollbar-thumb-blue-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(37 99 235);
+    }
+
+    .hover\:scrollbar-thumb-indigo-500:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(99 102 241);
+    }
+
+    .hover\:scrollbar-thumb-indigo-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(79 70 229);
+    }
+
+    .hover\:scrollbar-thumb-purple-500:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(168 85 247);
+    }
+
+    .hover\:scrollbar-thumb-purple-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(147 51 234);
+    }
+
+    /* Dark mode variants */
+    .dark .dark\:scrollbar-track-gray-800::-webkit-scrollbar-track {
+        background-color: rgb(31 41 55);
+    }
+
+    .dark .dark\:scrollbar-track-green-900::-webkit-scrollbar-track {
+        background-color: rgb(20 83 45);
+    }
+
+    .dark .dark\:scrollbar-track-blue-900::-webkit-scrollbar-track {
+        background-color: rgb(30 58 138);
+    }
+
+    .dark .dark\:scrollbar-track-indigo-900::-webkit-scrollbar-track {
+        background-color: rgb(49 46 129);
+    }
+
+    .dark .dark\:scrollbar-track-purple-900::-webkit-scrollbar-track {
+        background-color: rgb(88 28 135);
+    }
+
+    .dark .dark\:scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+        background-color: rgb(75 85 99);
+    }
+
+    .dark .dark\:scrollbar-thumb-green-700::-webkit-scrollbar-thumb {
+        background-color: rgb(21 128 61);
+    }
+
+    .dark .dark\:scrollbar-thumb-blue-700::-webkit-scrollbar-thumb {
+        background-color: rgb(29 78 216);
+    }
+
+    .dark .dark\:scrollbar-thumb-indigo-700::-webkit-scrollbar-thumb {
+        background-color: rgb(67 56 202);
+    }
+
+    .dark .dark\:scrollbar-thumb-purple-700::-webkit-scrollbar-thumb {
+        background-color: rgb(126 34 206);
+    }
+
+    .dark .dark\:hover\:scrollbar-thumb-gray-500:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(107 114 128);
+    }
+
+    .dark .dark\:hover\:scrollbar-thumb-green-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(22 163 74);
+    }
+
+    .dark .dark\:hover\:scrollbar-thumb-blue-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(37 99 235);
+    }
+
+    .dark .dark\:hover\:scrollbar-thumb-indigo-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(79 70 229);
+    }
+
+    .dark .dark\:hover\:scrollbar-thumb-purple-600:hover::-webkit-scrollbar-thumb {
+        background-color: rgb(147 51 234);
+    }
+
+    /* Firefox scrollbar support */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+
+    .scrollbar-track-gray-200 {
+        scrollbar-color: rgb(156 163 175) rgb(229 231 235);
+    }
+
+    .scrollbar-track-green-800 {
+        scrollbar-color: rgb(22 163 74) rgb(22 101 52);
+    }
+
+    .scrollbar-track-indigo-800 {
+        scrollbar-color: rgb(79 70 229) rgb(55 48 163);
+    }
+}
+
+/* HTML Content Styling for Light/Dark Mode */
+@layer components {
+    .prose-content {
+        @apply text-gray-900 dark:text-gray-100;
+    }
+
+    .prose-content p {
+        @apply text-gray-600 dark:text-gray-400 mb-2;
+    }
+
+    .prose-content strong,
+    .prose-content b {
+        @apply text-gray-900 dark:text-gray-100 font-semibold;
+    }
+
+    .prose-content em,
+    .prose-content i {
+        @apply text-gray-700 dark:text-gray-300 italic;
+    }
+
+    .prose-content ul,
+    .prose-content ol {
+        @apply text-gray-600 dark:text-gray-400 ml-4 mb-2;
+    }
+
+    .prose-content ul {
+        @apply list-disc;
+    }
+
+    .prose-content ol {
+        @apply list-decimal;
+    }
+
+    .prose-content li {
+        @apply mb-1;
+    }
+
+    .prose-content a {
+        @apply text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline;
+    }
+
+    .prose-content h1,
+    .prose-content h2,
+    .prose-content h3,
+    .prose-content h4,
+    .prose-content h5,
+    .prose-content h6 {
+        @apply text-gray-900 dark:text-gray-100 font-bold mb-2;
+    }
+
+    .prose-content code {
+        @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-1 py-0.5 rounded text-sm;
+    }
+
+    .prose-content pre {
+        @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-4 rounded overflow-x-auto mb-2;
+    }
+
+    .prose-content blockquote {
+        @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-600 dark:text-gray-400 mb-2;
+    }
+
+    .prose-content table {
+        @apply w-full border-collapse mb-2;
+    }
+
+    .prose-content th {
+        @apply bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-semibold p-2 border border-gray-300 dark:border-gray-600;
+    }
+
+    .prose-content td {
+        @apply p-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400;
+    }
+
+    .prose-content hr {
+        @apply border-gray-300 dark:border-gray-600 my-4;
+    }
+}

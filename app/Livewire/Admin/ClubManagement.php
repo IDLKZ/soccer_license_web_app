@@ -5,15 +5,18 @@ namespace App\Livewire\Admin;
 use App\Models\Club;
 use App\Models\ClubType;
 use App\Constants\ClubTypeConstants;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 #[Title('Управление клубами')]
 class ClubManagement extends Component
 {
+    use WithFileUploads;
     use WithPagination;
 
     protected $paginationTheme = 'tailwind';
@@ -85,6 +88,9 @@ class ClubManagement extends Component
 
     public $verified = false;
 
+    #[Validate('nullable|image|max:2048')]
+    public $photo = '';
+
     // Permissions
     #[Locked]
     public $canCreateClubs = false;
@@ -97,14 +103,14 @@ class ClubManagement extends Component
 
     public function mount()
     {
-        // Authorization - temporarily disabled for testing
-        // $this->authorize('view-clubs');
+        // Authorization
+        $this->authorize('view-clubs');
 
-        // Set permissions - temporary for testing
+        // Set permissions
         $user = auth()->user();
-        $this->canCreateClubs = true; // $user ? $user->can('create-clubs') : false;
-        $this->canEditClubs = true; // $user ? $user->can('manage-clubs') : false;
-        $this->canDeleteClubs = true; // $user ? $user->can('delete-clubs') : false;
+        $this->canCreateClubs = $user ? $user->can('create-clubs') : false;
+        $this->canEditClubs = $user ? $user->can('manage-clubs') : false;
+        $this->canDeleteClubs = $user ? $user->can('delete-clubs') : false;
     }
 
     public function updatedSearch()
@@ -174,7 +180,7 @@ class ClubManagement extends Component
     // Club CRUD Methods
     public function createClub()
     {
-        // $this->authorize('create-clubs'); // Temporary disabled for testing
+        $this->authorize('create-clubs');
 
         $this->validate([
             'fullNameRu' => 'required|string|max:255',
@@ -187,7 +193,7 @@ class ClubManagement extends Component
             'actualAddress' => 'required|string|max:500',
         ]);
 
-        Club::create([
+        $clubData = [
             'full_name_ru' => $this->fullNameRu,
             'full_name_kk' => $this->fullNameKk,
             'full_name_en' => $this->fullNameEn,
@@ -207,7 +213,15 @@ class ClubManagement extends Component
             'type_id' => $this->typeId,
             'parent_id' => $this->parentId,
             'verified' => (bool) $this->verified,
-        ]);
+        ];
+
+        // Handle photo upload
+        if ($this->photo) {
+            $photoPath = $this->photo->store('clubs/photos', 'public');
+            $clubData['image_url'] = $photoPath;
+        }
+
+        Club::create($clubData);
 
         $this->resetClubForm();
         session()->flash('message', 'Клуб успешно создан');
@@ -216,7 +230,7 @@ class ClubManagement extends Component
     public function editClub($clubId)
     {
         $club = Club::findOrFail($clubId);
-        // $this->authorize('manage-clubs'); // Temporary disabled for testing
+        $this->authorize('manage-clubs');
 
         $this->editingClubId = $club->id;
         $this->fullNameRu = $club->full_name_ru;
@@ -238,13 +252,14 @@ class ClubManagement extends Component
         $this->typeId = $club->type_id;
         $this->parentId = $club->parent_id;
         $this->verified = $club->verified;
+        $this->photo = '';
 
         $this->showEditClubModal = true;
     }
 
     public function updateClub()
     {
-        // $this->authorize('manage-clubs'); // Temporary disabled for testing
+        $this->authorize('manage-clubs');
 
         $club = Club::findOrFail($this->editingClubId);
 
@@ -281,6 +296,16 @@ class ClubManagement extends Component
             'verified' => (bool) $this->verified,
         ];
 
+        // Handle photo upload
+        if ($this->photo) {
+            // Delete old photo if exists
+            if ($club->image_url) {
+                Storage::disk('public')->delete($club->image_url);
+            }
+            $photoPath = $this->photo->store('clubs/photos', 'public');
+            $clubData['image_url'] = $photoPath;
+        }
+
         $club->update($clubData);
 
         $this->resetClubForm();
@@ -289,7 +314,7 @@ class ClubManagement extends Component
 
     public function deleteClub($clubId)
     {
-        // $this->authorize('delete-clubs'); // Temporary disabled for testing
+        $this->authorize('delete-clubs');
 
         $club = Club::findOrFail($clubId);
 
@@ -305,6 +330,11 @@ class ClubManagement extends Component
             return;
         }
 
+        // Delete club photo if exists
+        if ($club->image_url) {
+            Storage::disk('public')->delete($club->image_url);
+        }
+
         $club->delete();
 
         session()->flash('message', 'Клуб успешно удален');
@@ -312,7 +342,7 @@ class ClubManagement extends Component
 
     public function toggleClubVerification($clubId)
     {
-        // $this->authorize('manage-clubs'); // Temporary disabled for testing
+        $this->authorize('manage-clubs');
 
         $club = Club::findOrFail($clubId);
         $club->verified = !$club->verified;
@@ -330,7 +360,7 @@ class ClubManagement extends Component
             'bin', 'foundationDate', 'legalAddress', 'actualAddress',
             'website', 'email', 'phoneNumber',
             'descriptionRu', 'descriptionKk', 'descriptionEn',
-            'typeId', 'parentId', 'verified',
+            'typeId', 'parentId', 'verified', 'photo',
             'showCreateClubModal', 'showEditClubModal', 'editingClubId'
         ]);
     }
@@ -346,6 +376,14 @@ class ClubManagement extends Component
     {
         $this->showEditClubModal = false;
         $this->resetClubForm();
+    }
+
+    public function getClubPhotoUrl($club)
+    {
+        if ($club->image_url) {
+            return Storage::url($club->image_url);
+        }
+        return null;
     }
 
     public function render()

@@ -6,7 +6,7 @@
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Создание, редактирование и управление документами системы</p>
         </div>
         @if($canCreate)
-        <button wire:click="$set('showCreateModal', true)"
+        <button wire:click="openCreateModal"
                 class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors duration-150">
             <i class="fas fa-plus mr-2"></i>
             Создать документ
@@ -119,19 +119,19 @@
                     <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/30 transition-all duration-150 border-l-4 border-transparent hover:border-blue-400 dark:hover:border-blue-500">
                         <td class="px-4 py-4">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                                    <i class="fas fa-file-alt text-white"></i>
+                                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-md">
+                                    <i class="fas fa-file-alt text-white text-lg"></i>
                                 </div>
-                                <div class="ml-3">
-                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                <div class="ml-3 flex-1 min-w-0">
+                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                         {{ $document->title_ru }}
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                         {{ $document->title_kk }}
                                     </div>
                                     @if($document->description_ru)
-                                    <div class="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-1">
-                                        {{ $document->description_ru }}
+                                    <div class="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                                        {!! Str::limit(strip_tags($document->description_ru), 100) !!}
                                     </div>
                                     @endif
                                 </div>
@@ -257,31 +257,25 @@
 
                             <!-- Descriptions -->
                             <div class="grid grid-cols-1 gap-4">
-                                <div>
+                                <div wire:ignore>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Описание (RU)
                                     </label>
-                                    <textarea wire:model="descriptionRu"
-                                              rows="2"
-                                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"></textarea>
+                                    <textarea id="create-description-ru" class="summernote-create"></textarea>
                                     @error('descriptionRu') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
-                                <div>
+                                <div wire:ignore>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Сипаттама (KK)
                                     </label>
-                                    <textarea wire:model="descriptionKk"
-                                              rows="2"
-                                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"></textarea>
+                                    <textarea id="create-description-kk" class="summernote-create"></textarea>
                                     @error('descriptionKk') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
-                                <div>
+                                <div wire:ignore>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Description (EN)
                                     </label>
-                                    <textarea wire:model="descriptionEn"
-                                              rows="2"
-                                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"></textarea>
+                                    <textarea id="create-description-en" class="summernote-create"></textarea>
                                     @error('descriptionEn') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -408,31 +402,25 @@
 
                             <!-- Descriptions -->
                             <div class="grid grid-cols-1 gap-4">
-                                <div>
+                                <div wire:ignore>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Описание (RU)
                                     </label>
-                                    <textarea wire:model="descriptionRu"
-                                              rows="2"
-                                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"></textarea>
+                                    <textarea id="edit-description-ru" class="summernote-edit"></textarea>
                                     @error('descriptionRu') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
-                                <div>
+                                <div wire:ignore>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Сипаттама (KK)
                                     </label>
-                                    <textarea wire:model="descriptionKk"
-                                              rows="2"
-                                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"></textarea>
+                                    <textarea id="edit-description-kk" class="summernote-edit"></textarea>
                                     @error('descriptionKk') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
-                                <div>
+                                <div wire:ignore>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Description (EN)
                                     </label>
-                                    <textarea wire:model="descriptionEn"
-                                              rows="2"
-                                              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors"></textarea>
+                                    <textarea id="edit-description-en" class="summernote-edit"></textarea>
                                     @error('descriptionEn') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -531,4 +519,126 @@
         </div>
     </div>
     @endif
+
+    <!-- Summernote Integration Script -->
+    <script>
+        document.addEventListener('livewire:init', () => {
+            // Summernote configuration
+            const summernoteConfig = {
+                height: 150,
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['fontname', ['fontname']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            };
+
+            // Initialize Create Modal Summernote
+            Livewire.on('openCreateModal', () => {
+                setTimeout(() => {
+                    $('.summernote-create').each(function() {
+                        const id = $(this).attr('id');
+                        if (id) {
+                            $(this).summernote(summernoteConfig);
+
+                            // Sync with Livewire on change
+                            $(this).on('summernote.change', function(we, contents, $editable) {
+                                const wireModel = id.replace('create-', '');
+                                const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+                                @this.set(camelCase, contents);
+                            });
+                        }
+                    });
+                }, 300);
+            });
+
+            // Initialize Edit Modal Summernote
+            Livewire.on('openEditModal', (data) => {
+                setTimeout(() => {
+                    $('.summernote-edit').each(function() {
+                        const id = $(this).attr('id');
+                        if (id) {
+                            const wireModel = id.replace('edit-', '');
+                            const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+
+                            // Get the value from Livewire component
+                            const value = @this.get(camelCase) || '';
+
+                            // Initialize with value
+                            $(this).summernote(summernoteConfig);
+                            $(this).summernote('code', value);
+
+                            // Sync with Livewire on change
+                            $(this).on('summernote.change', function(we, contents, $editable) {
+                                @this.set(camelCase, contents);
+                            });
+                        }
+                    });
+                }, 300);
+            });
+
+            // Destroy Summernote when modals close
+            Livewire.on('closeCreateModal', () => {
+                $('.summernote-create').each(function() {
+                    if ($(this).summernote('instance')) {
+                        $(this).summernote('destroy');
+                    }
+                });
+            });
+
+            Livewire.on('closeEditModal', () => {
+                $('.summernote-edit').each(function() {
+                    if ($(this).summernote('instance')) {
+                        $(this).summernote('destroy');
+                    }
+                });
+            });
+
+            // Watch for showCreateModal changes
+            Livewire.hook('morph.updated', ({ component, cleanup }) => {
+                if (@this.showCreateModal) {
+                    setTimeout(() => {
+                        $('.summernote-create').each(function() {
+                            if (!$(this).summernote('instance')) {
+                                const id = $(this).attr('id');
+                                $(this).summernote(summernoteConfig);
+
+                                $(this).on('summernote.change', function(we, contents, $editable) {
+                                    const wireModel = id.replace('create-', '');
+                                    const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+                                    @this.set(camelCase, contents);
+                                });
+                            }
+                        });
+                    }, 300);
+                }
+
+                if (@this.showEditModal) {
+                    setTimeout(() => {
+                        $('.summernote-edit').each(function() {
+                            if (!$(this).summernote('instance')) {
+                                const id = $(this).attr('id');
+                                const wireModel = id.replace('edit-', '');
+                                const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+
+                                const value = @this.get(camelCase) || '';
+
+                                $(this).summernote(summernoteConfig);
+                                $(this).summernote('code', value);
+
+                                $(this).on('summernote.change', function(we, contents, $editable) {
+                                    @this.set(camelCase, contents);
+                                });
+                            }
+                        });
+                    }, 300);
+                }
+            });
+        });
+    </script>
 </div>

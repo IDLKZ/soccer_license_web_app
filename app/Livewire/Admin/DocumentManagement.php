@@ -15,18 +15,22 @@ use Livewire\WithPagination;
 #[Title('Управление документами')]
 class DocumentManagement extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithFileUploads, WithPagination;
 
     protected $paginationTheme = 'tailwind';
 
     // Modal States
     public $showCreateModal = false;
+
     public $showEditModal = false;
+
     public $editingDocumentId = null;
 
     // Search & Filters
     public $search = '';
+
     public $filterCategory = '';
+
     public $filterLevel = '';
 
     // Form Data
@@ -113,12 +117,12 @@ class DocumentManagement extends Component
 
         // Search
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('title_ru', 'like', '%' . $this->search . '%')
-                  ->orWhere('title_kk', 'like', '%' . $this->search . '%')
-                  ->orWhere('title_en', 'like', '%' . $this->search . '%')
-                  ->orWhere('description_ru', 'like', '%' . $this->search . '%')
-                  ->orWhere('value', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('title_ru', 'like', '%'.$this->search.'%')
+                    ->orWhere('title_kk', 'like', '%'.$this->search.'%')
+                    ->orWhere('title_en', 'like', '%'.$this->search.'%')
+                    ->orWhere('description_ru', 'like', '%'.$this->search.'%')
+                    ->orWhere('value', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -132,8 +136,8 @@ class DocumentManagement extends Component
         }
 
         return $query->orderBy('level', 'asc')
-                     ->orderBy('title_ru', 'asc')
-                     ->paginate(20);
+            ->orderBy('title_ru', 'asc')
+            ->paginate(20);
     }
 
     // Method to handle pagination properly
@@ -157,9 +161,9 @@ class DocumentManagement extends Component
 
         // Handle file upload
         if ($this->exampleFile) {
-            $filename = time() . '_' . $this->exampleFile->getClientOriginalName();
+            $filename = time().'_'.$this->exampleFile->getClientOriginalName();
             $this->exampleFile->storeAs('uploads', $filename, 'public');
-            $exampleFileUrl = 'uploads/' . $filename;
+            $exampleFileUrl = 'uploads/'.$filename;
         }
 
         Document::create([
@@ -196,6 +200,7 @@ class DocumentManagement extends Component
         $this->exampleFile = null;
 
         $this->showEditModal = true;
+        $this->dispatch('openEditModal');
     }
 
     public function updateDocument()
@@ -220,9 +225,9 @@ class DocumentManagement extends Component
                 Storage::disk('public')->delete($document->example_file_url);
             }
 
-            $filename = time() . '_' . $this->exampleFile->getClientOriginalName();
+            $filename = time().'_'.$this->exampleFile->getClientOriginalName();
             $this->exampleFile->storeAs('uploads', $filename, 'public');
-            $exampleFileUrl = 'uploads/' . $filename;
+            $exampleFileUrl = 'uploads/'.$filename;
         }
 
         $document->update([
@@ -271,14 +276,22 @@ class DocumentManagement extends Component
         }
     }
 
+    public function openCreateModal()
+    {
+        $this->showCreateModal = true;
+        $this->dispatch('openCreateModal');
+    }
+
     public function closeCreateModal()
     {
+        $this->dispatch('closeCreateModal');
         $this->showCreateModal = false;
         $this->reset(['titleRu', 'titleKk', 'titleEn', 'descriptionRu', 'descriptionKk', 'descriptionEn', 'categoryId', 'level', 'exampleFile']);
     }
 
     public function closeEditModal()
     {
+        $this->dispatch('closeEditModal');
         $this->showEditModal = false;
         $this->reset(['titleRu', 'titleKk', 'titleEn', 'descriptionRu', 'descriptionKk', 'descriptionEn', 'categoryId', 'level', 'exampleFile', 'currentExampleFile', 'editingDocumentId']);
     }

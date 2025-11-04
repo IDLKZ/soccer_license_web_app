@@ -2,7 +2,7 @@
     <!-- Logo & Title -->
     <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-2xl shadow-2xl mb-4">
-            <i class="fas fa-shield-halved text-3xl text-white"></i>
+            <img src="{{ asset('logo_kff.png') }}" alt="KFF Logo" class="w-16 h-16 object-contain">
         </div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Казахстанская Федерация Футбола

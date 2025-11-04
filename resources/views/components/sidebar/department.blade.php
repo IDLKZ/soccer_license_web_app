@@ -4,14 +4,14 @@
         <div class="flex items-center justify-center h-20 border-b border-indigo-700 dark:border-indigo-800">
             <div class="flex items-center">
                 <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-building text-white text-xl"></i>
+                    <img src="{{ asset('logo_kff.png') }}" alt="KFF Logo" class="w-8 h-8 object-contain">
                 </div>
                 <span class="ml-3 text-xl font-bold text-white">Департамент</span>
             </div>
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto py-6 px-3">
+        <nav class="flex-1 overflow-y-auto py-6 px-3 scrollbar-thin scrollbar-thumb-indigo-600 dark:scrollbar-thumb-indigo-700 scrollbar-track-indigo-800 dark:scrollbar-track-indigo-900 hover:scrollbar-thumb-indigo-500 dark:hover:scrollbar-thumb-indigo-600">
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
@@ -36,7 +36,7 @@
                 </a>
                 <a href="{{ route('department.applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->is('department-applications*') ? 'bg-indigo-800 text-white' : '' }}">
                     <i class="fas fa-clipboard-list w-5 text-center text-teal-400 group-hover:text-teal-300 {{ request()->is('department-applications*') ? 'text-teal-300' : '' }}"></i>
-                    <span class="ml-3 font-medium">Заявки</span>
+                    <span class="ml-3 font-medium">Заявки на лицензирование</span>
                 </a>
 
                 <div class="pt-4 pb-2">
@@ -52,7 +52,7 @@
                 @can('view-club-teams')
                 <a href="{{ route('admin.club-teams') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('admin.club-teams') ? 'bg-indigo-800 text-white' : '' }}">
                     <i class="fas fa-users w-5 text-center text-emerald-400 group-hover:text-emerald-300 {{ request()->routeIs('admin.club-teams') ? 'text-emerald-300' : '' }}"></i>
-                    <span class="ml-3 font-medium">Составы команд</span>
+                    <span class="ml-3 font-medium">Специалисты клубов</span>
                 </a>
                 @endcan
 

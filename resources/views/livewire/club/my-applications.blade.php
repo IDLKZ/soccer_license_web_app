@@ -242,7 +242,7 @@
                                     Создана: {{ $application->created_at->format('d.m.Y H:i') }}
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <a href="{{ route('my-application-detail', $application->id) }}" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                    <a href="{{ route('club.application.detail', $application->id) }}" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                                         <i class="fas fa-eye mr-2"></i>
                                         Подробнее
                                     </a>

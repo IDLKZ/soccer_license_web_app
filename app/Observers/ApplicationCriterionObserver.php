@@ -6,6 +6,7 @@ use App\Constants\ApplicationStatusConstants;
 use App\Constants\RoleConstants;
 use App\Models\Application;
 use App\Models\ApplicationCriterion;
+use App\Models\ApplicationInitialReport;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationSolution;
 use App\Models\ApplicationStatus;
@@ -27,6 +28,7 @@ class ApplicationCriterionObserver
         if ($applicationCriterion->status_id) {
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
+            $this->createApplicationInitialReportIfAwaitingIndustryCheck($applicationCriterion);
             $this->createApplicationReportIfAwaitingControlCheck($applicationCriterion);
         }
     }
@@ -40,6 +42,7 @@ class ApplicationCriterionObserver
         if ($applicationCriterion->isDirty('status_id')) {
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
+            $this->createApplicationInitialReportIfAwaitingIndustryCheck($applicationCriterion);
             $this->createApplicationReportIfAwaitingControlCheck($applicationCriterion);
         }
     }
@@ -127,6 +130,44 @@ class ApplicationCriterionObserver
     }
 
     /**
+     * Create ApplicationInitialReport when status changes to awaiting-industry-check
+     */
+    private function createApplicationInitialReportIfAwaitingIndustryCheck(ApplicationCriterion $applicationCriterion): void
+    {
+        if (! $applicationCriterion->application_status) {
+            return;
+        }
+
+        $statusValue = $applicationCriterion->application_status->value;
+
+        // Check if status is awaiting-industry-check
+        if ($statusValue !== ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE) {
+            return;
+        }
+
+        try {
+            // Check if ApplicationInitialReport already exists for this application
+            $existingReport = ApplicationInitialReport::where('application_id', $applicationCriterion->application_id)
+                ->whereNull('criteria_id')
+                ->first();
+
+            if (! $existingReport) {
+                ApplicationInitialReport::create([
+                    'application_id' => $applicationCriterion->application_id,
+                    'criteria_id' => null,
+                    'status' => 1, // Default status
+                ]);
+
+                Log::info("ApplicationInitialReport created for application #{$applicationCriterion->application_id} when criterion reached awaiting-industry-check status");
+            } else {
+                Log::info("ApplicationInitialReport already exists for application #{$applicationCriterion->application_id}, skipping creation.");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to create ApplicationInitialReport for application #{$applicationCriterion->application_id}: ".$e->getMessage());
+        }
+    }
+
+    /**
      * Create ApplicationReport when status changes to awaiting-control-check
      * Only creates if all other criteria have status_id >= current status_id
      */
@@ -199,7 +240,6 @@ class ApplicationCriterionObserver
                     'criteria_id' => $applicationCriterion->id,
                     'status' => true,
                 ]);
-
                 Log::info("ApplicationReport created for criterion #{$applicationCriterion->id}");
             } else {
                 Log::info("ApplicationReport already exists for criterion #{$applicationCriterion->id}, skipping creation.");

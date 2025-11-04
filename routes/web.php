@@ -8,8 +8,9 @@ use App\Livewire\Admin\SeasonManagement;
 use App\Livewire\Admin\CategoryDocumentManagement;
 use App\Livewire\Admin\DocumentManagement;
 use App\Livewire\Admin\LeagueManagement;
-use App\Livewire\Admin\ClubManagement;
+use App\Livewire\Admin\ClubManagement as AdminClubManagement;
 use App\Livewire\Admin\ApplicationStatusCategoryManagement;
+use App\Livewire\Club\ClubManagement;
 use App\Livewire\Admin\ApplicationStatusManagement;
 use App\Livewire\Admin\ClubTeamManagement;
 use App\Livewire\Admin\LicenceManagement;
@@ -45,7 +46,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/category-documents', CategoryDocumentManagement::class)->name('category-documents');
         Route::get('/documents', DocumentManagement::class)->name('documents');
         Route::get('/leagues', LeagueManagement::class)->name('leagues');
-        Route::get('/clubs', ClubManagement::class)->name('clubs');
+        Route::get('/clubs', AdminClubManagement::class)->name('clubs');
         Route::get('/club-teams', ClubTeamManagement::class)->name('club-teams');
         Route::get('/licences', LicenceManagement::class)->name('licences');
         Route::get('/licence-requirements', LicenceRequirementManagement::class)->name('licence-requirements');
@@ -55,17 +56,22 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // Club routes
-    Route::get('/club-management', MyClubs::class)->name('club.management');
-    Route::get('/my-applications', MyApplications::class)->name('club.applications');
-    Route::get('/my-application-detail/{application_id}', MyApplicationDetail::class)->name('my-application-detail');
-    Route::get('/my-criterias', MyCriterias::class)->name('club.criterias');
-    Route::get('/my-licences', MyLicences::class)->name('club.licences');
-    Route::get('/licence/{id}', SingleLicenceDetail::class)->name('club.licence-detail');
+    Route::prefix('club')->name('club.')->group(function () {
+        Route::get('/management', MyClubs::class)->name('management');
+        Route::get('/club-management', ClubManagement::class)->name('club-management');
+        Route::get('/applications', MyApplications::class)->name('applications');
+        Route::get('/application/{application_id}', MyApplicationDetail::class)->name('application.detail');
+        Route::get('/criterias', MyCriterias::class)->name('criterias');
+        Route::get('/licences', MyLicences::class)->name('licences');
+        Route::get('/licence/{id}', SingleLicenceDetail::class)->name('licence-detail');
+    });
 
     // Department routes
-    Route::get('/department-applications', DepartmentApplications::class)->name('department.applications');
-    Route::get('/department-application-detail/{application_id}', DepartmentApplicationDetail::class)->name('department-application-detail');
-    Route::get('/department-criterias', DepartmentCriterias::class)->name('department.criterias');
+    Route::prefix('department')->name('department.')->group(function () {
+        Route::get('/applications', DepartmentApplications::class)->name('applications');
+        Route::get('/application/{application_id}', DepartmentApplicationDetail::class)->name('application.detail');
+        Route::get('/criterias', DepartmentCriterias::class)->name('criterias');
+    });
 
     // Logout
     Route::post('/logout', function () {

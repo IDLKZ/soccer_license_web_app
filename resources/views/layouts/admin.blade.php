@@ -22,11 +22,20 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- jQuery (required for Summernote) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Summernote CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Livewire Styles -->
     @livewireStyles
+
+    <!-- Toastr CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
 </head>
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900">
     <div class="min-h-screen flex">
@@ -48,6 +57,12 @@
 
     <!-- Livewire Scripts -->
     @livewireScripts
+
+    <!-- Bootstrap JS (required for Summernote) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Summernote JS -->
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
 
     <!-- Mobile Sidebar Script -->
     <script>
@@ -130,5 +145,130 @@
             });
         }
     </script>
+
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+    <!-- Toastr Configuration for Dark Mode -->
+    <script>
+        // Configure Toastr for dark/light theme support
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDarkMode = document.documentElement.classList.contains('dark');
+
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": false,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut",
+                "toastClass": isDarkMode ? "toastr" : "toastr",
+                "titleClass": isDarkMode ? "toastr-title" : "toastr-title",
+                "messageClass": isDarkMode ? "toastr-message" : "toastr-message"
+            };
+
+            // Listen for Livewire events
+            Livewire.on('showMessage', function(event) {
+                const { type, message } = event;
+
+                // Update toastr options for current theme
+                const currentIsDarkMode = document.documentElement.classList.contains('dark');
+                if (currentIsDarkMode) {
+                    toastr.options.toastClass = 'toastr-dark';
+                } else {
+                    toastr.options.toastClass = 'toastr';
+                }
+
+                // Show the appropriate toast with smart stacking
+                switch(type) {
+                    case 'success':
+                        toastr.success(message);
+                        break;
+                    case 'error':
+                        // For validation errors, use shorter timeout to avoid overcrowding
+                        const originalTimeout = toastr.options.timeOut;
+                        toastr.options.timeOut = 4000; // 4 seconds for errors
+
+                        toastr.error(message);
+
+                        // Restore original timeout
+                        setTimeout(() => {
+                            toastr.options.timeOut = originalTimeout;
+                        }, 100);
+                        break;
+                    case 'warning':
+                        toastr.warning(message);
+                        break;
+                    case 'info':
+                        toastr.info(message);
+                        break;
+                    default:
+                        toastr.info(message);
+                }
+            });
+        });
+
+        // Update toastr options when theme changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    if (isDarkMode) {
+                        toastr.options.toastClass = 'toastr-dark';
+                    } else {
+                        toastr.options.toastClass = 'toastr';
+                    }
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, { attributes: true });
+    </script>
+
+    <!-- Custom Dark Mode Toastr Styles -->
+    <style>
+        .toastr-dark {
+            background-color: #1f2937 !important;
+            color: #f3f4f6 !important;
+            border: 1px solid #374151 !important;
+        }
+
+        .toastr-dark .toastr-title {
+            color: #f9fafb !important;
+        }
+
+        .toastr-dark .toastr-message {
+            color: #e5e7eb !important;
+        }
+
+        .toastr-dark.toast-success {
+            background-color: #065f46 !important;
+            border-color: #047857 !important;
+        }
+
+        .toastr-dark.toast-error {
+            background-color: #7f1d1d !important;
+            border-color: #991b1b !important;
+        }
+
+        .toastr-dark.toast-warning {
+            background-color: #78350f !important;
+            border-color: #92400e !important;
+        }
+
+        .toastr-dark.toast-info {
+            background-color: #1e3a8a !important;
+            border-color: #1e40af !important;
+        }
+    </style>
 </body>
 </html>

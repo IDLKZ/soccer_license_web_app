@@ -15,6 +15,8 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 #[Title('Управление лицензиями')]
 class LicenceManagement extends Component
@@ -88,6 +90,53 @@ class LicenceManagement extends Component
 
     #[Locked]
     public $canDelete = false;
+
+    /**
+     * Override validate method to show validation errors via toastr
+     */
+    public function validate($rules = null, $messages = [], $attributes = [])
+    {
+        try {
+            return parent::validate($rules, $messages, $attributes);
+        } catch (ValidationException $e) {
+            $this->showValidationErrorsViaToastr($e);
+            throw $e;
+        }
+    }
+
+    /**
+     * Show validation errors via toastr with grouping
+     */
+    private function showValidationErrorsViaToastr(ValidationException $e)
+    {
+        $errors = $e->validator->errors();
+
+        // Group errors by field
+        $groupedErrors = [];
+        $allErrors = $errors->all();
+
+        if (count($allErrors) === 1) {
+            // Single error - show directly
+            $this->dispatch('showMessage', [
+                'type' => 'error',
+                'message' => $allErrors[0]
+            ]);
+        } else {
+            // Multiple errors - show grouped
+            $this->dispatch('showMessage', [
+                'type' => 'error',
+                'message' => 'Исправьте следующие ошибки (' . count($allErrors) . '):'
+            ]);
+
+            // Show individual errors with slight delay
+            foreach ($allErrors as $index => $error) {
+                $this->dispatch('showMessage', [
+                    'type' => 'error',
+                    'message' => '• ' . $error
+                ]);
+            }
+        }
+    }
 
     public function mount()
     {
@@ -231,7 +280,57 @@ class LicenceManagement extends Component
     {
         $this->authorize('create-licences');
 
-        $this->validate();
+        // Custom validation for duplicate document_id within same licence
+        $this->validate([
+            'requirements' => 'required|array|min:1',
+            'requirements.*.category_id' => 'required_without:requirements.*.document_id|integer|exists:category_documents,id',
+            'requirements.*.document_id' => 'required_without:requirements.*.category_id|integer|exists:documents,id',
+            'deadlines' => 'required|array|min:1',
+            'deadlines.*.club_id' => 'required|integer|exists:clubs,id',
+            'deadlines.*.start_at' => 'required|date',
+            'deadlines.*.end_at' => 'required|date|after:deadlines.*.start_at',
+        ], [
+            'requirements.required' => 'Необходимо добавить хотя бы одно требование к лицензии',
+            'requirements.min' => 'Необходимо добавить хотя бы одно требование к лицензии',
+            'requirements.*.category_id.required_without' => 'Для каждого требования необходимо выбрать категорию или документ',
+            'requirements.*.document_id.required_without' => 'Для каждого требования необходимо выбрать документ или категорию',
+            'deadlines.required' => 'Необходимо добавить хотя бы один дедлайн для клуба',
+            'deadlines.min' => 'Необходимо добавить хотя бы один дедлайн для клуба',
+            'deadlines.*.club_id.required' => 'Для каждого дедлайна необходимо выбрать клуб',
+            'deadlines.*.start_at.required' => 'Для каждого дедлайна необходимо указать дату начала',
+            'deadlines.*.end_at.required' => 'Для каждого дедлайна необходимо указать дату окончания',
+            'deadlines.*.end_at.after' => 'Дата окончания должна быть позже даты начала',
+        ]);
+
+        // Custom validation: Check for duplicate document_id within the same licence
+        $documentIds = array_filter(array_column($this->requirements, 'document_id'));
+        if (count($documentIds) !== count(array_unique($documentIds))) {
+            // Find duplicates for specific error message
+            $duplicates = array_diff_assoc($documentIds, array_unique($documentIds));
+            $duplicateIds = array_values(array_unique($duplicates));
+
+            // Get document names for better error message
+            $documentNames = Document::whereIn('id', $duplicateIds)->pluck('title_ru')->toArray();
+            $namesList = implode(', ', $documentNames);
+
+            $this->addError('requirements', "Нельзя добавлять один и тот же документ несколько раз в рамках одной лицензии. Дублирующиеся документы: {$namesList}");
+
+            // Show toastr notification
+            $this->dispatch('showMessage', [
+                'type' => 'error',
+                'message' => "Нельзя добавлять один и тот же документ несколько раз в рамках одной лицензии. Дублирующиеся документы: {$namesList}"
+            ]);
+
+            return;
+        }
+
+        // Validate remaining fields
+        try {
+            $this->validate();
+        } catch (ValidationException $e) {
+            // Errors are already shown via toastr in the overridden validate method
+            return;
+        }
 
         $licence = Licence::create([
             'season_id' => $this->seasonId,
@@ -247,30 +346,26 @@ class LicenceManagement extends Component
             'is_active' => $this->isActive,
         ]);
 
-        // Create requirements
+        // Create requirements (now mandatory)
         foreach ($this->requirements as $req) {
-            if ($req['category_id'] || $req['document_id']) {
-                LicenceRequirement::create([
-                    'licence_id' => $licence->id,
-                    'category_id' => $req['category_id'],
-                    'document_id' => $req['document_id'],
-                    'is_required' => $req['is_required'],
-                    'allowed_extensions' => !empty($req['allowed_extensions']) ? $req['allowed_extensions'] : null,
-                    'max_file_size_mb' => $req['max_file_size_mb'],
-                ]);
-            }
+            LicenceRequirement::create([
+                'licence_id' => $licence->id,
+                'category_id' => $req['category_id'],
+                'document_id' => $req['document_id'],
+                'is_required' => $req['is_required'],
+                'allowed_extensions' => !empty($req['allowed_extensions']) ? $req['allowed_extensions'] : null,
+                'max_file_size_mb' => $req['max_file_size_mb'],
+            ]);
         }
 
-        // Create deadlines
+        // Create deadlines (now mandatory)
         foreach ($this->deadlines as $deadline) {
-            if ($deadline['club_id'] && $deadline['start_at'] && $deadline['end_at']) {
-                LicenceDeadline::create([
-                    'licence_id' => $licence->id,
-                    'club_id' => $deadline['club_id'],
-                    'start_at' => $deadline['start_at'],
-                    'end_at' => $deadline['end_at'],
-                ]);
-            }
+            LicenceDeadline::create([
+                'licence_id' => $licence->id,
+                'club_id' => $deadline['club_id'],
+                'start_at' => $deadline['start_at'],
+                'end_at' => $deadline['end_at'],
+            ]);
         }
 
         $this->reset([
@@ -281,6 +376,12 @@ class LicenceManagement extends Component
         ]);
 
         session()->flash('message', 'Лицензия успешно создана');
+
+        // Show toastr notification
+        $this->dispatch('showMessage', [
+            'type' => 'success',
+            'message' => 'Лицензия успешно создана'
+        ]);
     }
 
     public function editLicence($licenceId)
@@ -332,7 +433,57 @@ class LicenceManagement extends Component
 
         $licence = Licence::findOrFail($this->editingLicenceId);
 
-        $this->validate();
+        // Validate that at least one requirement and deadline are added and have valid data
+        $this->validate([
+            'requirements' => 'required|array|min:1',
+            'requirements.*.category_id' => 'required_without:requirements.*.document_id|integer|exists:category_documents,id',
+            'requirements.*.document_id' => 'required_without:requirements.*.category_id|integer|exists:documents,id',
+            'deadlines' => 'required|array|min:1',
+            'deadlines.*.club_id' => 'required|integer|exists:clubs,id',
+            'deadlines.*.start_at' => 'required|date',
+            'deadlines.*.end_at' => 'required|date|after:deadlines.*.start_at',
+        ], [
+            'requirements.required' => 'Необходимо добавить хотя бы одно требование к лицензии',
+            'requirements.min' => 'Необходимо добавить хотя бы одно требование к лицензии',
+            'requirements.*.category_id.required_without' => 'Для каждого требования необходимо выбрать категорию или документ',
+            'requirements.*.document_id.required_without' => 'Для каждого требования необходимо выбрать документ или категорию',
+            'deadlines.required' => 'Необходимо добавить хотя бы один дедлайн для клуба',
+            'deadlines.min' => 'Необходимо добавить хотя бы один дедлайн для клуба',
+            'deadlines.*.club_id.required' => 'Для каждого дедлайна необходимо выбрать клуб',
+            'deadlines.*.start_at.required' => 'Для каждого дедлайна необходимо указать дату начала',
+            'deadlines.*.end_at.required' => 'Для каждого дедлайна необходимо указать дату окончания',
+            'deadlines.*.end_at.after' => 'Дата окончания должна быть позже даты начала',
+        ]);
+
+        // Custom validation: Check for duplicate document_id within the same licence
+        $documentIds = array_filter(array_column($this->requirements, 'document_id'));
+        if (count($documentIds) !== count(array_unique($documentIds))) {
+            // Find duplicates for specific error message
+            $duplicates = array_diff_assoc($documentIds, array_unique($documentIds));
+            $duplicateIds = array_values(array_unique($duplicates));
+
+            // Get document names for better error message
+            $documentNames = Document::whereIn('id', $duplicateIds)->pluck('title_ru')->toArray();
+            $namesList = implode(', ', $documentNames);
+
+            $this->addError('requirements', "Нельзя добавлять один и тот же документ несколько раз в рамках одной лицензии. Дублирующиеся документы: {$namesList}");
+
+            // Show toastr notification
+            $this->dispatch('showMessage', [
+                'type' => 'error',
+                'message' => "Нельзя добавлять один и тот же документ несколько раз в рамках одной лицензии. Дублирующиеся документы: {$namesList}"
+            ]);
+
+            return;
+        }
+
+        // Validate remaining fields
+        try {
+            $this->validate();
+        } catch (ValidationException $e) {
+            // Errors are already shown via toastr in the overridden validate method
+            return;
+        }
 
         $licence->update([
             'season_id' => $this->seasonId,
@@ -348,32 +499,28 @@ class LicenceManagement extends Component
             'is_active' => $this->isActive,
         ]);
 
-        // Update requirements (delete old, create new)
+        // Update requirements (delete old, create new - now mandatory)
         $licence->licence_requirements()->delete();
         foreach ($this->requirements as $req) {
-            if ($req['category_id'] || $req['document_id']) {
-                LicenceRequirement::create([
-                    'licence_id' => $licence->id,
-                    'category_id' => $req['category_id'],
-                    'document_id' => $req['document_id'],
-                    'is_required' => $req['is_required'],
-                    'allowed_extensions' => !empty($req['allowed_extensions']) ? $req['allowed_extensions'] : null,
-                    'max_file_size_mb' => $req['max_file_size_mb'],
-                ]);
-            }
+            LicenceRequirement::create([
+                'licence_id' => $licence->id,
+                'category_id' => $req['category_id'],
+                'document_id' => $req['document_id'],
+                'is_required' => $req['is_required'],
+                'allowed_extensions' => !empty($req['allowed_extensions']) ? $req['allowed_extensions'] : null,
+                'max_file_size_mb' => $req['max_file_size_mb'],
+            ]);
         }
 
-        // Update deadlines (delete old, create new)
+        // Update deadlines (delete old, create new - now mandatory)
         $licence->licence_deadlines()->delete();
         foreach ($this->deadlines as $deadline) {
-            if ($deadline['club_id'] && $deadline['start_at'] && $deadline['end_at']) {
-                LicenceDeadline::create([
-                    'licence_id' => $licence->id,
-                    'club_id' => $deadline['club_id'],
-                    'start_at' => $deadline['start_at'],
-                    'end_at' => $deadline['end_at'],
-                ]);
-            }
+            LicenceDeadline::create([
+                'licence_id' => $licence->id,
+                'club_id' => $deadline['club_id'],
+                'start_at' => $deadline['start_at'],
+                'end_at' => $deadline['end_at'],
+            ]);
         }
 
         $this->reset([
@@ -384,6 +531,12 @@ class LicenceManagement extends Component
         ]);
 
         session()->flash('message', 'Лицензия успешно обновлена');
+
+        // Show toastr notification
+        $this->dispatch('showMessage', [
+            'type' => 'success',
+            'message' => 'Лицензия успешно обновлена'
+        ]);
     }
 
     public function deleteLicence($licenceId)

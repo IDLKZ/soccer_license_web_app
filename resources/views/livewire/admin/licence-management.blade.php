@@ -314,12 +314,20 @@
                             <!-- Requirements Section -->
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Требования к документам</h4>
+                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">
+                                        Требования к документам
+                                        <span class="text-red-500 ml-1">*</span>
+                                    </h4>
                                     <button type="button" wire:click="addRequirement"
                                             class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus mr-1"></i> Добавить
                                     </button>
                                 </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Необходимо добавить хотя бы одно требование к лицензии</p>
+
+                                @error('requirements')
+                                    <p class="text-sm text-red-500 dark:text-red-400 mb-3">{{ $message }}</p>
+                                @enderror
 
                                 @foreach($requirements as $index => $requirement)
                                 <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-3 relative">
@@ -337,6 +345,9 @@
                                                 <option value="{{ $category->id }}">{{ $category->title_ru }}</option>
                                                 @endforeach
                                             </select>
+                                            @error("requirements.{$index}.category_id")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Документ</label>
@@ -350,6 +361,9 @@
                                                     @endforeach
                                                 @endif
                                             </select>
+                                            @error("requirements.{$index}.document_id")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Макс. размер (МБ)</label>
@@ -408,17 +422,34 @@
                                     </div>
                                 </div>
                                 @endforeach
+
+                            <!-- Additional Add Button at Bottom -->
+                            <div class="mt-4 flex justify-center">
+                                <button type="button" wire:click="addRequirement"
+                                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-150 flex items-center">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Добавить еще требование
+                                </button>
+                            </div>
                             </div>
 
-                            <!-- Deadlines Section (Optional) -->
+                            <!-- Deadlines Section (Mandatory) -->
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Дедлайны для клубов (необязательно)</h4>
+                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">
+                                        Дедлайны для клубов
+                                        <span class="text-red-500 ml-1">*</span>
+                                    </h4>
                                     <button type="button" wire:click="addDeadline"
                                             class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus mr-1"></i> Добавить
                                     </button>
                                 </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Необходимо добавить хотя бы один дедлайн для клуба</p>
+
+                                @error('deadlines')
+                                    <p class="text-sm text-red-500 dark:text-red-400 mb-3">{{ $message }}</p>
+                                @enderror
 
                                 @foreach($deadlines as $index => $deadline)
                                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg mb-3 relative">
@@ -436,16 +467,25 @@
                                                 <option value="{{ $club->id }}">{{ $club->short_name_ru }}</option>
                                                 @endforeach
                                             </select>
+                                            @error("deadlines.{$index}.club_id")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Начало</label>
                                             <input type="date" wire:model="deadlines.{{ $index }}.start_at"
                                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md">
+                                            @error("deadlines.{$index}.start_at")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Окончание</label>
                                             <input type="date" wire:model="deadlines.{{ $index }}.end_at"
                                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md">
+                                            @error("deadlines.{$index}.end_at")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -565,12 +605,20 @@
                             <!-- Requirements Section -->
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Требования к документам</h4>
+                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">
+                                        Требования к документам
+                                        <span class="text-red-500 ml-1">*</span>
+                                    </h4>
                                     <button type="button" wire:click="addRequirement"
                                             class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus mr-1"></i> Добавить
                                     </button>
                                 </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Необходимо добавить хотя бы одно требование к лицензии</p>
+
+                                @error('requirements')
+                                    <p class="text-sm text-red-500 dark:text-red-400 mb-3">{{ $message }}</p>
+                                @enderror
 
                                 @foreach($requirements as $index => $requirement)
                                 <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-3 relative">
@@ -588,6 +636,9 @@
                                                 <option value="{{ $category->id }}">{{ $category->title_ru }}</option>
                                                 @endforeach
                                             </select>
+                                            @error("requirements.{$index}.category_id")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Документ</label>
@@ -601,6 +652,9 @@
                                                     @endforeach
                                                 @endif
                                             </select>
+                                            @error("requirements.{$index}.document_id")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Макс. размер (МБ)</label>
@@ -659,17 +713,34 @@
                                     </div>
                                 </div>
                                 @endforeach
+
+                            <!-- Additional Add Button at Bottom -->
+                            <div class="mt-4 flex justify-center">
+                                <button type="button" wire:click="addRequirement"
+                                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-150 flex items-center">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Добавить еще требование
+                                </button>
+                            </div>
                             </div>
 
-                            <!-- Deadlines Section (Optional) -->
+                            <!-- Deadlines Section (Mandatory) -->
                             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <div class="flex justify-between items-center mb-4">
-                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">Дедлайны для клубов (необязательно)</h4>
+                                    <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100">
+                                        Дедлайны для клубов
+                                        <span class="text-red-500 ml-1">*</span>
+                                    </h4>
                                     <button type="button" wire:click="addDeadline"
                                             class="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors">
                                         <i class="fas fa-plus mr-1"></i> Добавить
                                     </button>
                                 </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Необходимо добавить хотя бы один дедлайн для клуба</p>
+
+                                @error('deadlines')
+                                    <p class="text-sm text-red-500 dark:text-red-400 mb-3">{{ $message }}</p>
+                                @enderror
 
                                 @foreach($deadlines as $index => $deadline)
                                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg mb-3 relative">
@@ -687,16 +758,25 @@
                                                 <option value="{{ $club->id }}">{{ $club->short_name_ru }}</option>
                                                 @endforeach
                                             </select>
+                                            @error("deadlines.{$index}.club_id")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Начало</label>
                                             <input type="date" wire:model="deadlines.{{ $index }}.start_at"
                                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md">
+                                            @error("deadlines.{$index}.start_at")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Окончание</label>
                                             <input type="date" wire:model="deadlines.{{ $index }}.end_at"
                                                    class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md">
+                                            @error("deadlines.{$index}.end_at")
+                                                <p class="text-xs text-red-500 dark:text-red-400 mt-1">{{ $message }}</p>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>

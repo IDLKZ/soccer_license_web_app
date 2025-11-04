@@ -32,6 +32,9 @@ class RolePermissionSeeder extends Seeder
             // Get specific permissions for licensing department
             $licensingPermissions = Permission::whereIn('value', [
                 'view-clubs',
+                'create-clubs',
+                'manage-clubs',
+                'delete-clubs',
                 'view-category-documents',
                 'create-category-documents',
                 'manage-category-documents',
@@ -52,6 +55,14 @@ class RolePermissionSeeder extends Seeder
                 'create-club-teams',
                 'manage-club-teams',
                 'delete-club-teams',
+                'view-seasons',
+                'create-seasons',
+                'manage-seasons',
+                'delete-seasons',
+                'view-leagues',
+                'create-leagues',
+                'manage-leagues',
+                'delete-leagues',
                 'view-licences',
                 'create-licences',
                 'manage-licences',
@@ -102,6 +113,8 @@ class RolePermissionSeeder extends Seeder
         if ($legalSpecialistRole) {
             // Get specific permissions for legal specialists
             $legalSpecialistPermissions = Permission::whereIn('value', [
+                'view-clubs',
+                'manage-clubs',
                 'view-applications',
                 'manage-applications',
             ])->pluck('id')->toArray();
@@ -116,6 +129,8 @@ class RolePermissionSeeder extends Seeder
         if ($financialSpecialistRole) {
             // Get specific permissions for financial specialists
             $financialSpecialistPermissions = Permission::whereIn('value', [
+                'view-clubs',
+                'manage-clubs',
                 'view-applications',
                 'manage-applications',
             ])->pluck('id')->toArray();
@@ -130,6 +145,8 @@ class RolePermissionSeeder extends Seeder
         if ($sportingDirectorRole) {
             // Get specific permissions for sporting directors
             $sportingDirectorPermissions = Permission::whereIn('value', [
+                'view-clubs',
+                'manage-clubs',
                 'view-applications',
                 'create-applications',
                 'manage-applications',

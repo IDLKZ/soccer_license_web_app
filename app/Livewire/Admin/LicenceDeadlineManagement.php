@@ -58,7 +58,7 @@ class LicenceDeadlineManagement extends Component
     public function mount()
     {
         // Authorization
-        // $this->authorize('view-licence-deadlines');
+        $this->authorize('view-licence-deadlines');
 
         // Set permissions
         $user = auth()->user();

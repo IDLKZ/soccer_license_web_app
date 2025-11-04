@@ -1,4 +1,4 @@
-<div>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -265,7 +265,7 @@
                                     Создана: {{ $application->created_at->format('d.m.Y H:i') }}
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <a href="{{ route('department-application-detail', $application->id) }}" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                    <a href="{{ route('department.application.detail', $application->id) }}" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                                         <i class="fas fa-eye mr-2"></i>
                                         Подробнее
                                     </a>

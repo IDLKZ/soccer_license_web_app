@@ -118,12 +118,19 @@
                     <tr class="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 dark:hover:from-blue-900/20 dark:hover:to-indigo-900/30 transition-all duration-150 border-l-4 border-transparent hover:border-blue-400 dark:hover:border-blue-500">
                         <td class="px-4 py-4">
                             <div class="flex items-center">
-                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                                    <i class="fas fa-user text-white"></i>
-                                </div>
+                                @php
+                                    $photoUrl = $this->getUserPhotoUrl($user);
+                                @endphp
+                                @if($photoUrl)
+                                    <img src="{{ $photoUrl }}" alt="{{ $user->first_name }}" class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                @endif
                                 <div class="ml-3">
                                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $user->name }}
+                                        {{ $user->first_name }} {{ $user->last_name }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
                                         {{ '@'.$user->username }}
@@ -227,6 +234,32 @@
                         </div>
 
                         <div class="grid grid-cols-1 gap-6">
+                            <!-- Photo Upload -->
+                            <div class="flex justify-center">
+                                <div class="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden">
+                                    @if($photo)
+                                        <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="text-center">
+                                            <i class="fas fa-camera text-gray-400 dark:text-gray-500 text-2xl mb-1"></i>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Фото</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Фото пользователя (опционально)
+                                </label>
+                                <input type="file"
+                                       wire:model="photo"
+                                       accept="image/*"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/20 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40">
+                                @error('photo') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Максимальный размер: 2MB. Форматы: JPG, PNG, GIF</p>
+                            </div>
+
                             <!-- Personal Info -->
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
@@ -394,7 +427,40 @@
                             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Редактирование пользователя</h3>
                         </div>
 
+                        @php
+                            $editingUser = \App\Models\User::find($editingUserId);
+                            $currentPhotoUrl = $editingUser ? $this->getUserPhotoUrl($editingUser) : null;
+                        @endphp
+
                         <div class="grid grid-cols-1 gap-6">
+                            <!-- Photo Upload -->
+                            <div class="flex justify-center">
+                                <div class="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center overflow-hidden">
+                                    @if($photo)
+                                        <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="w-full h-full object-cover">
+                                    @elseif($currentPhotoUrl)
+                                        <img src="{{ $currentPhotoUrl }}" alt="Current photo" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="text-center">
+                                            <i class="fas fa-camera text-gray-400 dark:text-gray-500 text-2xl mb-1"></i>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Фото</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Фото пользователя (опционально)
+                                </label>
+                                <input type="file"
+                                       wire:model="photo"
+                                       accept="image/*"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/20 dark:file:text-blue-400 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/40">
+                                @error('photo') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Максимальный размер: 2MB. Форматы: JPG, PNG, GIF</p>
+                            </div>
+
                             <!-- Personal Info -->
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>

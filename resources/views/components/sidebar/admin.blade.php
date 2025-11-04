@@ -3,15 +3,15 @@
         <!-- Logo -->
         <div class="flex items-center justify-center h-20 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <div class="flex items-center">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-shield-halved text-white text-xl"></i>
+                <div class="w-10 h-10 flex items-center justify-center">
+                    <img src="{{ asset('logo_kff.png') }}" alt="KFF Logo" class="w-8 h-8 object-contain">
                 </div>
                 <span class="ml-3 text-xl font-bold text-gray-900 dark:text-white">КФФ Админ</span>
             </div>
         </div>
 
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto py-6 px-3">
+        <nav class="flex-1 overflow-y-auto py-6 px-3 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
             <div class="space-y-1">
                 <!-- Dashboard -->
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
@@ -57,7 +57,7 @@
                 @can('view-club-teams')
                 <a href="{{ route('admin.club-teams') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.club-teams') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
                     <i class="fas fa-users w-5 text-center text-emerald-500 dark:text-emerald-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-300"></i>
-                    <span class="ml-3 font-medium">Составы команд</span>
+                    <span class="ml-3 font-medium">Специалисты клубов</span>
                 </a>
                 @endcan
 
@@ -100,11 +100,6 @@
                     <span class="ml-3 font-medium">Дедлайны лицензий</span>
                 </a>
                 @endcan
-
-                <a href="#" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
-                    <i class="fas fa-clipboard-list w-5 text-center text-teal-500 dark:text-teal-400 group-hover:text-teal-600 dark:group-hover:text-teal-300"></i>
-                    <span class="ml-3 font-medium">Заявки</span>
-                </a>
 
                 @can('view-application-status-categories')
                 <a href="{{ route('admin.application-status-categories') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.application-status-categories') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">

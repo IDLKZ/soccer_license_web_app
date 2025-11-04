@@ -10,17 +10,19 @@ use App\Models\ClubType;
 use App\Models\League;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 #[Title('Управление клубами')]
 class ClubManagement extends Component
 {
-    use WithPagination;
+    use WithFileUploads, WithPagination;
 
     protected $paginationTheme = 'tailwind';
 
@@ -85,9 +87,13 @@ class ClubManagement extends Component
     #[Validate('required|integer|exists:club_types,id')]
     public $typeId = '';
 
-  
     #[Validate('required|integer|exists:users,id')]
     public $administratorId = '';
+
+    #[Validate('nullable|image|max:2048')]
+    public $clubLogo = null;
+
+    public $existingLogoUrl = null;
 
     public $verified = false;
 
@@ -111,7 +117,10 @@ class ClubManagement extends Component
 
         // Set permissions
         $user = auth()->user();
-        $this->canCreate = $user ? $user->can('create-clubs') : false;
+
+        // Only administrative users can create clubs
+        $this->canCreate = $user && $user->role && $user->role->is_administrative && $user->can('create-clubs');
+
         $this->canEdit = $user ? $user->can('manage-clubs') : false;
         $this->canDelete = $user ? $user->can('delete-clubs') : false;
 
@@ -123,15 +132,10 @@ class ClubManagement extends Component
     {
         $this->clubTypes = ClubType::orderBy('title_ru')->get();
 
-        // Get users who can be club administrators
+        // Get users who can be club administrators (non-administrative roles)
         $this->administrators = User::where('is_active', true)
             ->whereHas('role', function($query) {
-                $query->whereIn('value', [
-                    'club-administrator',
-                    'legal-specialist',
-                    'financial-specialist',
-                    'sporting-director'
-                ]);
+                $query->where('is_administrative', false);
             })
             ->orderBy('first_name')
             ->orderBy('last_name')
@@ -153,10 +157,10 @@ class ClubManagement extends Component
     {
         $query = Club::with(['club_type', 'club_teams.user']);
 
-        // Get clubs managed by the current user
+        // Get clubs managed by the current user (for non-administrative roles)
         $user = auth()->user();
-        if ($user && $user->role && $user->role->value === 'club-administrator') {
-            // Get clubs where the user is the administrator through club_teams
+        if ($user && $user->role && !$user->role->is_administrative) {
+            // Get clubs where the user is a team member through club_teams
             $userClubIds = ClubTeam::where('user_id', $user->id)->pluck('club_id')->toArray();
             $query->whereIn('id', $userClubIds);
         }
@@ -198,6 +202,12 @@ class ClubManagement extends Component
 
         DB::beginTransaction();
         try {
+            // Handle logo upload
+            $logoPath = null;
+            if ($this->clubLogo) {
+                $logoPath = $this->clubLogo->store('club-logos', 'public');
+            }
+
             $club = Club::create([
                 'full_name_ru' => $this->fullNameRu,
                 'full_name_kk' => $this->fullNameKk,
@@ -216,6 +226,7 @@ class ClubManagement extends Component
                 'description_kk' => $this->descriptionKk,
                 'description_en' => $this->descriptionEn,
                 'type_id' => $this->typeId,
+                'image_url' => $logoPath ? Storage::url($logoPath) : null,
                 'verified' => (bool) $this->verified,
             ]);
 
@@ -244,9 +255,9 @@ class ClubManagement extends Component
         $club = Club::findOrFail($clubId);
         $this->authorize('manage-clubs');
 
-        // Check if user can edit this club
+        // Check if user can edit this club (for non-administrative roles)
         $user = auth()->user();
-        if ($user && $user->role && $user->role->value === 'club-administrator') {
+        if ($user && $user->role && !$user->role->is_administrative) {
             $userClubIds = ClubTeam::where('user_id', $user->id)->pluck('club_id')->toArray();
             if (!in_array($club->id, $userClubIds)) {
                 session()->flash('error', 'У вас нет прав для редактирования этого клуба');
@@ -273,6 +284,7 @@ class ClubManagement extends Component
         $this->descriptionEn = $club->description_en ?? '';
         $this->typeId = $club->type_id;
         $this->verified = $club->verified;
+        $this->existingLogoUrl = $club->image_url;
 
         // Get current administrator
         $currentTeam = ClubTeam::where('club_id', $club->id)->first();
@@ -287,9 +299,9 @@ class ClubManagement extends Component
 
         $club = Club::findOrFail($this->editingClubId);
 
-        // Check if user can edit this club
+        // Check if user can edit this club (for non-administrative roles)
         $user = auth()->user();
-        if ($user && $user->role && $user->role->value === 'club-administrator') {
+        if ($user && $user->role && !$user->role->is_administrative) {
             $userClubIds = ClubTeam::where('user_id', $user->id)->pluck('club_id')->toArray();
             if (!in_array($club->id, $userClubIds)) {
                 session()->flash('error', 'У вас нет прав для редактирования этого клуба');
@@ -301,6 +313,17 @@ class ClubManagement extends Component
 
         DB::beginTransaction();
         try {
+            // Handle logo upload
+            $logoPath = null;
+            if ($this->clubLogo) {
+                // Delete old logo if exists
+                if ($club->image_url) {
+                    $oldPath = str_replace('/storage/', '', $club->image_url);
+                    Storage::disk('public')->delete($oldPath);
+                }
+                $logoPath = $this->clubLogo->store('club-logos', 'public');
+            }
+
             $clubData = [
                 'full_name_ru' => $this->fullNameRu,
                 'full_name_kk' => $this->fullNameKk,
@@ -321,6 +344,11 @@ class ClubManagement extends Component
                 'type_id' => $this->typeId,
                 'verified' => (bool) $this->verified,
             ];
+
+            // Only update image_url if new logo was uploaded
+            if ($logoPath) {
+                $clubData['image_url'] = Storage::url($logoPath);
+            }
 
             $club->update($clubData);
 
@@ -346,35 +374,63 @@ class ClubManagement extends Component
         }
     }
 
+    public function leaveClub($clubId)
+    {
+        $user = auth()->user();
+        $club = Club::findOrFail($clubId);
+
+        // Only non-administrative users can leave clubs
+        if (!$user || !$user->role || $user->role->is_administrative) {
+            session()->flash('error', 'Административные пользователи не могут покинуть клуб');
+            return;
+        }
+
+        try {
+            // Remove user from club team
+            $deleted = ClubTeam::where('club_id', $club->id)
+                ->where('user_id', $user->id)
+                ->delete();
+
+            if ($deleted) {
+                session()->flash('message', 'Вы успешно вышли из клуба');
+            } else {
+                session()->flash('error', 'Вы не состоите в этом клубе');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'Ошибка при выходе из клуба: ' . $e->getMessage());
+        }
+    }
+
     public function deleteClub($clubId)
     {
         $this->authorize('delete-clubs');
 
         $club = Club::findOrFail($clubId);
-
-        // Check if user can delete this club
         $user = auth()->user();
-        if ($user && $user->role && $user->role->value === 'club-administrator') {
-            $userClubIds = ClubTeam::where('user_id', $user->id)->pluck('club_id')->toArray();
-            if (!in_array($club->id, $userClubIds)) {
-                session()->flash('error', 'У вас нет прав для удаления этого клуба');
-                return;
-            }
 
-            // Check if there are other team members besides the current user
-            $teamMembersCount = ClubTeam::where('club_id', $club->id)
-                ->where('user_id', '!=', $user->id)
-                ->count();
-
-            if ($teamMembersCount > 0) {
-                session()->flash('error', 'Нельзя удалить клуб, пока в нем есть другие сотрудники');
-                return;
-            }
+        // Only administrative users can delete clubs
+        if ($user && $user->role && !$user->role->is_administrative) {
+            session()->flash('error', 'У вас нет прав для удаления клуба. Вы можете только выйти из клуба.');
+            return;
         }
 
         try {
+            // Check if club has applications or other important data
+            $hasApplications = $club->applications()->count() > 0;
+
+            if ($hasApplications) {
+                session()->flash('error', 'Нельзя удалить клуб с существующими заявками');
+                return;
+            }
+
             // Delete club team relationships first
             ClubTeam::where('club_id', $club->id)->delete();
+
+            // Delete club logo if exists
+            if ($club->image_url) {
+                $oldPath = str_replace('/storage/', '', $club->image_url);
+                Storage::disk('public')->delete($oldPath);
+            }
 
             // Delete the club
             $club->delete();
@@ -393,7 +449,8 @@ class ClubManagement extends Component
             'bin', 'foundationDate', 'legalAddress', 'actualAddress',
             'email', 'phoneNumber', 'website',
             'descriptionRu', 'descriptionKk', 'descriptionEn',
-            'typeId', 'administratorId', 'verified'
+            'typeId', 'administratorId', 'verified',
+            'clubLogo', 'existingLogoUrl'
         ]);
     }
 

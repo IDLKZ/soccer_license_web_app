@@ -1,4 +1,4 @@
-<div>
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Flash Messages -->
     @if (session()->has('success'))
         <div class="mb-6 bg-green-100 border border-green-400 text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200 px-4 py-3 rounded-lg relative">
@@ -51,7 +51,7 @@
             <!-- Application Info Cards -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- License Info -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="flex items-center mb-4">
                         <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg mr-4">
                             <i class="fas fa-certificate text-purple-600 dark:text-purple-400 text-xl"></i>
@@ -81,7 +81,7 @@
                 </div>
 
                 <!-- Club Info -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="flex items-center mb-4">
                         <div class="bg-green-100 dark:bg-green-900 p-3 rounded-lg mr-4">
                             <i class="fas fa-building text-green-600 dark:text-green-400 text-xl"></i>
@@ -95,7 +95,7 @@
                     <div class="space-y-3">
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Полное название</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $club->full_name_ru }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">{{ $club->full_name_ru }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">БИН</span>
@@ -109,7 +109,7 @@
                 </div>
 
                 <!-- User Info -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div class="flex items-center mb-4">
                         <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg mr-4">
                             <i class="fas fa-user text-blue-600 dark:text-blue-400 text-xl"></i>
@@ -264,7 +264,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
             <!-- Tab Headers -->
             <div class="border-b border-gray-200 dark:border-gray-700">
-                <nav class="flex -mb-px overflow-x-auto">
+                <nav class="flex -mb-px overflow-x-auto scrollbar-thin scrollbar-thumb-indigo-600 dark:scrollbar-thumb-indigo-700 scrollbar-track-indigo-100 dark:scrollbar-track-indigo-900 hover:scrollbar-thumb-indigo-500 dark:hover:scrollbar-thumb-indigo-600">
                     @foreach($criteriaTabs as $tab)
                         <button
                             wire:click="setActiveTab('{{ $tab['category']->id }}')"
@@ -512,9 +512,9 @@
                                                     @endif
                                                 </div>
                                                 @if($document->description_ru)
-                                                    <p class="text-sm text-gray-600 dark:text-gray-400 ml-6">
+                                                    <div class="text-sm ml-6 prose-content">
                                                         {!! $document->description_ru !!}
-                                                    </p>
+                                                    </div>
                                                 @endif
                                                 <div class="flex items-center space-x-4 ml-6 mt-2 text-xs text-gray-500 dark:text-gray-400">
                                                     @if(!empty($requirement['allowed_extensions']))
@@ -870,7 +870,7 @@
         <!-- Final Decision Modal (2.4.2) -->
         @if($showFinalDecisionModal)
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeFinalDecisionModal">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-blue-600 dark:scrollbar-thumb-blue-700 scrollbar-track-blue-100 dark:scrollbar-track-blue-900 hover:scrollbar-thumb-blue-500 dark:hover:scrollbar-thumb-blue-600">
                     <div class="p-6">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -888,7 +888,7 @@
                                 <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
                                     Решение и комментарий по каждому критерию <span class="text-red-500">*</span>
                                 </label>
-                                <div class="space-y-4 max-h-[600px] overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                                <div class="space-y-4 max-h-[600px] overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-4 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
                                     @foreach($allCriteriaForFinalDecision as $criterion)
                                         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-700">
                                             <!-- Criterion Header -->
@@ -943,7 +943,7 @@
                                                     <label class="block text-xs font-medium text-gray-900 dark:text-gray-100 mb-2">
                                                         Документы для повторной загрузки <span class="text-red-500">*</span>
                                                     </label>
-                                                    <div class="max-h-40 overflow-y-auto space-y-1">
+                                                    <div class="max-h-40 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
                                                         @foreach($availableDocumentsForReupload as $doc)
                                                             <label class="flex items-center">
                                                                 <input
@@ -1129,7 +1129,7 @@
                 </div>
 
                 <!-- Modal Body -->
-                <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-140px)] scrollbar-thin scrollbar-thumb-blue-600 dark:scrollbar-thumb-blue-700 scrollbar-track-blue-100 dark:scrollbar-track-blue-900 hover:scrollbar-thumb-blue-500 dark:hover:scrollbar-thumb-blue-600">
                     <!-- Document Details -->
                     <div class="space-y-6">
                         <!-- Basic Information -->

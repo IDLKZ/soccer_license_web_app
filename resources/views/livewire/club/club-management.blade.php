@@ -83,6 +83,12 @@
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                             <div class="flex items-center">
+                                <i class="fas fa-tag mr-1 text-gray-400 dark:text-gray-500"></i>
+                                Тип клуба
+                            </div>
+                        </th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                            <div class="flex items-center">
                                 <i class="fas fa-user-tie mr-1 text-gray-400 dark:text-gray-500"></i>
                                 Администратор
                             </div>
@@ -199,12 +205,23 @@
                                 </button>
                                 @endif
                                 @if($canDelete)
-                                <button wire:click="deleteClub({{ $club->id }})"
-                                        wire:confirm="Вы уверены, что хотите удалить этот клуб?"
-                                        class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                                        title="Удалить">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                    @if(auth()->user() && auth()->user()->role && !auth()->user()->role->is_administrative)
+                                        {{-- Club members can leave the club --}}
+                                        <button wire:click="leaveClub({{ $club->id }})"
+                                                wire:confirm="Вы уверены, что хотите выйти из этого клуба?"
+                                                class="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
+                                                title="Выйти из клуба">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                        </button>
+                                    @else
+                                        {{-- Admin can delete the club --}}
+                                        <button wire:click="deleteClub({{ $club->id }})"
+                                                wire:confirm="Вы уверены, что хотите удалить этот клуб?"
+                                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                                                title="Удалить клуб">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    @endif
                                 @endif
                             </div>
                         </td>
@@ -242,15 +259,18 @@
 
     <!-- Create Modal -->
     @if($showCreateModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" wire:click="closeCreateModal">
-                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 transition-opacity" wire:click="closeCreateModal"></div>
 
-            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <!-- Center modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">​</span>
+
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full max-h-[90vh]">
                 <form wire:submit="createClub">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <!-- Modal Content with Scroll -->
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[calc(90vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
                         <div class="mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Создание нового клуба
@@ -258,6 +278,47 @@
                             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 Заполните информацию о клубе
                             </p>
+                        </div>
+
+                        <!-- Logo Upload Section -->
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
+                                <i class="fas fa-image mr-1"></i>
+                                Логотип клуба
+                            </h4>
+                            <div class="flex items-center space-x-4">
+                                <!-- Logo Preview -->
+                                <div class="flex-shrink-0">
+                                    @if($clubLogo)
+                                        <img src="{{ $clubLogo->temporaryUrl() }}" alt="Preview" class="h-24 w-24 rounded-lg object-cover border-2 border-blue-500 shadow-lg">
+                                    @else
+                                        <div class="h-24 w-24 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-500">
+                                            <i class="fas fa-image text-gray-400 dark:text-gray-500 text-2xl"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <!-- Upload Button -->
+                                <div class="flex-1">
+                                    <label class="block">
+                                        <span class="sr-only">Выберите логотип</span>
+                                        <input type="file" wire:model="clubLogo" accept="image/*"
+                                               class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                      file:mr-4 file:py-2 file:px-4
+                                                      file:rounded-lg file:border-0
+                                                      file:text-sm file:font-semibold
+                                                      file:bg-blue-50 file:text-blue-700
+                                                      dark:file:bg-blue-900/50 dark:file:text-blue-300
+                                                      hover:file:bg-blue-100 dark:hover:file:bg-blue-900
+                                                      file:cursor-pointer cursor-pointer
+                                                      transition-colors">
+                                    </label>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF до 2MB</p>
+                                    @error('clubLogo') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <div wire:loading wire:target="clubLogo" class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                        <i class="fas fa-spinner fa-spin mr-1"></i>Загрузка...
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -496,15 +557,18 @@
 
     <!-- Edit Modal -->
     @if($showEditModal)
-    <div class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div class="fixed inset-0 transition-opacity" wire:click="closeEditModal">
-                <div class="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 transition-opacity" wire:click="closeEditModal"></div>
 
-            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <!-- Center modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">​</span>
+
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full max-h-[90vh]">
                 <form wire:submit="updateClub">
-                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <!-- Modal Content with Scroll -->
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[calc(90vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
                         <div class="mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                 Редактирование клуба
@@ -512,6 +576,49 @@
                             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
                                 Внесите изменения в информацию о клубе
                             </p>
+                        </div>
+
+                        <!-- Logo Upload Section -->
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 pb-2 mb-4">
+                                <i class="fas fa-image mr-1"></i>
+                                Логотип клуба
+                            </h4>
+                            <div class="flex items-center space-x-4">
+                                <!-- Logo Preview -->
+                                <div class="flex-shrink-0">
+                                    @if($clubLogo)
+                                        <img src="{{ $clubLogo->temporaryUrl() }}" alt="Preview" class="h-24 w-24 rounded-lg object-cover border-2 border-blue-500 shadow-lg">
+                                    @elseif($existingLogoUrl)
+                                        <img src="{{ $existingLogoUrl }}" alt="Current Logo" class="h-24 w-24 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600 shadow-lg">
+                                    @else
+                                        <div class="h-24 w-24 rounded-lg bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center border-2 border-dashed border-gray-400 dark:border-gray-500">
+                                            <i class="fas fa-image text-gray-400 dark:text-gray-500 text-2xl"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <!-- Upload Button -->
+                                <div class="flex-1">
+                                    <label class="block">
+                                        <span class="sr-only">Выберите новый логотип</span>
+                                        <input type="file" wire:model="clubLogo" accept="image/*"
+                                               class="block w-full text-sm text-gray-500 dark:text-gray-400
+                                                      file:mr-4 file:py-2 file:px-4
+                                                      file:rounded-lg file:border-0
+                                                      file:text-sm file:font-semibold
+                                                      file:bg-blue-50 file:text-blue-700
+                                                      dark:file:bg-blue-900/50 dark:file:text-blue-300
+                                                      hover:file:bg-blue-100 dark:hover:file:bg-blue-900
+                                                      file:cursor-pointer cursor-pointer
+                                                      transition-colors">
+                                    </label>
+                                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">PNG, JPG, GIF до 2MB</p>
+                                    @error('clubLogo') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                    <div wire:loading wire:target="clubLogo" class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                        <i class="fas fa-spinner fa-spin mr-1"></i>Загрузка...
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
