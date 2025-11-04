@@ -28,7 +28,6 @@ class ApplicationCriterionObserver
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
             $this->createApplicationReportIfAwaitingControlCheck($applicationCriterion);
-            $this->createApplicationSolutionIfAllCriteriaFinal($applicationCriterion);
         }
     }
 
@@ -42,7 +41,6 @@ class ApplicationCriterionObserver
             $this->updateApplicationStatus($applicationCriterion);
             $this->createApplicationStep($applicationCriterion);
             $this->createApplicationReportIfAwaitingControlCheck($applicationCriterion);
-            $this->createApplicationSolutionIfAllCriteriaFinal($applicationCriterion);
         }
     }
 
@@ -145,6 +143,7 @@ class ApplicationCriterionObserver
             return;
         }
 
+        // Create consolidated application report if all criteria are ready
         try {
             // Get the ID of awaiting-control-check status
             $currentStatusId = $applicationCriterion->status_id;
@@ -164,139 +163,59 @@ class ApplicationCriterionObserver
                 }
             }
 
-            // If we are the only criterion or all others are ready
-            if (! $allCriteriaReady) {
-                return;
+            // Only create consolidated report if all criteria are ready
+            if ($allCriteriaReady) {
+                // Check if report already exists for this application to avoid duplicates
+                $existingReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
+                    ->whereNull('criteria_id') // Only check reports without specific criteria_id
+                    ->first();
+
+                if (! $existingReport) {
+                    // Create ApplicationReport with only application_id (no criteria_id)
+                    ApplicationReport::create([
+                        'application_id' => $applicationCriterion->application_id,
+                        'criteria_id' => null,
+                        'status' => 0, // Default status
+                    ]);
+
+                    Log::info("ApplicationReport created for application #{$applicationCriterion->application_id} as all criteria reached awaiting-control-check");
+                } else {
+                    Log::info("ApplicationReport already exists for application #{$applicationCriterion->application_id}, skipping creation.");
+                }
             }
-
-            // Check if report already exists for this application to avoid duplicates
-            $existingReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
-                ->whereNull('criteria_id') // Only check reports without specific criteria_id
-                ->first();
-
-            if ($existingReport) {
-                Log::info("ApplicationReport already exists for application #{$applicationCriterion->application_id}, skipping creation.");
-
-                return;
-            }
-
-            // Create ApplicationReport with only application_id (no criteria_id)
-            ApplicationReport::create([
-                'application_id' => $applicationCriterion->application_id,
-                'criteria_id' => null,
-                'status' => 0, // Default status
-            ]);
-
-            Log::info("ApplicationReport created for application #{$applicationCriterion->application_id} as all criteria reached awaiting-control-check");
         } catch (\Exception $e) {
             Log::error("Failed to create ApplicationReport for application #{$applicationCriterion->application_id}: ".$e->getMessage());
+        }
+
+        // Always create individual criterion report (regardless of all criteria status)
+        try {
+            $existingCriterionReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
+                ->where('criteria_id', $applicationCriterion->id)
+                ->first();
+
+            if (! $existingCriterionReport) {
+                ApplicationReport::create([
+                    'application_id' => $applicationCriterion->application_id,
+                    'criteria_id' => $applicationCriterion->id,
+                    'status' => true,
+                ]);
+
+                Log::info("ApplicationReport created for criterion #{$applicationCriterion->id}");
+            } else {
+                Log::info("ApplicationReport already exists for criterion #{$applicationCriterion->id}, skipping creation.");
+            }
+        } catch (\Exception $e) {
+            Log::error("Failed to create ApplicationReport for criterion #{$applicationCriterion->id}: ".$e->getMessage());
         }
     }
 
     /**
      * Check if all application criteria have final statuses and create ApplicationSolution if so
      */
-    private function createApplicationSolutionIfAllCriteriaFinal(ApplicationCriterion $applicationCriterion): void
-    {
-        if (! $applicationCriterion->application_status) {
-            return;
-        }
-
-        $statusValue = $applicationCriterion->application_status->value;
-
-        // Define final statuses
-        $finalStatuses = [
-            ApplicationStatusConstants::FULLY_APPROVED_VALUE,
-            ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE,
-            ApplicationStatusConstants::REVOKED_VALUE,
-        ];
-
-        // Check if current status is a final status
-        if (! in_array($statusValue, $finalStatuses)) {
-            return;
-        }
-
-        try {
-            $application = $applicationCriterion->application;
-            if (! $application) {
-                return;
-            }
-
-            // Check if ApplicationSolution already exists for this application
-            $existingSolution = ApplicationSolution::where('application_id', $application->id)->first();
-            if ($existingSolution) {
-                Log::info("ApplicationSolution already exists for application #{$application->id}, skipping creation.");
-
-                return;
-            }
-
-            // Check if all criteria in this application have final statuses
-            if ($this->allCriteriaHaveFinalStatuses($application)) {
-                $this->createApplicationSolution($application);
-            }
-        } catch (\Exception $e) {
-            Log::error('Failed to check/create ApplicationSolution for application: '.$e->getMessage());
-        }
-    }
 
     /**
      * Check if all criteria in an application have final statuses
      */
-    private function allCriteriaHaveFinalStatuses(Application $application): bool
-    {
-        // Define final statuses
-        $finalStatuses = [
-            ApplicationStatusConstants::FULLY_APPROVED_VALUE,
-            ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE,
-            ApplicationStatusConstants::REVOKED_VALUE,
-        ];
-
-        // Get all criteria for this application with their statuses
-        $criteria = $application->application_criteria()
-            ->with('application_status')
-            ->get();
-
-        if ($criteria->isEmpty()) {
-            return false;
-        }
-
-        // Check if all criteria have final statuses
-        foreach ($criteria as $criterion) {
-            if (! $criterion->application_status) {
-                Log::info("Criterion #{$criterion->id} has no status, not all criteria are final");
-
-                return false;
-            }
-
-            $statusValue = $criterion->application_status->value;
-            if (! in_array($statusValue, $finalStatuses)) {
-                Log::info("Criterion #{$criterion->id} has status '{$statusValue}', not a final status");
-
-                return false;
-            }
-        }
-
-        Log::info("All criteria for application #{$application->id} have final statuses");
-
-        return true;
-    }
-
-    /**
-     * Create ApplicationSolution for an application
-     */
-    private function createApplicationSolution(Application $application): void
-    {
-        try {
-            ApplicationSolution::create([
-                'application_id' => $application->id,
-                // Other fields can be filled in later by the appropriate department/secretary
-            ]);
-
-            Log::info("ApplicationSolution created for application #{$application->id} as all criteria have final statuses");
-        } catch (\Exception $e) {
-            Log::error("Failed to create ApplicationSolution for application #{$application->id}: ".$e->getMessage());
-        }
-    }
 
     /**
      * Get responsible user for the step
