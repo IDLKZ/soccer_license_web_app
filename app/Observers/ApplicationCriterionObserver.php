@@ -9,10 +9,9 @@ use App\Models\ApplicationCriterion;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationSolution;
 use App\Models\ApplicationStatus;
-use App\Models\ApplicationStatusCategory;
 use App\Models\ApplicationStep;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -54,14 +53,14 @@ class ApplicationCriterionObserver
     {
         $application = $applicationCriterion->application;
 
-        if (!$application) {
+        if (! $application) {
             return;
         }
 
         // Reload the application_status relationship to get the NEW status
         $applicationCriterion->load('application_status');
 
-        if (!$applicationCriterion->application_status) {
+        if (! $applicationCriterion->application_status) {
             return;
         }
 
@@ -75,7 +74,7 @@ class ApplicationCriterionObserver
             ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE,
         ];
 
-        if (!in_array($statusValue, $triggerStatuses)) {
+        if (! in_array($statusValue, $triggerStatuses)) {
             return;
         }
 
@@ -84,7 +83,7 @@ class ApplicationCriterionObserver
             ->where('value', $statusValue)
             ->first();
 
-        if (!$status || !$status->application_status_category) {
+        if (! $status || ! $status->application_status_category) {
             return;
         }
 
@@ -95,7 +94,7 @@ class ApplicationCriterionObserver
         if ($newCategoryId > $currentCategoryId) {
             DB::transaction(function () use ($application, $newCategoryId, $statusValue) {
                 $application->update([
-                    'category_id' => $newCategoryId
+                    'category_id' => $newCategoryId,
                 ]);
 
                 Log::info("Application #{$application->id} category updated to '{$statusValue}' (category_id: {$newCategoryId}) based on criterion status change.");
@@ -108,7 +107,7 @@ class ApplicationCriterionObserver
      */
     private function createApplicationStep(ApplicationCriterion $applicationCriterion): void
     {
-        if (!$applicationCriterion->application_status) {
+        if (! $applicationCriterion->application_status) {
             return;
         }
 
@@ -120,21 +119,22 @@ class ApplicationCriterionObserver
                 'responsible_id' => $this->getResponsibleUser($applicationCriterion),
                 'responsible_by' => $this->getResponsibleBy($applicationCriterion),
                 'is_passed' => $this->determineStepStatus($applicationCriterion),
-                'result' => $this->getStepResult($applicationCriterion)
+                'result' => $this->getStepResult($applicationCriterion),
             ]);
 
             Log::info("ApplicationStep created for criterion #{$applicationCriterion->id} with status '{$applicationCriterion->application_status->value}'");
         } catch (\Exception $e) {
-            Log::error("Failed to create ApplicationStep for criterion #{$applicationCriterion->id}: " . $e->getMessage());
+            Log::error("Failed to create ApplicationStep for criterion #{$applicationCriterion->id}: ".$e->getMessage());
         }
     }
 
     /**
      * Create ApplicationReport when status changes to awaiting-control-check
+     * Only creates if all other criteria have status_id >= current status_id
      */
     private function createApplicationReportIfAwaitingControlCheck(ApplicationCriterion $applicationCriterion): void
     {
-        if (!$applicationCriterion->application_status) {
+        if (! $applicationCriterion->application_status) {
             return;
         }
 
@@ -146,26 +146,50 @@ class ApplicationCriterionObserver
         }
 
         try {
-            // Check if report already exists for this criterion to avoid duplicates
-            $existingReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
-                ->where('criteria_id', $applicationCriterion->id)
-                ->first();
+            // Get the ID of awaiting-control-check status
+            $currentStatusId = $applicationCriterion->status_id;
 
-            if ($existingReport) {
-                Log::info("ApplicationReport already exists for criterion #{$applicationCriterion->id}, skipping creation.");
+            // Get all other criteria for the same application
+            $otherCriteria = ApplicationCriterion::where('application_id', $applicationCriterion->application_id)
+                ->where('id', '!=', $applicationCriterion->id)
+                ->get();
+
+            // Check if all other criteria have status_id >= current status_id
+            $allCriteriaReady = true;
+            foreach ($otherCriteria as $criterion) {
+                if ($criterion->status_id < $currentStatusId) {
+                    $allCriteriaReady = false;
+                    Log::info("Criterion #{$criterion->id} has status_id {$criterion->status_id} < {$currentStatusId}, not creating ApplicationReport yet");
+                    break;
+                }
+            }
+
+            // If we are the only criterion or all others are ready
+            if (! $allCriteriaReady) {
                 return;
             }
 
-            // Create ApplicationReport with status = true
+            // Check if report already exists for this application to avoid duplicates
+            $existingReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
+                ->whereNull('criteria_id') // Only check reports without specific criteria_id
+                ->first();
+
+            if ($existingReport) {
+                Log::info("ApplicationReport already exists for application #{$applicationCriterion->application_id}, skipping creation.");
+
+                return;
+            }
+
+            // Create ApplicationReport with only application_id (no criteria_id)
             ApplicationReport::create([
                 'application_id' => $applicationCriterion->application_id,
-                'criteria_id' => $applicationCriterion->id,
-                'status' => true
+                'criteria_id' => null,
+                'status' => 0, // Default status
             ]);
 
-            Log::info("ApplicationReport created for criterion #{$applicationCriterion->id} with awaiting-control-check status");
+            Log::info("ApplicationReport created for application #{$applicationCriterion->application_id} as all criteria reached awaiting-control-check");
         } catch (\Exception $e) {
-            Log::error("Failed to create ApplicationReport for criterion #{$applicationCriterion->id}: " . $e->getMessage());
+            Log::error("Failed to create ApplicationReport for application #{$applicationCriterion->application_id}: ".$e->getMessage());
         }
     }
 
@@ -174,7 +198,7 @@ class ApplicationCriterionObserver
      */
     private function createApplicationSolutionIfAllCriteriaFinal(ApplicationCriterion $applicationCriterion): void
     {
-        if (!$applicationCriterion->application_status) {
+        if (! $applicationCriterion->application_status) {
             return;
         }
 
@@ -188,13 +212,13 @@ class ApplicationCriterionObserver
         ];
 
         // Check if current status is a final status
-        if (!in_array($statusValue, $finalStatuses)) {
+        if (! in_array($statusValue, $finalStatuses)) {
             return;
         }
 
         try {
             $application = $applicationCriterion->application;
-            if (!$application) {
+            if (! $application) {
                 return;
             }
 
@@ -202,6 +226,7 @@ class ApplicationCriterionObserver
             $existingSolution = ApplicationSolution::where('application_id', $application->id)->first();
             if ($existingSolution) {
                 Log::info("ApplicationSolution already exists for application #{$application->id}, skipping creation.");
+
                 return;
             }
 
@@ -210,7 +235,7 @@ class ApplicationCriterionObserver
                 $this->createApplicationSolution($application);
             }
         } catch (\Exception $e) {
-            Log::error("Failed to check/create ApplicationSolution for application: " . $e->getMessage());
+            Log::error('Failed to check/create ApplicationSolution for application: '.$e->getMessage());
         }
     }
 
@@ -237,19 +262,22 @@ class ApplicationCriterionObserver
 
         // Check if all criteria have final statuses
         foreach ($criteria as $criterion) {
-            if (!$criterion->application_status) {
+            if (! $criterion->application_status) {
                 Log::info("Criterion #{$criterion->id} has no status, not all criteria are final");
+
                 return false;
             }
 
             $statusValue = $criterion->application_status->value;
-            if (!in_array($statusValue, $finalStatuses)) {
+            if (! in_array($statusValue, $finalStatuses)) {
                 Log::info("Criterion #{$criterion->id} has status '{$statusValue}', not a final status");
+
                 return false;
             }
         }
 
         Log::info("All criteria for application #{$application->id} have final statuses");
+
         return true;
     }
 
@@ -266,7 +294,7 @@ class ApplicationCriterionObserver
 
             Log::info("ApplicationSolution created for application #{$application->id} as all criteria have final statuses");
         } catch (\Exception $e) {
-            Log::error("Failed to create ApplicationSolution for application #{$application->id}: " . $e->getMessage());
+            Log::error("Failed to create ApplicationSolution for application #{$application->id}: ".$e->getMessage());
         }
     }
 
@@ -284,7 +312,7 @@ class ApplicationCriterionObserver
         // Otherwise, try to determine based on status
         $statusValue = $applicationCriterion->application_status->value;
 
-        return match($statusValue) {
+        return match ($statusValue) {
             ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE => $this->getDepartmentUserByRole(RoleConstants::LICENSING_DEPARTMENT_VALUE),
             ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE => $this->getIndustryDepartmentUserId($applicationCriterion),
             ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE => $this->getDepartmentUserByRole(RoleConstants::CONTROL_DEPARTMENT_VALUE),
@@ -299,7 +327,7 @@ class ApplicationCriterionObserver
     {
         $statusValue = $applicationCriterion->application_status->value;
 
-        return match($statusValue) {
+        return match ($statusValue) {
             ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE => 'Licensing Department',
             ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE => $this->getIndustryDepartmentName($applicationCriterion),
             ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE => 'Control Department',
@@ -317,7 +345,7 @@ class ApplicationCriterionObserver
     {
         $statusValue = $applicationCriterion->application_status->value;
 
-        return match($statusValue) {
+        return match ($statusValue) {
             ApplicationStatusConstants::FULLY_APPROVED_VALUE => true,
             ApplicationStatusConstants::REVOKED_VALUE => false,
             ApplicationStatusConstants::REJECTED_VALUE => false,
@@ -332,7 +360,7 @@ class ApplicationCriterionObserver
     {
         $statusValue = $applicationCriterion->application_status->value;
 
-        return match($statusValue) {
+        return match ($statusValue) {
             ApplicationStatusConstants::FULLY_APPROVED_VALUE => 'Fully approved',
             ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE => 'Partially approved',
             ApplicationStatusConstants::REVOKED_VALUE => 'Revoked',
@@ -351,7 +379,7 @@ class ApplicationCriterionObserver
     {
         try {
             $role = Role::where('value', $roleValue)->first();
-            if (!$role) {
+            if (! $role) {
                 return null;
             }
 
@@ -362,7 +390,8 @@ class ApplicationCriterionObserver
 
             return $user?->id;
         } catch (\Exception $e) {
-            Log::error("Error getting user by role {$roleValue}: " . $e->getMessage());
+            Log::error("Error getting user by role {$roleValue}: ".$e->getMessage());
+
             return null;
         }
     }
@@ -375,7 +404,7 @@ class ApplicationCriterionObserver
         // Determine which industry department based on criterion category
         $categoryId = $applicationCriterion->category_id;
 
-        $roleValue = match($categoryId) {
+        $roleValue = match ($categoryId) {
             // Legal documents (categories 1-2)
             1, 2 => RoleConstants::LEGAL_DEPARTMENT_VALUE,
             // Financial documents (categories 3-4)
@@ -395,14 +424,13 @@ class ApplicationCriterionObserver
     {
         $categoryId = $applicationCriterion->category_id;
 
-        return match($categoryId) {
+        return match ($categoryId) {
             1, 2 => 'Legal Department',
             3, 4 => 'Finance Department',
             5, 6 => 'Infrastructure Department',
             default => 'Industry Department'
         };
     }
-
 
     /**
      * Handle the ApplicationCriterion "deleted" event.
