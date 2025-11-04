@@ -90,16 +90,32 @@
                     </div>
                 </div>
 
-                <!-- Apply Button -->
-                @if($canApply)
+                <!-- Apply Button or Reason -->
                 <div class="mt-6">
+                    @if($canApply)
                     <button wire:click="openApplicationModal"
                             class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
                         <i class="fas fa-paper-plane mr-3 text-xl"></i>
                         <span class="text-lg">Подать заявку на лицензию</span>
                     </button>
+                    @elseif($canApplyReason)
+                    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-info-circle text-2xl text-yellow-600 dark:text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <h3 class="text-sm font-bold text-yellow-800 dark:text-yellow-300 mb-1">
+                                    Подача заявки недоступна
+                                </h3>
+                                <p class="text-sm text-yellow-700 dark:text-yellow-400">
+                                    {{ $canApplyReason }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                 </div>
-                @endif
             </div>
         </div>
 

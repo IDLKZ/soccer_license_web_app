@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Models\ApplicationCriterion;
+use App\Models\LicenceRequirement;
 use App\Observers\ApplicationCriterionObserver;
+use App\Observers\LicenceRequirementObserver;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,5 +24,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         ApplicationCriterion::observe(ApplicationCriterionObserver::class);
+        LicenceRequirement::observe(LicenceRequirementObserver::class);
     }
 }

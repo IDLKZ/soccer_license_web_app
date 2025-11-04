@@ -60,14 +60,22 @@ return new class extends Migration
                 ->onDelete('set null')
                 ->onUpdate('cascade');
             $table->text('control_checked_by')->nullable();
+
             // Status flags
             $table->boolean('is_ready')->default(false);
             $table->boolean('is_first_passed')->nullable();
+            $table->text('first_comment')->nullable();
             $table->boolean('is_industry_passed')->nullable();
+            $table->text('industry_comment')->nullable();
             $table->boolean('is_final_passed')->nullable();
+            $table->text('final_comment')->nullable();
+            $table->text('last_comment')->nullable();
             $table->boolean('can_reupload_after_ending')->nullable();
             $table->json('can_reupload_after_endings_doc_ids')->nullable();
             $table->timestamps();
+
+            // Unique constraint: application_id + category_id must be unique
+            $table->unique(['application_id', 'category_id'], 'unique_application_category');
         });
     }
 

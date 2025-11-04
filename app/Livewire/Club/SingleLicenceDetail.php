@@ -2,16 +2,15 @@
 
 namespace App\Livewire\Club;
 
-use App\Models\Licence;
-use App\Models\CategoryDocument;
-use App\Models\ClubTeam;
-use App\Models\Club;
 use App\Models\Application;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationStatus;
 use App\Models\ApplicationStatusCategory;
+use App\Models\CategoryDocument;
+use App\Models\Club;
+use App\Models\ClubTeam;
+use App\Models\Licence;
 use Livewire\Attributes\Locked;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -21,14 +20,22 @@ class SingleLicenceDetail extends Component
     public $licenceId;
 
     public $licence;
+
     public $activeCategory = null;
+
     public $categories = [];
+
     public $requirementsByCategory = [];
 
     // Application submission
     public $showApplicationModal = false;
+
     public $canApply = false;
+
+    public $canApplyReason = '';
+
     public $myClubs = [];
+
     public $availableClubs = [];
 
     #[Validate('required|exists:clubs,id')]
@@ -69,7 +76,7 @@ class SingleLicenceDetail extends Component
         }
 
         // Set first category as active
-        if ($this->categories->count() > 0 && !$this->activeCategory) {
+        if ($this->categories->count() > 0 && ! $this->activeCategory) {
             $this->activeCategory = $this->categories->first()->id;
         }
     }
@@ -83,8 +90,33 @@ class SingleLicenceDetail extends Component
     {
         // Check permission
         $user = auth()->user();
-        if (!$user || !$user->can('apply-for-license')) {
+        if (! $user || ! $user->can('apply-for-license')) {
             $this->canApply = false;
+            $this->canApplyReason = 'У вас нет прав на подачу заявки на лицензию.';
+
+            return;
+        }
+
+        // Check if licence period is active (current date between start_at and end_at)
+        $now = now();
+        if (! $this->licence->start_at || ! $this->licence->end_at) {
+            $this->canApply = false;
+            $this->canApplyReason = 'Период действия лицензии не указан.';
+
+            return;
+        }
+
+        if ($now->lt($this->licence->start_at)) {
+            $this->canApply = false;
+            $this->canApplyReason = 'Период действия лицензии еще не начался. Начало: '.$this->licence->start_at->format('d.m.Y');
+
+            return;
+        }
+
+        if ($now->gt($this->licence->end_at)) {
+            $this->canApply = false;
+            $this->canApplyReason = 'Период действия лицензии истек. Окончание: '.$this->licence->end_at->format('d.m.Y');
+
             return;
         }
 
@@ -95,6 +127,42 @@ class SingleLicenceDetail extends Component
 
         if (empty($this->myClubs)) {
             $this->canApply = false;
+            $this->canApplyReason = 'Вы не являетесь членом ни одного клуба.';
+
+            return;
+        }
+
+        // Check if any of user's clubs have valid deadlines
+        $validDeadlines = $this->licence->licence_deadlines()
+            ->whereIn('club_id', $this->myClubs)
+            ->where('start_at', '<=', $now)
+            ->where('end_at', '>=', $now)
+            ->exists();
+
+        if (! $validDeadlines) {
+            // Check if deadlines exist but are not active
+            $anyDeadlines = $this->licence->licence_deadlines()
+                ->whereIn('club_id', $this->myClubs)
+                ->exists();
+
+            if ($anyDeadlines) {
+                $nextDeadline = $this->licence->licence_deadlines()
+                    ->whereIn('club_id', $this->myClubs)
+                    ->where('start_at', '>', $now)
+                    ->orderBy('start_at')
+                    ->first();
+
+                if ($nextDeadline) {
+                    $this->canApplyReason = 'Период подачи заявки еще не начался. Начало: '.$nextDeadline->start_at->format('d.m.Y H:i');
+                } else {
+                    $this->canApplyReason = 'Период подачи заявки для ваших клубов истек.';
+                }
+            } else {
+                $this->canApplyReason = 'Для ваших клубов не установлены дедлайны подачи заявок.';
+            }
+
+            $this->canApply = false;
+
             return;
         }
 
@@ -102,40 +170,51 @@ class SingleLicenceDetail extends Component
         $rejectedCategoryValue = 'rejected';
         $existingApplications = Application::where('license_id', $this->licenceId)
             ->whereIn('club_id', $this->myClubs)
-            ->whereHas('application_status_category', function($query) use ($rejectedCategoryValue) {
+            ->whereHas('application_status_category', function ($query) use ($rejectedCategoryValue) {
                 $query->where('value', '!=', $rejectedCategoryValue);
             })
             ->exists();
 
         if ($existingApplications) {
             $this->canApply = false;
+            $this->canApplyReason = 'У вас уже есть активная заявка на эту лицензию.';
+
             return;
         }
 
         $this->canApply = true;
+        $this->canApplyReason = '';
     }
 
     public function openApplicationModal()
     {
-        if (!$this->canApply) {
+        if (! $this->canApply) {
             session()->flash('error', 'У вас нет прав на подачу заявки или заявка уже существует.');
+
             return;
         }
 
-        // Get available clubs based on licence_deadlines
-        $licenceDeadlines = $this->licence->licence_deadlines()
+        $now = now();
+
+        // Get clubs with valid deadlines (current date between start_at and end_at)
+        $validDeadlineClubIds = $this->licence->licence_deadlines()
             ->whereIn('club_id', $this->myClubs)
+            ->where('start_at', '<=', $now)
+            ->where('end_at', '>=', $now)
             ->pluck('club_id')
             ->toArray();
 
-        // If there are deadlines, show only those clubs
-        // Otherwise show all user's clubs
-        $clubIds = !empty($licenceDeadlines) ? $licenceDeadlines : $this->myClubs;
+        if (empty($validDeadlineClubIds)) {
+            session()->flash('error', 'У вас нет клубов с действующим периодом подачи заявок.');
 
-        $this->availableClubs = Club::whereIn('id', $clubIds)->get();
+            return;
+        }
+
+        $this->availableClubs = Club::whereIn('id', $validDeadlineClubIds)->get();
 
         if ($this->availableClubs->count() === 0) {
             session()->flash('error', 'У вас нет доступных клубов для подачи заявки.');
+
             return;
         }
 
@@ -159,17 +238,19 @@ class SingleLicenceDetail extends Component
         $this->validate();
 
         // Double check permission
-        if (!auth()->user()->can('apply-for-license')) {
+        if (! auth()->user()->can('apply-for-license')) {
             session()->flash('error', 'У вас нет прав на подачу заявки.');
             $this->closeApplicationModal();
+
             return;
         }
 
         try {
             // Get first category
             $firstCategory = ApplicationStatusCategory::where('is_first', true)->first();
-            if (!$firstCategory) {
+            if (! $firstCategory) {
                 session()->flash('error', 'Ошибка: не найдена начальная категория статуса.');
+
                 return;
             }
 
@@ -191,9 +272,10 @@ class SingleLicenceDetail extends Component
 
             // Get first status
             $firstStatus = ApplicationStatus::where('is_first', true)->first();
-            if (!$firstStatus) {
+            if (! $firstStatus) {
                 session()->flash('error', 'Ошибка: не найден начальный статус.');
                 $application->delete();
+
                 return;
             }
 
@@ -221,7 +303,7 @@ class SingleLicenceDetail extends Component
             $this->checkCanApply();
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Ошибка при подаче заявки: ' . $e->getMessage());
+            session()->flash('error', 'Ошибка при подаче заявки: '.$e->getMessage());
         }
     }
 

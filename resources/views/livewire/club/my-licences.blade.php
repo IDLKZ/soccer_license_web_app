@@ -135,16 +135,25 @@
                             </div>
                         </div>
 
-                        @if($activeTab === 'active' && $licence->licence_deadlines->count() > 0)
-                        <div class="flex items-center group/item">
-                            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center group-hover/item:bg-orange-200 dark:group-hover/item:bg-orange-900/50 transition-colors">
-                                <i class="fas fa-exclamation-triangle text-orange-600 dark:text-orange-400"></i>
+                        @if($licence->licence_deadlines->count() > 0)
+                        @php
+                            $deadline = $licence->licence_deadlines->first();
+                            $statusBadge = $this->getDeadlineStatusBadge($deadline);
+                        @endphp
+
+                        <!-- Deadline Status Badge -->
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center justify-between p-3 rounded-lg {{ $statusBadge['classes'] }}">
+                                <div class="flex items-center">
+                                    <i class="fas {{ $statusBadge['icon'] }} text-lg mr-2"></i>
+                                    <span class="text-sm font-bold">{{ $statusBadge['text'] }}</span>
+                                </div>
                             </div>
-                            <div class="ml-3">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Дедлайн для клубов</p>
-                                <p class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
-                                    {{ $licence->licence_deadlines->first()->end_at->format('d.m.Y') }}
-                                </p>
+
+                            <!-- Deadline Date -->
+                            <div class="mt-2 flex items-center text-xs text-gray-600 dark:text-gray-400">
+                                <i class="fas fa-calendar-times mr-1.5"></i>
+                                <span>Дедлайн: {{ $deadline->end_at->format('d.m.Y H:i') }}</span>
                             </div>
                         </div>
                         @endif

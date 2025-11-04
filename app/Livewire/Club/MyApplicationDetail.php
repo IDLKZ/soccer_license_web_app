@@ -24,32 +24,45 @@ class MyApplicationDetail extends Component
     use WithFileUploads;
 
     public $applicationId;
+
     public $application;
+
     public $licence;
+
     public $club;
+
     public $user;
 
     // Tab management
     public $activeTab = null;
+
     public $criteriaTabs = [];
+
     public $licenceRequirementsByCategory = [];
+
     public $uploadedDocumentsByCategory = [];
 
     // Permissions
     #[Locked]
     public $canView = false;
+
     #[Locked]
     public $canUpload = false;
 
     // Upload modal
     public $showUploadModal = false;
+
     public $showEditModal = false;
+
     public $selectedCriterion = null;
+
     public $selectedRequirement = null;
+
     public $editingDocument = null;
 
     // Document info modal
     public $showDocumentInfoModal = false;
+
     public $viewingDocument = null;
 
     // Upload form data
@@ -67,7 +80,7 @@ class MyApplicationDetail extends Component
         $this->applicationId = $application_id;
         $this->loadApplication();
 
-        if (!$this->application) {
+        if (! $this->application) {
             abort(404);
         }
 
@@ -81,7 +94,7 @@ class MyApplicationDetail extends Component
         try {
             $this->application = Application::find($this->applicationId);
 
-            if (!$this->application) {
+            if (! $this->application) {
                 return;
             }
 
@@ -94,14 +107,14 @@ class MyApplicationDetail extends Component
                 'user.role',
                 'application_criteria.category_document',
                 'application_criteria.application_status',
-                'documents'
+                'documents',
             ]);
 
             $this->licence = $this->application->licence;
             $this->club = $this->application->club;
             $this->user = $this->application->user;
         } catch (\Exception $e) {
-            \Log::error('Error loading application: ' . $e->getMessage());
+            \Log::error('Error loading application: '.$e->getMessage());
             $this->application = null;
         }
     }
@@ -111,7 +124,7 @@ class MyApplicationDetail extends Component
         $authUser = Auth::user();
         // Check if user can view this specific application
         $userClubIds = $this->getUserClubIds();
-        if (!in_array($this->application->club_id, $userClubIds)) {
+        if (! in_array($this->application->club_id, $userClubIds)) {
             abort(403);
         }
     }
@@ -128,7 +141,7 @@ class MyApplicationDetail extends Component
         // Get club teams for the user
         $clubTeams = \App\Models\ClubTeam::where('user_id', $user->id)->get();
         foreach ($clubTeams as $team) {
-            if ($team->club_id && !in_array($team->club_id, $clubIds)) {
+            if ($team->club_id && ! in_array($team->club_id, $clubIds)) {
                 $clubIds[] = $team->club_id;
             }
         }
@@ -138,15 +151,17 @@ class MyApplicationDetail extends Component
 
     private function loadTabsAndRequirements()
     {
-        if (!$this->application) return;
+        if (! $this->application) {
+            return;
+        }
 
         $user = Auth::user();
         $userRole = $user->role ? $user->role->value : null;
 
         // Get criteria that user can see based on roles
         $this->criteriaTabs = $this->application->application_criteria
-            ->filter(function($criterion) use ($userRole) {
-                if (!$criterion->category_document) {
+            ->filter(function ($criterion) use ($userRole) {
+                if (! $criterion->category_document) {
                     return false;
                 }
                 $category = $criterion->category_document;
@@ -160,19 +175,20 @@ class MyApplicationDetail extends Component
                 return empty($categoryRoles) || ($userRole && is_array($categoryRoles) && in_array($userRole, $categoryRoles));
             })
             ->groupBy('category_id')
-            ->map(function($criteria, $categoryId) {
+            ->map(function ($criteria, $categoryId) {
                 $category = CategoryDocument::find($categoryId);
+
                 return [
                     'category' => $category,
                     'criteria' => $criteria, // Keep as collection, not array
-                    'title' => $category->title_ru ?? 'Категория'
+                    'title' => $category->title_ru ?? 'Категория',
                 ];
             })
             ->values()
             ->toArray(); // Convert final collection to array
 
         // Set first tab as active if exists
-        if (!empty($this->criteriaTabs)) {
+        if (! empty($this->criteriaTabs)) {
             $firstTab = reset($this->criteriaTabs);
             $this->activeTab = $firstTab['category']->id;
             $this->loadLicenceRequirements();
@@ -181,18 +197,20 @@ class MyApplicationDetail extends Component
 
     private function loadLicenceRequirements()
     {
-        if (!$this->activeTab) return;
+        if (! $this->activeTab) {
+            return;
+        }
 
         $this->licenceRequirementsByCategory = LicenceRequirement::with(['document'])
             ->where('licence_id', $this->application->license_id)
             ->where('category_id', $this->activeTab)
             ->get()
             ->groupBy('document_id')
-            ->map(function($requirements) {
+            ->map(function ($requirements) {
                 // Keep document as object, convert requirements to array
                 return [
                     'document' => $requirements->first()->document,
-                    'requirements' => $requirements->toArray()
+                    'requirements' => $requirements->toArray(),
                 ];
             })
             ->toArray(); // Convert final structure to array for Livewire
@@ -203,7 +221,9 @@ class MyApplicationDetail extends Component
 
     private function loadUploadedDocuments()
     {
-        if (!$this->activeTab || !$this->application) return;
+        if (! $this->activeTab || ! $this->application) {
+            return;
+        }
 
         $this->uploadedDocumentsByCategory = ApplicationDocument::with(['document', 'user'])
             ->where('application_id', $this->application->id)
@@ -222,7 +242,7 @@ class MyApplicationDetail extends Component
 
     public function canViewCategory($category)
     {
-        if (!$category || !$category->roles) {
+        if (! $category || ! $category->roles) {
             return true;
         }
 
@@ -241,13 +261,13 @@ class MyApplicationDetail extends Component
 
     public function canUploadDocuments($criterion)
     {
-        if (!$criterion || !$this->canUpload) {
+        if (! $criterion || ! $this->canUpload) {
             return false;
         }
 
         // Check if criterion status allows upload
         $applicationStatus = $criterion->application_status;
-        if (!$applicationStatus) {
+        if (! $applicationStatus) {
             return false;
         }
 
@@ -257,7 +277,7 @@ class MyApplicationDetail extends Component
             'first-check-revision',
             'industry-check-revision',
             'control-check-revision',
-            'partially-approved'
+            'partially-approved',
         ];
 
         return in_array($statusValue, $allowedStatuses);
@@ -265,7 +285,7 @@ class MyApplicationDetail extends Component
 
     public function getDocumentsForRequirement($requirement)
     {
-        if (!$this->application || !$requirement) {
+        if (! $this->application || ! $requirement) {
             return collect();
         }
 
@@ -278,26 +298,36 @@ class MyApplicationDetail extends Component
 
     public function openUploadModal($criterionId, $requirementId)
     {
+        // Check date restrictions first
+        if (! $this->isWithinValidPeriod()) {
+            toastr()->error($this->getDateRestrictionMessage());
+
+            return;
+        }
+
         // Find criterion by ID directly
         $criterion = ApplicationCriterion::with(['category_document', 'application_status'])
             ->find($criterionId);
 
-        if (!$criterion) {
+        if (! $criterion) {
             toastr()->error('Критерий не найден.');
+
             return;
         }
 
         // Find requirement by ID
         $requirement = LicenceRequirement::with(['document'])->find($requirementId);
 
-        if (!$requirement) {
+        if (! $requirement) {
             toastr()->error('Требование не найдено.');
+
             return;
         }
 
         // Check if user can upload for this criterion and specific document
-        if (!$this->canUploadForCriterion($criterion, $requirement->document_id)) {
+        if (! $this->canUploadForCriterion($criterion, $requirement->document_id)) {
             toastr()->error('Загрузка документов для этого критерия недоступна.');
+
             return;
         }
 
@@ -318,14 +348,16 @@ class MyApplicationDetail extends Component
     {
         $this->editingDocument = ApplicationDocument::find($documentId);
 
-        if (!$this->editingDocument) {
+        if (! $this->editingDocument) {
             toastr()->error('Документ не найден.');
+
             return;
         }
 
         // Check if document can be edited
-        if (!$this->canEditDocument($this->editingDocument)) {
+        if (! $this->canEditDocument($this->editingDocument)) {
             toastr()->error('Редактирование этого документа недоступно.');
+
             return;
         }
 
@@ -347,11 +379,12 @@ class MyApplicationDetail extends Component
             'document',
             'user',
             'application.club',
-            'application.licence'
+            'application.licence',
         ])->find($documentId);
 
-        if (!$this->viewingDocument) {
+        if (! $this->viewingDocument) {
             toastr()->error('Документ не найден.');
+
             return;
         }
 
@@ -375,7 +408,7 @@ class MyApplicationDetail extends Component
 
     public function getApplicationStatusColor($statusValue)
     {
-        return match($statusValue) {
+        return match ($statusValue) {
             ApplicationStatusCategoryConstants::DOCUMENT_SUBMISSION_VALUE => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
             ApplicationStatusCategoryConstants::FIRST_CHECK_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
             ApplicationStatusCategoryConstants::INDUSTRY_CHECK_VALUE => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
@@ -390,7 +423,7 @@ class MyApplicationDetail extends Component
 
     public function getCriterionStatusColor($criterion)
     {
-        if (!$criterion->is_ready) {
+        if (! $criterion->is_ready) {
             return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
         }
 
@@ -405,13 +438,13 @@ class MyApplicationDetail extends Component
 
         if ($criterion->is_industry_passed === false) {
             $hasFailures = true;
-        } elseif ($criterion->is_industry_passed === null && !$hasFailures) {
+        } elseif ($criterion->is_industry_passed === null && ! $hasFailures) {
             $hasPending = true;
         }
 
         if ($criterion->is_final_passed === false) {
             $hasFailures = true;
-        } elseif ($criterion->is_final_passed === null && !$hasFailures) {
+        } elseif ($criterion->is_final_passed === null && ! $hasFailures) {
             $hasPending = true;
         }
 
@@ -426,21 +459,31 @@ class MyApplicationDetail extends Component
 
     public function uploadDocument()
     {
+        // Check date restrictions first
+        if (! $this->isWithinValidPeriod()) {
+            toastr()->error($this->getDateRestrictionMessage());
+
+            return;
+        }
+
         // Validate basic fields
         try {
             $this->validate();
         } catch (\Illuminate\Validation\ValidationException $e) {
             toastr()->error('Пожалуйста, заполните все обязательные поля.');
+
             return;
         }
 
-        if (!$this->selectedRequirement || !$this->selectedCriterion) {
+        if (! $this->selectedRequirement || ! $this->selectedCriterion) {
             toastr()->error('Выберите документ для загрузки.');
+
             return;
         }
 
-        if (!$this->uploadFile) {
+        if (! $this->uploadFile) {
             toastr()->error('Пожалуйста, выберите файл для загрузки.');
+
             return;
         }
 
@@ -450,6 +493,7 @@ class MyApplicationDetail extends Component
 
         if ($this->uploadFile->getSize() > ($maxSizeKb * 1024)) {
             toastr()->error("Размер файла превышает максимально допустимый ({$maxSizeMb} МБ).");
+
             return;
         }
 
@@ -464,7 +508,7 @@ class MyApplicationDetail extends Component
         $fileExtension = strtolower($this->uploadFile->getClientOriginalExtension());
 
         // Check extension (allowed extensions may have dots like ".pdf" or just "pdf")
-        if (!empty($allowedExtensions) && is_array($allowedExtensions)) {
+        if (! empty($allowedExtensions) && is_array($allowedExtensions)) {
             $extensionValid = false;
             foreach ($allowedExtensions as $allowed) {
                 $allowed = strtolower(ltrim($allowed, '.'));
@@ -474,8 +518,9 @@ class MyApplicationDetail extends Component
                 }
             }
 
-            if (!$extensionValid) {
-                toastr()->error('Недопустимый формат файла. Разрешенные форматы: ' . implode(', ', $allowedExtensions));
+            if (! $extensionValid) {
+                toastr()->error('Недопустимый формат файла. Разрешенные форматы: '.implode(', ', $allowedExtensions));
+
                 return;
             }
         }
@@ -484,17 +529,17 @@ class MyApplicationDetail extends Component
             DB::beginTransaction();
 
             // Generate unique filename
-            $filename = time() . '_' . uniqid() . '.' . $fileExtension;
-            $path = 'applications/' . $this->application->id . '/' . $filename;
+            $filename = time().'_'.uniqid().'.'.$fileExtension;
+            $path = 'applications/'.$this->application->id.'/'.$filename;
 
             // Store file
-            $this->uploadFile->storeAs('applications/' . $this->application->id, $filename, 'public');
+            $this->uploadFile->storeAs('applications/'.$this->application->id, $filename, 'public');
 
             // Get authenticated user info
             $user = Auth::user();
             $uploadedBy = trim(
-                ($user->last_name ?? '') . ' ' .
-                ($user->first_name ?? '') . ' ' .
+                ($user->last_name ?? '').' '.
+                ($user->first_name ?? '').' '.
                 ($user->patronymic ?? '')
             );
 
@@ -522,26 +567,35 @@ class MyApplicationDetail extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error uploading document: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            toastr()->error('Ошибка при загрузке документа: ' . $e->getMessage());
+            Log::error('Error uploading document: '.$e->getMessage());
+            Log::error('Stack trace: '.$e->getTraceAsString());
+            toastr()->error('Ошибка при загрузке документа: '.$e->getMessage());
         }
     }
 
     public function updateDocument()
     {
+        // Check date restrictions first
+        if (! $this->isWithinValidPeriod()) {
+            toastr()->error($this->getDateRestrictionMessage());
+
+            return;
+        }
+
         $this->validate([
             'uploadTitle' => 'required|string|max:255',
             'uploadInfo' => 'nullable|string|max:1000',
         ]);
 
-        if (!$this->editingDocument) {
+        if (! $this->editingDocument) {
             toastr()->error('Документ не найден.');
+
             return;
         }
 
-        if (!$this->canEditDocument($this->editingDocument)) {
+        if (! $this->canEditDocument($this->editingDocument)) {
             toastr()->error('Редактирование недоступно.');
+
             return;
         }
 
@@ -569,14 +623,16 @@ class MyApplicationDetail extends Component
 
                     if ($this->uploadFile->getSize() > ($maxSizeKb * 1024)) {
                         session()->flash('error', "Размер файла превышает максимально допустимый ({$maxSizeMb} МБ).");
+
                         return;
                     }
 
                     $allowedExtensions = $requirement->allowed_extensions ?? [];
                     $fileExtension = strtolower($this->uploadFile->getClientOriginalExtension());
 
-                    if (!empty($allowedExtensions) && !in_array($fileExtension, $allowedExtensions)) {
-                        toastr()->error('Недопустимый формат файла. Разрешенные форматы: ' . implode(', ', $allowedExtensions));
+                    if (! empty($allowedExtensions) && ! in_array($fileExtension, $allowedExtensions)) {
+                        toastr()->error('Недопустимый формат файла. Разрешенные форматы: '.implode(', ', $allowedExtensions));
+
                         return;
                     }
 
@@ -586,9 +642,9 @@ class MyApplicationDetail extends Component
                     }
 
                     // Upload new file
-                    $filename = time() . '_' . uniqid() . '.' . $fileExtension;
-                    $path = 'applications/' . $this->application->id . '/' . $filename;
-                    $this->uploadFile->storeAs('applications/' . $this->application->id, $filename, 'public');
+                    $filename = time().'_'.uniqid().'.'.$fileExtension;
+                    $path = 'applications/'.$this->application->id.'/'.$filename;
+                    $this->uploadFile->storeAs('applications/'.$this->application->id, $filename, 'public');
 
                     $this->editingDocument->update(['file_url' => $path]);
                 }
@@ -602,22 +658,31 @@ class MyApplicationDetail extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating document: ' . $e->getMessage());
+            Log::error('Error updating document: '.$e->getMessage());
             toastr()->error('Ошибка при обновлении документа.');
         }
     }
 
     public function deleteDocument($documentId)
     {
-        $document = ApplicationDocument::find($documentId);
+        // Check date restrictions first
+        if (! $this->isWithinValidPeriod()) {
+            toastr()->error($this->getDateRestrictionMessage());
 
-        if (!$document) {
-            toastr()->error('Документ не найден.');
             return;
         }
 
-        if (!$this->canEditDocument($document)) {
+        $document = ApplicationDocument::find($documentId);
+
+        if (! $document) {
+            toastr()->error('Документ не найден.');
+
+            return;
+        }
+
+        if (! $this->canEditDocument($document)) {
             toastr()->error('Удаление недоступно.');
+
             return;
         }
 
@@ -639,23 +704,32 @@ class MyApplicationDetail extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error deleting document: ' . $e->getMessage());
+            Log::error('Error deleting document: '.$e->getMessage());
             toastr()->error('Ошибка при удалении документа.');
         }
     }
 
     public function submitCriterionForCheck($criterionId, $checkType)
     {
+        // Check date restrictions first
+        if (! $this->isWithinValidPeriod()) {
+            toastr()->error($this->getDateRestrictionMessage());
+
+            return;
+        }
+
         $criterion = ApplicationCriterion::find($criterionId);
 
-        if (!$criterion) {
+        if (! $criterion) {
             toastr()->error('Критерий не найден.');
+
             return;
         }
 
         // Check if can submit
-        if (!$this->canSubmitCriterion($criterion, $checkType)) {
+        if (! $this->canSubmitCriterion($criterion, $checkType)) {
             toastr()->error('Отправка на проверку недоступна.');
+
             return;
         }
 
@@ -663,23 +737,25 @@ class MyApplicationDetail extends Component
             DB::beginTransaction();
 
             // Determine new status based on check type
-            $newStatusValue = match($checkType) {
+            $newStatusValue = match ($checkType) {
                 'first' => ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE,
                 'industry' => ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE,
                 'control' => ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE,
                 default => null
             };
 
-            if (!$newStatusValue) {
+            if (! $newStatusValue) {
                 toastr()->error('Неверный тип проверки.');
+
                 return;
             }
 
             // Find new status
             $newStatus = ApplicationStatus::where('value', $newStatusValue)->first();
 
-            if (!$newStatus) {
+            if (! $newStatus) {
                 toastr()->error('Статус не найден.');
+
                 return;
             }
 
@@ -715,29 +791,110 @@ class MyApplicationDetail extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error submitting criterion: ' . $e->getMessage());
+            Log::error('Error submitting criterion: '.$e->getMessage());
             toastr()->error('Ошибка при отправке критерия на проверку.');
         }
     }
 
     // Helper methods for authorization and business logic
 
+    /**
+     * Check if current date is within licence period and club deadline
+     */
+    private function isWithinValidPeriod()
+    {
+        $now = now();
+
+        // Check licence period
+        if (! $this->licence || ! $this->licence->start_at || ! $this->licence->end_at) {
+            return false;
+        }
+
+        if ($now->lt($this->licence->start_at) || $now->gt($this->licence->end_at)) {
+            return false;
+        }
+
+        // Check club deadline if exists
+        $deadline = $this->licence->licence_deadlines()
+            ->where('club_id', $this->application->club_id)
+            ->first();
+
+        if ($deadline) {
+            if (! $deadline->start_at || ! $deadline->end_at) {
+                return false;
+            }
+
+            if ($now->lt($deadline->start_at) || $now->gt($deadline->end_at)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get human-readable message why upload is not available due to date restrictions
+     */
+    private function getDateRestrictionMessage()
+    {
+        $now = now();
+
+        // Check licence period
+        if (! $this->licence || ! $this->licence->start_at || ! $this->licence->end_at) {
+            return 'Период действия лицензии не указан.';
+        }
+
+        if ($now->lt($this->licence->start_at)) {
+            return 'Период действия лицензии еще не начался. Начало: '.$this->licence->start_at->format('d.m.Y');
+        }
+
+        if ($now->gt($this->licence->end_at)) {
+            return 'Период действия лицензии истек. Окончание: '.$this->licence->end_at->format('d.m.Y');
+        }
+
+        // Check club deadline
+        $deadline = $this->licence->licence_deadlines()
+            ->where('club_id', $this->application->club_id)
+            ->first();
+
+        if ($deadline) {
+            if (! $deadline->start_at || ! $deadline->end_at) {
+                return 'Дедлайн для вашего клуба не указан.';
+            }
+
+            if ($now->lt($deadline->start_at)) {
+                return 'Период подачи документов еще не начался. Начало: '.$deadline->start_at->format('d.m.Y H:i');
+            }
+
+            if ($now->gt($deadline->end_at)) {
+                return 'Период подачи документов истек. Дедлайн: '.$deadline->end_at->format('d.m.Y H:i');
+            }
+        }
+
+        return 'Загрузка документов недоступна в данный момент.';
+    }
+
     private function canUploadForCriterion($criterion, $documentId = null)
     {
-        if (!$criterion || !$criterion->application_status) {
+        if (! $criterion || ! $criterion->application_status) {
+            return false;
+        }
+
+        // Check date restrictions (licence period and club deadline)
+        if (! $this->isWithinValidPeriod()) {
             return false;
         }
 
         // Check role-based access (2.1 requirement)
         $user = auth()->user();
-        if (!$user || !$user->role) {
+        if (! $user || ! $user->role) {
             return false;
         }
 
         // Get category document
         $categoryDocument = CategoryDocument::find($criterion->category_id);
 
-        if (!$categoryDocument) {
+        if (! $categoryDocument) {
             return false;
         }
 
@@ -750,7 +907,7 @@ class MyApplicationDetail extends Component
             $allowedRoleValues = json_decode($allowedRoleValues, true) ?? [];
         }
 
-        if (!empty($allowedRoleValues) && is_array($allowedRoleValues) && !in_array($user->role->value, $allowedRoleValues)) {
+        if (! empty($allowedRoleValues) && is_array($allowedRoleValues) && ! in_array($user->role->value, $allowedRoleValues)) {
             return false;
         }
 
@@ -798,7 +955,7 @@ class MyApplicationDetail extends Component
                            $document->is_industry_passed === null &&
                            $document->is_final_passed === null;
 
-        if (!$documentStatusOk) {
+        if (! $documentStatusOk) {
             return false;
         }
 
@@ -813,7 +970,7 @@ class MyApplicationDetail extends Component
             ->where('category_id', $document->category_id)
             ->first();
 
-        if (!$appCriterion) {
+        if (! $appCriterion) {
             return false;
         }
 
@@ -822,7 +979,12 @@ class MyApplicationDetail extends Component
 
     private function canSubmitCriterion($criterion, $checkType)
     {
-        if (!$criterion || !$criterion->application_status) {
+        if (! $criterion || ! $criterion->application_status) {
+            return false;
+        }
+
+        // Check date restrictions (licence period and club deadline)
+        if (! $this->isWithinValidPeriod()) {
             return false;
         }
 
@@ -843,7 +1005,7 @@ class MyApplicationDetail extends Component
         // Check if all required documents are uploaded
         foreach ($requiredDocuments as $docId) {
             $hasDocument = $uploadedDocuments->where('document_id', $docId)->isNotEmpty();
-            if (!$hasDocument) {
+            if (! $hasDocument) {
                 return false;
             }
         }
@@ -852,9 +1014,9 @@ class MyApplicationDetail extends Component
         switch ($checkType) {
             case 'first':
                 // Can submit for first check from awaiting-documents or first-check-revision
-                if (!in_array($statusValue, [
+                if (! in_array($statusValue, [
                     ApplicationStatusConstants::AWAITING_DOCUMENTS_VALUE,
-                    ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE
+                    ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE,
                 ])) {
                     return false;
                 }
@@ -863,11 +1025,12 @@ class MyApplicationDetail extends Component
                 if ($statusValue === ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE) {
                     $hasFailedDocuments = $uploadedDocuments->where('is_first_passed', false)->isNotEmpty();
                     $hasNewUploads = $uploadedDocuments->whereNull('is_first_passed')->isNotEmpty();
+
                     return $hasFailedDocuments && $hasNewUploads;
                 }
 
                 // For awaiting-documents, check that all documents have null status
-                return $uploadedDocuments->every(function($doc) {
+                return $uploadedDocuments->every(function ($doc) {
                     return $doc->is_first_passed === null &&
                            $doc->is_industry_passed === null &&
                            $doc->is_final_passed === null;
@@ -881,6 +1044,7 @@ class MyApplicationDetail extends Component
 
                 $hasFailedDocuments = $uploadedDocuments->where('is_industry_passed', false)->isNotEmpty();
                 $hasNewUploads = $uploadedDocuments->whereNull('is_industry_passed')->isNotEmpty();
+
                 return $hasFailedDocuments && $hasNewUploads;
 
             case 'control':
@@ -891,6 +1055,7 @@ class MyApplicationDetail extends Component
 
                 $hasFailedDocuments = $uploadedDocuments->where('is_final_passed', false)->isNotEmpty();
                 $hasNewUploads = $uploadedDocuments->whereNull('is_final_passed')->isNotEmpty();
+
                 return $hasFailedDocuments && $hasNewUploads;
 
             default:
@@ -900,7 +1065,7 @@ class MyApplicationDetail extends Component
 
     public function getUploadedDocumentsForRequirement($documentId)
     {
-        if (!isset($this->uploadedDocumentsByCategory[$documentId])) {
+        if (! isset($this->uploadedDocumentsByCategory[$documentId])) {
             return [];
         }
 
@@ -915,10 +1080,10 @@ class MyApplicationDetail extends Component
     public function canEditOrDeleteDocument($criterion, $doc)
     {
         // Convert to object if array
-        $document = is_array($doc) ? (object)$doc : $doc;
+        $document = is_array($doc) ? (object) $doc : $doc;
 
         // Check if criterion allows upload for this document
-        if (!$this->canUploadForCriterion($criterion, $document->document_id ?? null)) {
+        if (! $this->canUploadForCriterion($criterion, $document->document_id ?? null)) {
             return false;
         }
 
