@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Constants\ApplicationStatusCategoryConstants;
+use App\Constants\RoleConstants;
 use App\Models\ApplicationStatusCategory;
 use Illuminate\Database\Seeder;
 
@@ -25,11 +26,13 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::DOCUMENT_SUBMISSION_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => true,
                 'is_last' => false,
                 'result' => 0,
+                'role_values'=>[
+                    RoleConstants::CLUB_ADMINISTRATOR_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::FIRST_CHECK_ID,
@@ -42,11 +45,13 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::FIRST_CHECK_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
                 'result' => 0,
+                'role_values'=>[
+                    RoleConstants::LICENSING_DEPARTMENT_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::INDUSTRY_CHECK_ID,
@@ -59,11 +64,15 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::INDUSTRY_CHECK_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
                 'result' => 0,
+                'role_values'=>[
+                    RoleConstants::FINANCE_DEPARTMENT_VALUE,
+                    RoleConstants::INFRASTRUCTURE_DEPARTMENT_VALUE,
+                    RoleConstants::LEGAL_DEPARTMENT_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::CONTROL_CHECK_ID,
@@ -76,11 +85,13 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::CONTROL_CHECK_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
                 'result' => 0,
+                'role_values'=>[
+                    RoleConstants::CONTROL_DEPARTMENT_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::FINAL_DECISION_ID,
@@ -93,11 +104,13 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::FINAL_DECISION_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
                 'result' => 0,
+                'role_values'=>[
+                    RoleConstants::CONTROL_DEPARTMENT_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::APPROVED_ID,
@@ -110,11 +123,13 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::APPROVED_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,
                 'result' => 1,
+                'role_values'=>[
+                    RoleConstants::CONTROL_DEPARTMENT_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::REVOKED_ID,
@@ -127,11 +142,13 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::REVOKED_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,
                 'result' => -1,
+                'role_values'=>[
+                    RoleConstants::CONTROL_DEPARTMENT_VALUE,
+                ]
             ],
             [
                 'id' => ApplicationStatusCategoryConstants::REJECTED_ID,
@@ -144,11 +161,14 @@ class ApplicationStatusCategorySeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusCategoryConstants::REJECTED_VALUE,
-                'role_values' => null,
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,
                 'result' => -1,
+                'role_values'=>[
+                    RoleConstants::LICENSING_DEPARTMENT_VALUE,
+                    RoleConstants::CONTROL_DEPARTMENT_VALUE,
+                ]
             ],
         ];
 

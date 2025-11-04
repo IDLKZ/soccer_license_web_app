@@ -21,7 +21,7 @@ class CategoryDocumentSeeder extends Seeder
                 'title_en' => 'Legal criteria',
                 'value' => CategoryDocumentConstants::LEGAL_DOCUMENTS_VALUE,
                 'level' => 1,
-                'roles' => json_encode(CategoryDocumentConstants::LEGAL_DOCUMENTS_ROLES),
+                'roles' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ROLES,
             ],
             [
                 'id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
@@ -30,7 +30,7 @@ class CategoryDocumentSeeder extends Seeder
                 'title_en' => 'Financial criteria',
                 'value' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_VALUE,
                 'level' => 2,
-                'roles' => json_encode(CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ROLES),
+                'roles' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ROLES,
             ],
             [
                 'id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
@@ -39,16 +39,16 @@ class CategoryDocumentSeeder extends Seeder
                 'title_en' => 'Sport criteria',
                 'value' => CategoryDocumentConstants::SPORT_DOCUMENTS_VALUE,
                 'level' => 3,
-                'roles' => json_encode(CategoryDocumentConstants::SPORT_DOCUMENTS_ROLES),
+                'roles' => CategoryDocumentConstants::SPORT_DOCUMENTS_ROLES,
             ],
             [
                 'id' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ID,
                 'title_ru' => 'Инфраструктурные критерии',
-                'title_kk' => 'Инфрақұрылым критерийлері',
+                'title_kk' => 'Інфрақұрылым критерийлері',
                 'title_en' => 'Infrastructure criteria',
                 'value' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_VALUE,
                 'level' => 4,
-                'roles' => json_encode(CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ROLES),
+                'roles' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ROLES,
             ],
         ];
 

@@ -55,12 +55,12 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::AWAITING_DOCUMENTS_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CLUB_ADMINISTRATOR_VALUE,
                     RoleConstants::LEGAL_SPECIALIST_VALUE,
                     RoleConstants::FINANCIAL_SPECIALIST_VALUE,
                     RoleConstants::SPORTING_DIRECTOR_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => true,
                 'is_last' => false,
@@ -79,9 +79,9 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::LICENSING_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -100,12 +100,12 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CLUB_ADMINISTRATOR_VALUE,
                     RoleConstants::LEGAL_SPECIALIST_VALUE,
                     RoleConstants::FINANCIAL_SPECIALIST_VALUE,
                     RoleConstants::SPORTING_DIRECTOR_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -124,11 +124,11 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::LEGAL_DEPARTMENT_VALUE,
                     RoleConstants::FINANCE_DEPARTMENT_VALUE,
                     RoleConstants::INFRASTRUCTURE_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -147,11 +147,11 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::LEGAL_SPECIALIST_VALUE,
                     RoleConstants::FINANCIAL_SPECIALIST_VALUE,
                     RoleConstants::SPORTING_DIRECTOR_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -170,9 +170,9 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CONTROL_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -191,11 +191,11 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::CONTROL_CHECK_REVISION_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::LEGAL_SPECIALIST_VALUE,
                     RoleConstants::FINANCIAL_SPECIALIST_VALUE,
                     RoleConstants::SPORTING_DIRECTOR_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -214,9 +214,9 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CONTROL_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => false,
@@ -235,9 +235,9 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::FULLY_APPROVED_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CONTROL_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,
@@ -256,9 +256,9 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CONTROL_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,
@@ -277,9 +277,9 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::REVOKED_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CONTROL_DEPARTMENT_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,
@@ -298,11 +298,11 @@ class ApplicationStatusSeeder extends Seeder
                 'description_kk' => null,
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::REJECTED_VALUE,
-                'role_values' => json_encode([
+                'role_values' => [
                     RoleConstants::CONTROL_DEPARTMENT_VALUE,
                     RoleConstants::LICENSING_DEPARTMENT_VALUE,
                     RoleConstants::CLUB_ADMINISTRATOR_VALUE,
-                ]),
+                ],
                 'is_active' => true,
                 'is_first' => false,
                 'is_last' => true,

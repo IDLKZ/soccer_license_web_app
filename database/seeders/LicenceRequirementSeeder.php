@@ -21,7 +21,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 1,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -29,7 +29,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 2,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -37,7 +37,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 3,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -45,7 +45,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 4,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -55,7 +55,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
                 'document_id' => 5,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -63,7 +63,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
                 'document_id' => 6,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -71,7 +71,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
                 'document_id' => 7,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -81,7 +81,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
                 'document_id' => 8,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -89,7 +89,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
                 'document_id' => 9,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -97,7 +97,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
                 'document_id' => 10,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -107,7 +107,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ID,
                 'document_id' => 11,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -115,7 +115,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ID,
                 'document_id' => 12,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -125,7 +125,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 1,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -133,7 +133,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 2,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -141,7 +141,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 3,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -149,7 +149,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::LEGAL_DOCUMENTS_ID,
                 'document_id' => 4,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -159,7 +159,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
                 'document_id' => 5,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -167,7 +167,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
                 'document_id' => 6,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -175,7 +175,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::FINANCIAL_DOCUMENTS_ID,
                 'document_id' => 7,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -185,7 +185,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
                 'document_id' => 8,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -193,7 +193,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
                 'document_id' => 9,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -201,7 +201,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::SPORT_DOCUMENTS_ID,
                 'document_id' => 10,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
 
@@ -211,7 +211,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ID,
                 'document_id' => 11,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
             [
@@ -219,7 +219,7 @@ class LicenceRequirementSeeder extends Seeder
                 'category_id' => CategoryDocumentConstants::INFRASTRUCTURE_DOCUMENTS_ID,
                 'document_id' => 12,
                 'is_required' => true,
-                'allowed_extensions' => json_encode(FileExtensionConstants::DOCUMENT_EXTENSIONS),
+                'allowed_extensions' => FileExtensionConstants::DOCUMENT_EXTENSIONS,
                 'max_file_size_mb' => 10,
             ],
         ];
