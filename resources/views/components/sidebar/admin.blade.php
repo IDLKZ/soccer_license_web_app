@@ -16,7 +16,7 @@
                 <!-- Dashboard -->
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group">
                     <i class="fas fa-chart-line w-5 text-center text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300"></i>
-                    <span class="ml-3 font-medium">Панель управления</span>
+                    <span class="ml-3 font-medium">Панель администратора</span>
                 </a>
 
                 <!-- Система -->

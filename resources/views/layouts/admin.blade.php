@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Панель управления - {{ config('app.name', 'Laravel') }}</title>
+    <title>Панель администратора - {{ config('app.name', 'Laravel') }}</title>
 
     <!-- Theme Script (Prevent Flash) -->
     <script>
@@ -36,7 +36,7 @@
         <!-- Main Content -->
         <div class="flex-1 lg:ml-64">
             <!-- Header -->
-            <x-header title="Панель управления" />
+            <x-header title="Панель администратора" />
 
             <!-- Page Content -->
             <main class="p-6">

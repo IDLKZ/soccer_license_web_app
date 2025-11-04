@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | External Services Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for external services used by the application.
+    |
+    */
+
+    'report_service_url' => env('REPORT_SERVICE_URL'),
+
 ];

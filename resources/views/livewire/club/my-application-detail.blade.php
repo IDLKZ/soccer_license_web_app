@@ -313,7 +313,7 @@
                                                 </div>
                                                 @if($document->description_ru)
                                                     <p class="text-sm text-gray-600 dark:text-gray-400 ml-6">
-                                                        {{ $document->description_ru }}
+                                                        {!! $document->description_ru !!}
                                                     </p>
                                                 @endif
                                                 <div class="flex items-center space-x-4 ml-6 mt-2 text-xs text-gray-500 dark:text-gray-400">

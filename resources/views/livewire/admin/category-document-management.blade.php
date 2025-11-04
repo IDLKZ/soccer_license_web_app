@@ -126,8 +126,14 @@
                         </td>
                         <td class="px-4 py-4">
                             @if(!empty($category->roles))
+                            @php
+                                $categoryRoles = $category->roles;
+                                if (is_string($categoryRoles)) {
+                                    $categoryRoles = json_decode($categoryRoles, true) ?? [];
+                                }
+                            @endphp
                             <div class="flex flex-wrap gap-1">
-                                @foreach($category->roles as $roleValue)
+                                @foreach($categoryRoles as $roleValue)
                                     @php
                                         $role = $availableRoles->firstWhere('value', $roleValue);
                                     @endphp

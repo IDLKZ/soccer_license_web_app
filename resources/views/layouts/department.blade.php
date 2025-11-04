@@ -36,7 +36,7 @@
         <!-- Main Content -->
         <div class="flex-1 lg:ml-64">
             <!-- Header -->
-            <x-header title="@yield('title', 'Панель управления')" />
+            <x-header title="Панель департамента" />
 
             <!-- Page Content -->
             <main class="p-6">

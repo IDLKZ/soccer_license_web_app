@@ -16,7 +16,7 @@
                 <!-- Dashboard -->
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-green-800 dark:hover:bg-green-800 hover:text-white rounded-lg transition-colors group">
                     <i class="fas fa-chart-line w-5 text-center text-green-400 group-hover:text-green-300"></i>
-                    <span class="ml-3 font-medium">Панель управления</span>
+                    <span class="ml-3 font-medium">Панель клуба</span>
                 </a>
 
                 <!-- Мои заявки -->

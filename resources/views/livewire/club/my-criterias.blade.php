@@ -177,22 +177,100 @@
 
                         <!-- Readiness Indicator -->
                         <div class="mt-4 pt-4 border-t border-slate-200 dark:border-blue-800/40">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-500 dark:text-gray-400">
-                                    Готовность:
-                                </span>
-                                <div class="flex items-center">
-                                    @if($criteria->is_ready)
-                                        <span class="text-sm font-medium text-green-600 dark:text-green-400">
-                                            Готов к проверке
-                                        </span>
-                                        <i class="fas fa-check-circle text-green-500 ml-2"></i>
-                                    @else
-                                        <span class="text-sm font-medium text-yellow-600 dark:text-yellow-400">
-                                            Требует доработки
-                                        </span>
-                                        <i class="fas fa-exclamation-circle text-yellow-500 ml-2"></i>
-                                    @endif
+                            <div class="space-y-2">
+                                <!-- Primary Readiness -->
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                                        Готовность:
+                                    </span>
+                                    <div class="flex items-center">
+                                        @if($criteria->is_ready)
+                                            <span class="text-sm font-medium text-green-600 dark:text-green-400">
+                                                Готов к проверке
+                                            </span>
+                                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                                        @else
+                                            <span class="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                                                Требует доработки
+                                            </span>
+                                            <i class="fas fa-exclamation-circle text-yellow-500 ml-2"></i>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- First Check Status -->
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                                        Первичная проверка:
+                                    </span>
+                                    <div class="flex items-center">
+                                        @if($criteria->is_first_passed === true)
+                                            <span class="text-xs font-medium text-green-600 dark:text-green-400">
+                                                Пройдена
+                                            </span>
+                                            <i class="fas fa-check text-green-400 ml-1 text-xs"></i>
+                                        @elseif($criteria->is_first_passed === false)
+                                            <span class="text-xs font-medium text-red-600 dark:text-red-400">
+                                                Не пройдена
+                                            </span>
+                                            <i class="fas fa-times text-red-400 ml-1 text-xs"></i>
+                                        @else
+                                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                Не проверялась
+                                            </span>
+                                            <i class="fas fa-clock text-gray-400 ml-1 text-xs"></i>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Industry Check Status -->
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                                        Отраслевая проверка:
+                                    </span>
+                                    <div class="flex items-center">
+                                        @if($criteria->is_industry_passed === true)
+                                            <span class="text-xs font-medium text-green-600 dark:text-green-400">
+                                                Пройдена
+                                            </span>
+                                            <i class="fas fa-check text-green-400 ml-1 text-xs"></i>
+                                        @elseif($criteria->is_industry_passed === false)
+                                            <span class="text-xs font-medium text-red-600 dark:text-red-400">
+                                                Не пройдена
+                                            </span>
+                                            <i class="fas fa-times text-red-400 ml-1 text-xs"></i>
+                                        @else
+                                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                Не проверялась
+                                            </span>
+                                            <i class="fas fa-clock text-gray-400 ml-1 text-xs"></i>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Final Check Status -->
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">
+                                        Контрольная проверка:
+                                    </span>
+                                    <div class="flex items-center">
+                                        @if($criteria->is_final_passed === true)
+                                            <span class="text-xs font-medium text-green-600 dark:text-green-400">
+                                                Пройдена
+                                            </span>
+                                            <i class="fas fa-check text-green-400 ml-1 text-xs"></i>
+                                        @elseif($criteria->is_final_passed === false)
+                                            <span class="text-xs font-medium text-red-600 dark:text-red-400">
+                                                Не пройдена
+                                            </span>
+                                            <i class="fas fa-times text-red-400 ml-1 text-xs"></i>
+                                        @else
+                                            <span class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                Не проверялась
+                                            </span>
+                                            <i class="fas fa-clock text-gray-400 ml-1 text-xs"></i>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

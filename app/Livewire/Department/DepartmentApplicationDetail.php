@@ -7,13 +7,16 @@ use App\Constants\ApplicationStatusConstants;
 use App\Models\Application;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationDocument;
+use App\Models\ApplicationReport;
 use App\Models\ApplicationStatus;
 use App\Models\ApplicationStep;
 use App\Models\CategoryDocument;
 use App\Models\LicenceRequirement;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -30,6 +33,11 @@ class DepartmentApplicationDetail extends Component
     public $criteriaTabs = [];
     public $licenceRequirementsByCategory = [];
     public $uploadedDocumentsByCategory = [];
+
+    // Reports by criteria
+    public $reportsByCriteria = []; // ['criteria_id' => ['reports' => [], 'count' => 0]]
+    public $departmentReports = []; // General department reports (criteria_id = null)
+    public $downloadingReports = []; // Track which reports are being downloaded
 
     // Permissions
     #[Locked]
@@ -156,7 +164,66 @@ class DepartmentApplicationDetail extends Component
             $firstTab = reset($this->criteriaTabs);
             $this->activeTab = $firstTab['category']->id;
             $this->loadLicenceRequirements();
+
+            // Load reports for all criteria
+            $this->loadReportsForAllCriteria();
+
+            // Load general department reports
+            $this->loadDepartmentReports();
         }
+    }
+
+    private function loadReportsForAllCriteria()
+    {
+        if (!$this->application) return;
+
+        // Get all criteria IDs from tabs
+        $criteriaIds = [];
+        foreach ($this->criteriaTabs as $tab) {
+            foreach ($tab['criteria'] as $criterion) {
+                $criteriaIds[] = $criterion->id;
+            }
+        }
+
+        // Load reports for each criteria
+        $reports = ApplicationReport::with('application_criterion')
+            ->where('application_id', $this->application->id)
+            ->whereIn('criteria_id', $criteriaIds)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('criteria_id');
+
+        $this->reportsByCriteria = [];
+        foreach ($criteriaIds as $criteriaId) {
+            $this->reportsByCriteria[$criteriaId] = $reports->get($criteriaId, collect());
+        }
+      }
+
+    /**
+     * Load general department reports (criteria_id = null)
+     */
+    private function loadDepartmentReports()
+    {
+        if (!$this->application) return;
+
+        $this->departmentReports = ApplicationReport::with('application.user')
+            ->where('application_id', $this->application->id)
+            ->whereNull('criteria_id')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function getReportsForCriterion($criterionId)
+    {
+        if (!$this->application || !$criterionId) {
+            return collect();
+        }
+
+        return ApplicationReport::with('application_criterion')
+            ->where('application_id', $this->application->id)
+            ->where('criteria_id', $criterionId)
+            ->orderBy('created_at', 'desc')
+            ->get();
     }
 
     private function loadLicenceRequirements()
@@ -1143,6 +1210,120 @@ class DepartmentApplicationDetail extends Component
             DB::rollBack();
             Log::error('Error rejecting application: ' . $e->getMessage());
             toastr()->error('Произошла ошибка при отказе заявки.');
+        }
+    }
+
+    /**
+     * Download report from external service
+     */
+    public function downloadReport($reportId)
+    {
+        // Set loading state
+        $this->downloadingReports[$reportId] = true;
+
+        try {
+            $reportServiceUrl = config('app.report_service_url', env('REPORT_SERVICE_URL'));
+
+            if (!$reportServiceUrl) {
+                toastr()->error('URL сервиса генерации отчетов не настроен');
+                $this->downloadingReports[$reportId] = false;
+                return;
+            }
+
+            // Send POST request to report service
+            $response = Http::timeout(30)
+                ->post($reportServiceUrl, [
+                    'report_id' => $reportId
+                ]);
+
+            if (!$response->successful()) {
+                Log::error("Report service returned error: " . $response->status() . " - " . $response->body());
+                toastr()->error('Ошибка при получении отчета от сервиса');
+                $this->downloadingReports[$reportId] = false;
+                return;
+            }
+
+            // Get the file content
+            $fileContent = $response->body();
+
+            // Get the report from database for filename
+            $report = ApplicationReport::find($reportId);
+            $filename = 'report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+            if ($report && $report->application_criterion && $report->application_criterion->category_document) {
+                $categoryName = Str::slug($report->application_criterion->category_document->title_ru ?? 'report');
+                $filename = $categoryName . '_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            }
+
+            // Clear loading state before returning file
+            $this->downloadingReports[$reportId] = false;
+
+            // Return file download response
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading report: ' . $e->getMessage());
+            toastr()->error('Произошла ошибка при скачивании отчета');
+            $this->downloadingReports[$reportId] = false;
+        }
+    }
+
+    /**
+     * Download department report from external service
+     */
+    public function downloadDepartmentReport($reportId)
+    {
+        // Set loading state
+        $this->downloadingReports['dept_' . $reportId] = true;
+
+        try {
+            $reportServiceUrl = 'http://localhost:8001/api/v1/department-reports/generate';
+
+            // Send POST request to report service
+            $response = Http::timeout(30)
+                ->post($reportServiceUrl, [
+                    'report_id' => $reportId
+                ]);
+
+            if (!$response->successful()) {
+                Log::error("Department report service returned error: " . $response->status() . " - " . $response->body());
+                toastr()->error('Ошибка при получении отчета от сервиса');
+                $this->downloadingReports['dept_' . $reportId] = false;
+                return;
+            }
+
+            // Get the file content
+            $fileContent = $response->body();
+
+            // Get the report from database for filename
+            $report = ApplicationReport::find($reportId);
+            $filename = 'department_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+            if ($report) {
+                $appName = Str::slug(config('app.name', 'KFF'));
+                $filename = $appName . '_department_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            }
+
+            // Clear loading state before returning file
+            $this->downloadingReports['dept_' . $reportId] = false;
+
+            // Return file download response
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading department report: ' . $e->getMessage());
+            toastr()->error('Произошла ошибка при скачивании отчета');
+            $this->downloadingReports['dept_' . $reportId] = false;
         }
     }
 

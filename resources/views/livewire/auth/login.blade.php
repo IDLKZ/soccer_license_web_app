@@ -5,11 +5,11 @@
             <i class="fas fa-shield-halved text-3xl text-white"></i>
         </div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Система лицензирования
+            Казахстанская Федерация Футбола
         </h1>
-        <p class="text-gray-600 dark:text-gray-400">
-            Футбольная федерация Казахстана
-        </p>
+{{--        <p class="text-gray-600 dark:text-gray-400">--}}
+{{--            Казахстанская Федерация Футбола--}}
+{{--        </p>--}}
     </div>
 
     <!-- Login Card -->
@@ -95,7 +95,7 @@
     <!-- Copyright -->
     <div class="text-center mt-8">
         <p class="text-sm text-gray-600 dark:text-gray-400">
-            © {{ date('Y') }} Футбольная федерация Казахстана
+            © {{ date('Y') }} Казахстанская Федерация Футбола
         </p>
     </div>
 </div>

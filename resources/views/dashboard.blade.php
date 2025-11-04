@@ -1,6 +1,15 @@
 @extends(get_user_layout())
 
-@section('title', 'Панель управления')
+@php
+    $userRole = auth()->user()->role->value ?? '';
+    $title = match($userRole) {
+        'admin' => 'Панель администратора',
+        'licensing-department', 'legal-department', 'finance-department', 'infrastructure-department', 'control-department' => 'Панель департамента',
+        'club-administrator', 'legal-specialist', 'financial-specialist', 'sporting-director' => 'Панель клуба',
+        default => 'Панель управления'
+    };
+@endphp
+@section('title', $title)
 
 @section('content')
     <div class="container mx-auto">

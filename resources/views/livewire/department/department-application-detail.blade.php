@@ -513,7 +513,7 @@
                                                 </div>
                                                 @if($document->description_ru)
                                                     <p class="text-sm text-gray-600 dark:text-gray-400 ml-6">
-                                                        {{ $document->description_ru }}
+                                                        {!! $document->description_ru !!}
                                                     </p>
                                                 @endif
                                                 <div class="flex items-center space-x-4 ml-6 mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -708,8 +708,150 @@
                         @endif
                     @endif
                 @endif
+
+                <!-- Reports Section -->
+                @if($criterion && isset($reportsByCriteria[$criterion->id]))
+                    <div class="mt-8 bg-gray-50 dark:bg-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                <i class="fas fa-clipboard-list text-indigo-500 mr-2"></i>
+                                Отчеты по критерию
+                            </h3>
+                            <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-3 py-1 rounded-full text-sm font-medium">
+                                {{ count($reportsByCriteria[$criterion->id]) }} {{ count($reportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($reportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}
+                            </span>
+                        </div>
+
+                        @if(!empty($reportsByCriteria[$criterion->id]))
+                            <div class="space-y-4">
+                                @foreach($reportsByCriteria[$criterion->id] as $report)
+                                    <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center mb-2">
+                                                    <i class="fas fa-file-alt text-indigo-500 mr-2"></i>
+                                                    <h4 class="text-md font-medium text-gray-900 dark:text-gray-100">
+                                                        Отчет #{{ $report->id }}
+                                                    </h4>
+                                                    <span class="ml-3 text-xs text-gray-500 dark:text-gray-400">
+                                                        от {{ $report->created_at->format('d.m.Y H:i') }}
+                                                    </span>
+                                                </div>
+
+                                                @if($report->application_criterion)
+                                                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                                        Критерий: {{ $report->application_criterion->category_document->title_ru ?? 'Не указан' }}
+                                                    </div>
+                                                @endif
+
+                                                <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                                    @if($report->application && $report->application->user)
+                                                        <span>
+                                                            <i class="fas fa-user mr-1"></i>
+                                                            {{ $report->application->user->name }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="ml-4">
+                                                <button
+                                                    wire:click="downloadReport({{ $report->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                                    <span wire:loading wire:target="downloadReport({{ $report->id }})">
+                                                        <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                        Генерация...
+                                                    </span>
+                                                    <span wire:loading.remove wire:target="downloadReport({{ $report->id }})">
+                                                        <i class="fas fa-download mr-1.5"></i>
+                                                        Скачать отчет
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <i class="fas fa-clipboard text-3xl mb-2"></i>
+                                <p>Пока нет отчетов по этому критерию</p>
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
+
+        <!-- Department Reports Section (General reports with criteria_id = null) -->
+        @if(!empty($departmentReports))
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mt-6">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <i class="fas fa-building text-indigo-500 mr-2"></i>
+                        Общие отчеты департамента
+                    </h3>
+                    <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm font-medium">
+                        {{ count($departmentReports) }} {{ count($departmentReports) === 1 ? 'отчет' : (count($departmentReports) <= 4 ? 'отчета' : 'отчетов') }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    @foreach($departmentReports as $report)
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <div class="bg-purple-100 dark:bg-purple-900 rounded-lg p-3 mr-3">
+                                            <i class="fas fa-file-alt text-purple-600 dark:text-purple-400 text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                Общий отчет #{{ $report->id }}
+                                            </h4>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                от {{ $report->created_at->format('d.m.Y H:i') }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between ml-14">
+                                        <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                            @if($report->application && $report->application->user)
+                                                <span>
+                                                    <i class="fas fa-user mr-1"></i>
+                                                    {{ $report->application->user->name }}
+                                                </span>
+                                            @endif
+                                            <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-full text-xs font-medium">
+                                                Общий отчет
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            wire:click="downloadDepartmentReport({{ $report->id }})"
+                                            wire:loading.attr="disabled"
+                                            class="inline-flex items-center px-3 py-1.5 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                            <span wire:loading wire:target="downloadDepartmentReport({{ $report->id }})">
+                                                <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                Генерация...
+                                            </span>
+                                            <span wire:loading.remove wire:target="downloadDepartmentReport({{ $report->id }})">
+                                                <i class="fas fa-download mr-1.5"></i>
+                                                Скачать
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
 
         @else
         <div class="text-center py-12">

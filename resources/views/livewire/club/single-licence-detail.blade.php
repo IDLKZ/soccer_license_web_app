@@ -248,7 +248,7 @@
 
                                 @if($requirement->document->description_ru)
                                 <p class="text-sm text-gray-700 dark:text-gray-300 mb-3 leading-relaxed">
-                                    {{ $requirement->document->description_ru }}
+                                    {!! $requirement->document->description_ru !!}
                                 </p>
                                 @endif
 

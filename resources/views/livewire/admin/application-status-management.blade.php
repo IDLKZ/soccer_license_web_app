@@ -148,8 +148,14 @@
                             </td>
                             <td class="px-4 py-4">
                                 @if(!empty($status->role_values))
+                                    @php
+                                        $statusRoleValues = $status->role_values;
+                                        if (is_string($statusRoleValues)) {
+                                            $statusRoleValues = json_decode($statusRoleValues, true) ?? [];
+                                        }
+                                    @endphp
                                     <div class="flex flex-wrap gap-1 justify-center">
-                                        @foreach($status->role_values as $roleValue)
+                                        @foreach($statusRoleValues as $roleValue)
                                             @php
                                                 $role = $availableRoles->firstWhere('value', $roleValue);
                                             @endphp

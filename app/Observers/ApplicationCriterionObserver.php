@@ -175,7 +175,7 @@ class ApplicationCriterionObserver
                     ApplicationReport::create([
                         'application_id' => $applicationCriterion->application_id,
                         'criteria_id' => null,
-                        'status' => 0, // Default status
+                        'status' => 1, // Default status
                     ]);
 
                     Log::info("ApplicationReport created for application #{$applicationCriterion->application_id} as all criteria reached awaiting-control-check");
