@@ -1363,7 +1363,14 @@ class DepartmentApplicationDetail extends Component
         $this->downloadingReports['dept_'.$reportId] = true;
 
         try {
-            $reportServiceUrl = 'http://localhost:8001/api/v1/department-reports/generate';
+            $reportServiceUrl = config('app.department_report_service_url', env('DEPARTMENT_REPORT_SERVICE_URL'));
+
+            if (! $reportServiceUrl) {
+                toastr()->error('URL сервиса генерации отчетов департамента не настроен');
+                $this->downloadingReports['dept_'.$reportId] = false;
+
+                return;
+            }
 
             // Send POST request to report service
             $response = Http::timeout(30)
