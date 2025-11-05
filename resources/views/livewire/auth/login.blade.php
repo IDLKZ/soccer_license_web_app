@@ -5,7 +5,7 @@
             <img src="{{ asset('logo_kff.png') }}" alt="KFF Logo" class="w-16 h-16 object-contain">
         </div>
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            Казахстанская Федерация Футбола
+            Система лицензирования футбольных клубов КФФ
         </h1>
 {{--        <p class="text-gray-600 dark:text-gray-400">--}}
 {{--            Казахстанская Федерация Футбола--}}
