@@ -298,9 +298,7 @@
                                 </h3>
                                 <div class="flex items-center space-x-4">
                                     <span class="{{ $this->getCriterionStatusColor($criterion) }} px-3 py-1 rounded-full text-xs font-medium">
-                                        @if(!$criterion->is_ready)
-                                            <i class="fas fa-clock mr-1"></i> Не готово
-                                        @elseif($criterion->is_first_passed === false || $criterion->is_industry_passed === false || $criterion->is_final_passed === false)
+                                        @if($criterion->is_first_passed === false || $criterion->is_industry_passed === false || $criterion->is_final_passed === false)
                                             <i class="fas fa-exclamation-triangle mr-1"></i> Требует исправлений
                                         @elseif($criterion->is_first_passed === null || $criterion->is_industry_passed === null || $criterion->is_final_passed === null)
                                             <i class="fas fa-spinner mr-1"></i> На проверке

@@ -235,10 +235,6 @@ class DepartmentApplications extends Component
 
     public function getCriterionStatusText($criterion)
     {
-        if (!$criterion->is_ready) {
-            return 'Не готово';
-        }
-
         $hasFailures = false;
         $hasPending = false;
 
