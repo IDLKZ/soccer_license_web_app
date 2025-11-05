@@ -148,13 +148,13 @@ class ApplicationCriterionObserver
         try {
             // Check if ApplicationInitialReport already exists for this application
             $existingReport = ApplicationInitialReport::where('application_id', $applicationCriterion->application_id)
-                ->whereNull('criteria_id')
+                ->where('criteria_id',$applicationCriterion->id)
                 ->first();
 
             if (! $existingReport) {
                 ApplicationInitialReport::create([
                     'application_id' => $applicationCriterion->application_id,
-                    'criteria_id' => null,
+                    'criteria_id' => $applicationCriterion->id,
                     'status' => 1, // Default status
                 ]);
 
