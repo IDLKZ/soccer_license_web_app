@@ -8,6 +8,7 @@ use App\Models\Application;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationReport;
+use App\Models\ApplicationSolution;
 use App\Models\ApplicationStatus;
 use App\Models\ApplicationStep;
 use App\Models\CategoryDocument;
@@ -45,7 +46,7 @@ class DepartmentApplicationDetail extends Component
     public $reportsByCriteria = []; // ['criteria_id' => ['reports' => [], 'count' => 0]]
 
     public $departmentReports = []; // General department reports (criteria_id = null)
-
+    public $solutions = []; // Commission solutions from application_solutions table
     public $downloadingReports = []; // Track which reports are being downloaded
 
     // Permissions
@@ -197,6 +198,9 @@ class DepartmentApplicationDetail extends Component
 
             // Load general department reports
             $this->loadDepartmentReports();
+
+            // Load commission solutions
+            $this->loadSolutions();
         }
     }
 
@@ -240,6 +244,19 @@ class DepartmentApplicationDetail extends Component
         $this->departmentReports = ApplicationReport::with('application.user')
             ->where('application_id', $this->application->id)
             ->whereNull('criteria_id')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    /**
+     * Load commission solutions from application_solutions table
+     */
+    private function loadSolutions()
+    {
+        if (!$this->application) return;
+
+        $this->solutions = ApplicationSolution::with('user')
+            ->where('application_id', $this->application->id)
             ->orderBy('created_at', 'desc')
             ->get();
     }
@@ -1413,6 +1430,66 @@ class DepartmentApplicationDetail extends Component
             Log::error('Error downloading department report: '.$e->getMessage());
             toastr()->error('Произошла ошибка при скачивании отчета');
             $this->downloadingReports['dept_'.$reportId] = false;
+        }
+    }
+
+    /**
+     * Download commission solution from external service
+     */
+    public function downloadSolution($solutionId)
+    {
+        // Set loading state
+        $this->downloadingReports['solution_' . $solutionId] = true;
+
+        try {
+            $solutionServiceUrl = config('app.solution_service_url', env('SOLUTION_SERVICE_URL'));
+
+            if (!$solutionServiceUrl) {
+                toastr()->error('URL сервиса генерации решений комиссии не настроен');
+                $this->downloadingReports['solution_' . $solutionId] = false;
+                return;
+            }
+
+            // Send POST request to solution service
+            $response = Http::timeout(30)
+                ->post($solutionServiceUrl, [
+                    'solution_id' => $solutionId
+                ]);
+
+            if (!$response->successful()) {
+                Log::error("Solution service returned error: " . $response->status() . " - " . $response->body());
+                toastr()->error('Ошибка при получении решения от сервиса');
+                $this->downloadingReports['solution_' . $solutionId] = false;
+                return;
+            }
+
+            // Get the file content
+            $fileContent = $response->body();
+
+            // Get the solution from database for filename
+            $solution = ApplicationSolution::find($solutionId);
+            $filename = 'commission_solution_' . $solutionId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+            if ($solution) {
+                $appName = Str::slug(config('app.name', 'KFF'));
+                $filename = $appName . '_commission_solution_' . $solutionId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            }
+
+            // Clear loading state before returning file
+            $this->downloadingReports['solution_' . $solutionId] = false;
+
+            // Return file download response
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading solution: ' . $e->getMessage());
+            toastr()->error('Произошла ошибка при скачивании решения');
+            $this->downloadingReports['solution_' . $solutionId] = false;
         }
     }
 

@@ -134,5 +134,6 @@ return [
 
     'report_service_url' => env('REPORT_SERVICE_URL'),
     'department_report_service_url' => env('DEPARTMENT_REPORT_SERVICE_URL'),
+    'solution_service_url' => env('SOLUTION_SERVICE_URL'),
 
 ];

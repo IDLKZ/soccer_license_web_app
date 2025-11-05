@@ -865,6 +865,87 @@
         </div>
         @endif
 
+        <!-- Commission Solutions Section -->
+        @if(!empty($solutions))
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mt-6">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <i class="fas fa-gavel text-green-500 mr-2"></i>
+                        Решения комиссии
+                    </h3>
+                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-medium">
+                        {{ count($solutions) }} {{ count($solutions) === 1 ? 'решение' : (count($solutions) <= 4 ? 'решения' : 'решений') }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    @foreach($solutions as $solution)
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <div class="bg-green-100 dark:bg-green-900 rounded-lg p-3 mr-3">
+                                            <i class="fas fa-gavel text-green-600 dark:text-green-400 text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                Решение комиссии #{{ $solution->id }}
+                                            </h4>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                от {{ $solution->created_at->format('d.m.Y H:i') }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($solution->title)
+                                        <div class="text-sm text-gray-700 dark:text-gray-300 mb-2 ml-14">
+                                            <strong>{{ $solution->title }}</strong>
+                                        </div>
+                                    @endif
+
+                                    @if($solution->description)
+                                        <div class="text-sm text-gray-700 dark:text-gray-300 mb-4 ml-14">
+                                            {!! $solution->description !!}
+                                        </div>
+                                    @endif
+
+                                    <div class="flex items-center justify-between ml-14">
+                                        <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                            @if($solution->user)
+                                                <span>
+                                                    <i class="fas fa-user mr-1"></i>
+                                                    {{ $solution->user->name }}
+                                                </span>
+                                            @endif
+                                            <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs font-medium">
+                                                Решение комиссии
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            wire:click="downloadSolution({{ $solution->id }})"
+                                            wire:loading.attr="disabled"
+                                            class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                            <span wire:loading wire:target="downloadSolution({{ $solution->id }})">
+                                                <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                Генерация...
+                                            </span>
+                                            <span wire:loading.remove wire:target="downloadSolution({{ $solution->id }})">
+                                                <i class="fas fa-download mr-1.5"></i>
+                                                Скачать
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Final Decision Modal (2.4.2) -->
         @if($showFinalDecisionModal)
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeFinalDecisionModal">
