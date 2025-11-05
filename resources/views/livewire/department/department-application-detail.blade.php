@@ -946,6 +946,93 @@
         </div>
         @endif
 
+        <!-- License Certificates Section (only for approved applications) -->
+        @if($application && $application->category_id == 6 && !empty($licenseCertificates))
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 mt-6">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <i class="fas fa-award text-yellow-500 mr-2"></i>
+                        Лицензия
+                    </h3>
+                    <span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-full text-sm font-medium">
+                        {{ count($licenseCertificates) }} {{ count($licenseCertificates) === 1 ? 'документ' : (count($licenseCertificates) <= 4 ? 'документа' : 'документов') }}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    @foreach($licenseCertificates as $certificate)
+                        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <div class="bg-yellow-100 dark:bg-yellow-900 rounded-lg p-3 mr-3">
+                                            <i class="fas fa-award text-yellow-600 dark:text-yellow-400 text-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                Лицензия #{{ $certificate->id }}
+                                            </h4>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                от {{ $certificate->created_at->format('d.m.Y H:i') }}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if($certificate->title)
+                                        <div class="text-sm text-gray-700 dark:text-gray-300 mb-2 ml-14">
+                                            <strong>{{ $certificate->title }}</strong>
+                                        </div>
+                                    @endif
+
+                                    @if($certificate->description)
+                                        <div class="text-sm text-gray-700 dark:text-gray-300 mb-4 ml-14">
+                                            {!! $certificate->description !!}
+                                        </div>
+                                    @endif
+
+                                    <div class="flex items-center justify-between ml-14">
+                                        <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                            @if($certificate->user)
+                                                <span>
+                                                    <i class="fas fa-user mr-1"></i>
+                                                    {{ $certificate->user->name }}
+                                                </span>
+                                            @endif
+                                            @if($certificate->application && $certificate->application->club)
+                                                <span>
+                                                    <i class="fas fa-building mr-1"></i>
+                                                    {{ $certificate->application->club->name_ru }}
+                                                </span>
+                                            @endif
+                                            <span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-full text-xs font-medium">
+                                                Лицензия
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            wire:click="downloadLicenseCertificate({{ $certificate->id }})"
+                                            wire:loading.attr="disabled"
+                                            class="inline-flex items-center px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                            <span wire:loading wire:target="downloadLicenseCertificate({{ $certificate->id }})">
+                                                <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                Генерация...
+                                            </span>
+                                            <span wire:loading.remove wire:target="downloadLicenseCertificate({{ $certificate->id }})">
+                                                <i class="fas fa-download mr-1.5"></i>
+                                                Скачать
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
         <!-- Final Decision Modal (2.4.2) -->
         @if($showFinalDecisionModal)
             <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeFinalDecisionModal">
