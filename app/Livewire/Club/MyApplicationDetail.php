@@ -1056,7 +1056,6 @@ class MyApplicationDetail extends Component
 
                     return $hasFailedDocuments && $hasNewUploads;
                 }
-
                 // For awaiting-documents, check that all documents have null status
                 return $uploadedDocuments->every(function ($doc) {
                     return $doc->is_first_passed === null &&
@@ -1069,9 +1068,8 @@ class MyApplicationDetail extends Component
                 if ($statusValue !== ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE) {
                     return false;
                 }
-
                 $hasFailedDocuments = $uploadedDocuments->where('is_industry_passed', false)->isNotEmpty();
-                $hasNewUploads = $uploadedDocuments->whereNull('is_industry_passed')->isNotEmpty();
+                $hasNewUploads = $uploadedDocuments->whereNull("is_first_passed")->whereNull('is_industry_passed')->isNotEmpty();
 
                 return $hasFailedDocuments && $hasNewUploads;
 
@@ -1082,7 +1080,7 @@ class MyApplicationDetail extends Component
                 }
 
                 $hasFailedDocuments = $uploadedDocuments->where('is_final_passed', false)->isNotEmpty();
-                $hasNewUploads = $uploadedDocuments->whereNull('is_final_passed')->isNotEmpty();
+                $hasNewUploads = $uploadedDocuments->whereNull("is_first_passed")->whereNull("is_industry_passed")->whereNull('is_final_passed')->isNotEmpty();
 
                 return $hasFailedDocuments && $hasNewUploads;
 

@@ -119,6 +119,15 @@ class DepartmentApplicationDetail extends Component
 
     public $deadlineEndAt = null;
 
+    // Change to partially approved modal
+    public $showChangeToPartialModal = false;
+
+    public $changeCriterionId = null;
+
+    public $changeComment = '';
+
+    public $changeReuploadDocumentIds = [];
+
     public function mount($application_id)
     {
         $this->applicationId = $application_id;
@@ -476,6 +485,33 @@ class DepartmentApplicationDetail extends Component
         }
 
         return true;
+    }
+
+    /**
+     * Check if criterion has at least one rejected document
+     */
+    public function hasRejectedDocuments($criterionId)
+    {
+        $criterion = ApplicationCriterion::find($criterionId);
+        if (! $criterion) {
+            return false;
+        }
+
+        $statusValue = $criterion->application_status->value ?? null;
+
+        // Get documents for this category
+        $documents = ApplicationDocument::where('application_id', $this->application->id)
+            ->where('category_id', $criterion->category_id)
+            ->get();
+
+        // Check if any document has been rejected in current review decisions
+        foreach ($documents as $doc) {
+            if (isset($this->reviewDecisions[$doc->id]) && $this->reviewDecisions[$doc->id]['decision'] === false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // Submit First Check (2.1)
@@ -1612,6 +1648,152 @@ class DepartmentApplicationDetail extends Component
         }
 
         $this->closeRevisionDeadlineModal();
+    }
+
+    /**
+     * Check if user can change fully-approved to partially-approved
+     */
+    public function canChangeToPartiallyApproved($criterion)
+    {
+        $user = auth()->user();
+
+        if (! $user || ! $user->role) {
+            return false;
+        }
+
+        // Only licensing-department and control-department can change
+        if (! in_array($user->role->value, ['licensing-department', 'control-department'])) {
+            return false;
+        }
+
+        // Check if criterion is fully-approved
+        if (! $criterion->application_status || $criterion->application_status->value !== ApplicationStatusConstants::FULLY_APPROVED_VALUE) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Open modal to change fully-approved to partially-approved
+     */
+    public function openChangeToPartialModal($criterionId)
+    {
+        $criterion = ApplicationCriterion::with(['application_status', 'application'])->find($criterionId);
+
+        if (! $criterion || ! $this->canChangeToPartiallyApproved($criterion)) {
+            toastr()->error('Изменение статуса недоступно.');
+
+            return;
+        }
+
+        $this->changeCriterionId = $criterionId;
+        $this->changeComment = '';
+        $this->changeReuploadDocumentIds = [];
+
+        // Load available documents for this criterion from licence_requirements
+        // using license_id from application and category_id from criterion
+        $licenseId = $criterion->application->license_id;
+        $categoryId = $criterion->category_id;
+        $requirements = LicenceRequirement::with('document')
+            ->where('licence_id', $licenseId)
+            ->where('category_id', $categoryId)
+            ->get();
+        $this->availableDocumentsForReupload = $requirements
+            ->map(function ($requirement) {
+                return [
+                    'id' => $requirement->id,
+                    'document' => [
+                        'id' => $requirement->document->id,
+                        'title_ru' => $requirement->document->title_ru,
+                        'title_kk' => $requirement->document->title_kk,
+                        'title_en' => $requirement->document->title_en,
+                        'description_ru' => $requirement->document->description_ru ?? null,
+                    ],
+                ];
+            })
+            ->toArray();
+
+        $this->showChangeToPartialModal = true;
+    }
+
+    /**
+     * Close modal
+     */
+    public function closeChangeToPartialModal()
+    {
+        $this->showChangeToPartialModal = false;
+        $this->changeCriterionId = null;
+        $this->changeComment = '';
+        $this->changeReuploadDocumentIds = [];
+        $this->availableDocumentsForReupload = [];
+    }
+
+    /**
+     * Change fully-approved to partially-approved
+     */
+    public function changeToPartiallyApproved()
+    {
+        $criterion = ApplicationCriterion::with('application_status')->find($this->changeCriterionId);
+
+        if (! $criterion || ! $this->canChangeToPartiallyApproved($criterion)) {
+            toastr()->error('Изменение статуса недоступно.');
+
+            return;
+        }
+
+        if (empty($this->changeReuploadDocumentIds)) {
+            toastr()->error('Необходимо выбрать хотя бы один документ для повторной загрузки.');
+
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Get partially-approved status
+            $partiallyApprovedStatus = ApplicationStatus::where('value', ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE)->first();
+
+            if (! $partiallyApprovedStatus) {
+                toastr()->error('Статус "Одобрено частично" не найден.');
+
+                return;
+            }
+
+            $user = auth()->user();
+            $userName = $user->name ?? 'Неизвестный пользователь';
+
+            // Update criterion
+            $criterion->update([
+                'status_id' => $partiallyApprovedStatus->id,
+                'last_comment' => $this->changeComment,
+                'can_reupload_after_ending' => true,
+                'can_reupload_after_endings_doc_ids' => $this->changeReuploadDocumentIds,
+            ]);
+
+            // Log step
+            ApplicationStep::create([
+                'application_id' => $this->application->id,
+                'application_criteria_id' => $criterion->id,
+                'status_id' => $partiallyApprovedStatus->id,
+                'responsible_id' => $user->id,
+                'responsible_by' => $userName,
+                'is_passed' => false,
+                'result' => $this->changeComment ?: 'Изменен статус с "Полностью одобрено" на "Одобрено частично"',
+            ]);
+
+            DB::commit();
+
+            toastr()->success('Статус успешно изменен на "Одобрено частично".');
+            $this->closeChangeToPartialModal();
+            $this->loadApplication();
+            $this->loadTabsAndRequirements();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error changing to partially approved: '.$e->getMessage());
+            toastr()->error('Ошибка при изменении статуса.');
+        }
     }
 
     public function render()

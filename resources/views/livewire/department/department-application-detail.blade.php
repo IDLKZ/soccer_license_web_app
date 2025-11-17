@@ -407,12 +407,14 @@
                                 @if($this->allDocumentsReviewed($criterion->id))
                                     <div class="flex items-center space-x-3">
                                         @if($statusValue === 'awaiting-first-check')
-                                            <button
-                                                wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'first')"
-                                                class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
-                                                <i class="fas fa-undo mr-2"></i>
-                                                Отправить на доработку
-                                            </button>
+                                            @if($this->hasRejectedDocuments($criterion->id))
+                                                <button
+                                                    wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'first')"
+                                                    class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-undo mr-2"></i>
+                                                    Отправить на доработку
+                                                </button>
+                                            @endif
                                             <button
                                                 wire:click="submitFirstCheck({{ $criterion->id }}, 'approve')"
                                                 wire:confirm="Отправить на отраслевое рассмотрение?"
@@ -421,12 +423,14 @@
                                                 Отправить на отраслевое рассмотрение
                                             </button>
                                         @elseif($statusValue === 'awaiting-industry-check')
-                                            <button
-                                                wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'industry')"
-                                                class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
-                                                <i class="fas fa-undo mr-2"></i>
-                                                Отправить на доработку
-                                            </button>
+                                            @if($this->hasRejectedDocuments($criterion->id))
+                                                <button
+                                                    wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'industry')"
+                                                    class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-undo mr-2"></i>
+                                                    Отправить на доработку
+                                                </button>
+                                            @endif
                                             <button
                                                 wire:click="submitIndustryCheck({{ $criterion->id }}, 'approve')"
                                                 wire:confirm="Отправить на контрольное рассмотрение?"
@@ -435,12 +439,14 @@
                                                 Отправить на контрольное рассмотрение
                                             </button>
                                         @elseif($statusValue === 'awaiting-control-check')
-                                            <button
-                                                wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'control')"
-                                                class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
-                                                <i class="fas fa-undo mr-2"></i>
-                                                Отправить на доработку
-                                            </button>
+                                            @if($this->hasRejectedDocuments($criterion->id))
+                                                <button
+                                                    wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'control')"
+                                                    class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-undo mr-2"></i>
+                                                    Отправить на доработку
+                                                </button>
+                                            @endif
                                             <button
                                                 wire:click="submitControlCheck({{ $criterion->id }}, 'approve')"
                                                 wire:confirm="Отправить на финальное решение?"
@@ -458,6 +464,21 @@
                                         </p>
                                     </div>
                                 @endif
+                            @endif
+
+                            <!-- Change fully-approved to partially-approved button -->
+                            @if($this->canChangeToPartiallyApproved($criterion))
+                                <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <button
+                                        wire:click="openChangeToPartialModal({{ $criterion->id }})"
+                                        class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                        <i class="fas fa-exchange-alt mr-2"></i>
+                                        Изменить на "Одобрено частично"
+                                    </button>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                                        Позволяет вернуть критерий с "Полностью одобрено" на "Одобрено частично" для повторной загрузки документов
+                                    </p>
+                                </div>
                             @endif
 
                             <!-- Comments from Previous Reviews -->
@@ -1247,14 +1268,16 @@
                                                     </label>
                                                     <div class="max-h-40 overflow-y-auto space-y-1 scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-200 dark:scrollbar-track-gray-800 hover:scrollbar-thumb-gray-500 dark:hover:scrollbar-thumb-gray-500">
                                                         @foreach($availableDocumentsForReupload as $doc)
-                                                            <label class="flex items-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    wire:model="reuploadDocumentIdsByCriterion.{{ $criterion['id'] }}"
-                                                                    value="{{ $doc['id'] }}"
-                                                                    class="mr-2">
-                                                                <span class="text-xs text-gray-900 dark:text-gray-100">{{ $doc['title_ru'] }}</span>
-                                                            </label>
+                                                            @if($criterion["category_id"] == $doc["category_id"])
+                                                                <label class="flex items-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        wire:model="reuploadDocumentIdsByCriterion.{{ $criterion['id'] }}"
+                                                                        value="{{ $doc['id'] }}"
+                                                                        class="mr-2">
+                                                                    <span class="text-xs text-gray-900 dark:text-gray-100">{{ $doc['title_ru'] }}</span>
+                                                                </label>
+                                                            @endif
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -1785,6 +1808,112 @@
                         class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                         <i class="fas fa-paper-plane mr-2"></i>
                         Отправить на доработку
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Change to Partially Approved Modal -->
+    @if($showChangeToPartialModal)
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeChangeToPartialModal">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <i class="fas fa-exchange-alt mr-2 text-yellow-600"></i>
+                        Изменить на "Одобрено частично"
+                    </h3>
+                    <button wire:click="closeChangeToPartialModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-6">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Вы изменяете статус критерия с "Полностью одобрено" на "Одобрено частично".
+                            Клуб сможет повторно загрузить только выбранные вами документы.
+                        </p>
+                    </div>
+
+                    <!-- Comment -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Комментарий (необязательно)
+                        </label>
+                        <textarea
+                            wire:model="changeComment"
+                            rows="4"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                   focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500
+                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            placeholder="Укажите причину изменения статуса и какие документы требуют доработки..."></textarea>
+                    </div>
+
+                    <!-- Documents for Reupload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            Выберите документы для повторной загрузки <span class="text-red-500">*</span>
+                        </label>
+
+                        @if(!empty($availableDocumentsForReupload))
+                            <div class="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                @foreach($availableDocumentsForReupload as $requirement)
+                                    <label class="flex items-start p-3 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            wire:model="changeReuploadDocumentIds"
+                                            value="{{ $requirement['document']['id'] }}"
+                                            class="mt-1 mr-3 text-yellow-600 focus:ring-yellow-500">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                {{ $requirement['document']['title_ru'] ?? 'Без названия' }}
+                                            </div>
+                                            @if(isset($requirement['document']['description_ru']))
+                                                <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                    {!!  $requirement['document']['description_ru'] !!}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-center">
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    <i class="fas fa-exclamation-circle mr-2"></i>
+                                    Нет доступных документов для выбора
+                                </p>
+                            </div>
+                        @endif
+
+                        @if(!empty($changeReuploadDocumentIds))
+                            <div class="mt-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                                <p class="text-sm text-green-800 dark:text-green-200">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    Выбрано документов: <strong>{{ count($changeReuploadDocumentIds) }}</strong>
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        wire:click="closeChangeToPartialModal"
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Отмена
+                    </button>
+                    <button
+                        wire:click="changeToPartiallyApproved"
+                        class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                        <i class="fas fa-exchange-alt mr-2"></i>
+                        Изменить статус
                     </button>
                 </div>
             </div>
