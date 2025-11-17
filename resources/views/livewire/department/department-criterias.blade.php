@@ -254,6 +254,53 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Deadlines Section -->
+                        @if($criteria->application_criteria_deadlines && $criteria->application_criteria_deadlines->count() > 0)
+                            @php
+                                $latestDeadline = $criteria->application_criteria_deadlines->sortByDesc('created_at')->first();
+                                $now = now();
+                                $isExpired = $latestDeadline->deadline_end_at->lt($now);
+                                $isUpcoming = $latestDeadline->deadline_end_at->diffInDays($now) <= 3 && !$isExpired;
+                            @endphp
+                            <div class="mt-3 pt-3 border-t border-slate-200 dark:border-blue-800/40">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <i class="fas fa-calendar-alt text-yellow-500 text-xs"></i>
+                                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Дедлайн:</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="{{ $this->getCriterionStatusColorByValue($latestDeadline->application_status->value) }} px-2 py-1 rounded text-xs">
+                                            {{ $latestDeadline->application_status->title_ru }}
+                                        </span>
+                                        @if($isExpired)
+                                            <span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs font-medium">
+                                                <i class="fas fa-exclamation-circle"></i> Просрочен
+                                            </span>
+                                        @elseif($isUpcoming)
+                                            <span class="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-2 py-1 rounded text-xs font-medium">
+                                                <i class="fas fa-clock"></i> Скоро
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-gray-600 dark:text-gray-400">
+                                        <i class="fas fa-hourglass-end mr-1 {{ $isExpired ? 'text-red-500' : 'text-yellow-500' }}"></i>
+                                        До: {{ $latestDeadline->deadline_end_at->format('d.m.Y H:i') }}
+                                    </div>
+                                    @if($isExpired)
+                                        <div class="text-xs text-red-600 dark:text-red-400">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            Просрочен на {{ $latestDeadline->deadline_end_at->diffForHumans($now, true) }}
+                                        </div>
+                                    @else
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Осталось {{ $latestDeadline->deadline_end_at->diffForHumans($now, true) }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Hover Effect -->

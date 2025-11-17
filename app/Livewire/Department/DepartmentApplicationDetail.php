@@ -5,6 +5,7 @@ namespace App\Livewire\Department;
 use App\Constants\ApplicationStatusCategoryConstants;
 use App\Constants\ApplicationStatusConstants;
 use App\Models\Application;
+use App\Models\ApplicationCriteriaDeadline;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationReport;
@@ -46,7 +47,9 @@ class DepartmentApplicationDetail extends Component
     public $reportsByCriteria = []; // ['criteria_id' => ['reports' => [], 'count' => 0]]
 
     public $departmentReports = []; // General department reports (criteria_id = null)
+
     public $solutions = []; // Commission solutions from application_solutions table
+
     public $downloadingReports = []; // Track which reports are being downloaded
 
     // Permissions
@@ -105,6 +108,17 @@ class DepartmentApplicationDetail extends Component
 
     public $rejectApplicationComment = '';
 
+    // Revision deadline modal
+    public $showRevisionDeadlineModal = false;
+
+    public $revisionCriterionId = null;
+
+    public $revisionType = null; // 'first', 'industry', 'control'
+
+    public $deadlineStartAt = null;
+
+    public $deadlineEndAt = null;
+
     public function mount($application_id)
     {
         $this->applicationId = $application_id;
@@ -134,6 +148,7 @@ class DepartmentApplicationDetail extends Component
                 'user.role',
                 'application_criteria.category_document',
                 'application_criteria.application_status',
+                'application_criteria.application_criteria_deadlines.application_status',
                 'documents',
             ]);
 
@@ -177,11 +192,13 @@ class DepartmentApplicationDetail extends Component
             ->groupBy('category_id')
             ->map(function ($criteria, $categoryId) {
                 $category = CategoryDocument::find($categoryId);
+                $firstCriterion = $criteria->first();
 
                 return [
                     'category' => $category,
                     'criteria' => $criteria,
                     'title' => $category->title_ru ?? 'Категория',
+                    'status' => $firstCriterion ? $firstCriterion->application_status : null,
                 ];
             })
             ->values()
@@ -253,7 +270,9 @@ class DepartmentApplicationDetail extends Component
      */
     private function loadSolutions()
     {
-        if (!$this->application) return;
+        if (! $this->application) {
+            return;
+        }
 
         $this->solutions = ApplicationSolution::with('user')
             ->where('application_id', $this->application->id)
@@ -568,6 +587,17 @@ class DepartmentApplicationDetail extends Component
                 'result' => $this->criterionComment,
             ]);
 
+            // Save deadline if sending for revision and deadline is set
+            if ($decision === 'revision' && $this->deadlineEndAt) {
+                ApplicationCriteriaDeadline::create([
+                    'application_id' => $this->application->id,
+                    'application_criteria_id' => $criterion->id,
+                    'deadline_start_at' => $this->deadlineStartAt,
+                    'deadline_end_at' => $this->deadlineEndAt,
+                    'status_id' => $newStatus->id,
+                ]);
+            }
+
             DB::commit();
 
             toastr()->success('Первичная проверка завершена.');
@@ -686,6 +716,17 @@ class DepartmentApplicationDetail extends Component
                 'is_passed' => $passed,
                 'result' => $this->criterionComment,
             ]);
+
+            // Save deadline if sending for revision and deadline is set
+            if ($decision === 'revision' && $this->deadlineEndAt) {
+                ApplicationCriteriaDeadline::create([
+                    'application_id' => $this->application->id,
+                    'application_criteria_id' => $criterion->id,
+                    'deadline_start_at' => $this->deadlineStartAt,
+                    'deadline_end_at' => $this->deadlineEndAt,
+                    'status_id' => $newStatus->id,
+                ]);
+            }
 
             DB::commit();
 
@@ -806,6 +847,17 @@ class DepartmentApplicationDetail extends Component
                 'is_passed' => $passed,
                 'result' => $this->criterionComment,
             ]);
+
+            // Save deadline if sending for revision and deadline is set
+            if ($decision === 'revision' && $this->deadlineEndAt) {
+                ApplicationCriteriaDeadline::create([
+                    'application_id' => $this->application->id,
+                    'application_criteria_id' => $criterion->id,
+                    'deadline_start_at' => $this->deadlineStartAt,
+                    'deadline_end_at' => $this->deadlineEndAt,
+                    'status_id' => $newStatus->id,
+                ]);
+            }
 
             DB::commit();
 
@@ -1181,6 +1233,25 @@ class DepartmentApplicationDetail extends Component
         }
     }
 
+    public function getCriterionStatusColorByValue($statusValue)
+    {
+        return match ($statusValue) {
+            ApplicationStatusConstants::AWAITING_DOCUMENTS_VALUE => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            ApplicationStatusConstants::CONTROL_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+            ApplicationStatusConstants::FULLY_APPROVED_VALUE => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE => 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+            ApplicationStatusConstants::REVOKED_VALUE => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            ApplicationStatusConstants::REJECTED_VALUE => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+        };
+    }
+
     public function getUploadedDocumentsForRequirement($documentId)
     {
         if (! isset($this->uploadedDocumentsByCategory[$documentId])) {
@@ -1439,27 +1510,29 @@ class DepartmentApplicationDetail extends Component
     public function downloadSolution($solutionId)
     {
         // Set loading state
-        $this->downloadingReports['solution_' . $solutionId] = true;
+        $this->downloadingReports['solution_'.$solutionId] = true;
 
         try {
             $solutionServiceUrl = config('app.solution_service_url', env('SOLUTION_SERVICE_URL'));
 
-            if (!$solutionServiceUrl) {
+            if (! $solutionServiceUrl) {
                 toastr()->error('URL сервиса генерации решений комиссии не настроен');
-                $this->downloadingReports['solution_' . $solutionId] = false;
+                $this->downloadingReports['solution_'.$solutionId] = false;
+
                 return;
             }
 
             // Send POST request to solution service
             $response = Http::timeout(30)
                 ->post($solutionServiceUrl, [
-                    'solution_id' => $solutionId
+                    'solution_id' => $solutionId,
                 ]);
 
-            if (!$response->successful()) {
-                Log::error("Solution service returned error: " . $response->status() . " - " . $response->body());
+            if (! $response->successful()) {
+                Log::error('Solution service returned error: '.$response->status().' - '.$response->body());
                 toastr()->error('Ошибка при получении решения от сервиса');
-                $this->downloadingReports['solution_' . $solutionId] = false;
+                $this->downloadingReports['solution_'.$solutionId] = false;
+
                 return;
             }
 
@@ -1468,29 +1541,77 @@ class DepartmentApplicationDetail extends Component
 
             // Get the solution from database for filename
             $solution = ApplicationSolution::find($solutionId);
-            $filename = 'commission_solution_' . $solutionId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            $filename = 'commission_solution_'.$solutionId.'_'.now()->format('Y-m-d_H-i-s').'.pdf';
 
             if ($solution) {
                 $appName = Str::slug(config('app.name', 'KFF'));
-                $filename = $appName . '_commission_solution_' . $solutionId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+                $filename = $appName.'_commission_solution_'.$solutionId.'_'.now()->format('Y-m-d_H-i-s').'.pdf';
             }
 
             // Clear loading state before returning file
-            $this->downloadingReports['solution_' . $solutionId] = false;
+            $this->downloadingReports['solution_'.$solutionId] = false;
 
             // Return file download response
             return response()->streamDownload(function () use ($fileContent) {
                 echo $fileContent;
             }, $filename, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error downloading solution: ' . $e->getMessage());
+            Log::error('Error downloading solution: '.$e->getMessage());
             toastr()->error('Произошла ошибка при скачивании решения');
-            $this->downloadingReports['solution_' . $solutionId] = false;
+            $this->downloadingReports['solution_'.$solutionId] = false;
         }
+    }
+
+    public function openRevisionDeadlineModal($criterionId, $revisionType)
+    {
+        $this->revisionCriterionId = $criterionId;
+        $this->revisionType = $revisionType;
+        $this->deadlineStartAt = null;
+        $this->deadlineEndAt = null;
+        $this->showRevisionDeadlineModal = true;
+    }
+
+    public function closeRevisionDeadlineModal()
+    {
+        $this->showRevisionDeadlineModal = false;
+        $this->revisionCriterionId = null;
+        $this->revisionType = null;
+        $this->deadlineStartAt = null;
+        $this->deadlineEndAt = null;
+        $this->resetValidation(['deadlineEndAt']);
+    }
+
+    public function confirmRevisionWithDeadline()
+    {
+        // Validate deadline (optional, but if provided must be valid)
+        $this->validate([
+            'deadlineEndAt' => 'nullable|date|after:now',
+            'deadlineStartAt' => 'nullable|date|before:deadlineEndAt',
+        ], [
+            'deadlineEndAt.date' => 'Неверный формат даты',
+            'deadlineEndAt.after' => 'Дедлайн должен быть в будущем',
+            'deadlineStartAt.date' => 'Неверный формат даты начала',
+            'deadlineStartAt.before' => 'Дата начала должна быть раньше даты окончания',
+        ]);
+
+        // Determine which submit method to call based on revision type
+        switch ($this->revisionType) {
+            case 'first':
+                $this->submitFirstCheck($this->revisionCriterionId, 'revision');
+                break;
+            case 'industry':
+                $this->submitIndustryCheck($this->revisionCriterionId, 'revision');
+                break;
+            case 'control':
+                $this->submitControlCheck($this->revisionCriterionId, 'revision');
+                break;
+        }
+
+        $this->closeRevisionDeadlineModal();
     }
 
     public function render()

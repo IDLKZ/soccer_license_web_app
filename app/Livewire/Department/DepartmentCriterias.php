@@ -2,11 +2,12 @@
 
 namespace App\Livewire\Department;
 
+use App\Constants\ApplicationStatusConstants;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationStatus;
 use App\Models\CategoryDocument;
-use Livewire\Component;
 use Livewire\Attributes\Locked;
+use Livewire\Component;
 
 class DepartmentCriterias extends Component
 {
@@ -15,13 +16,18 @@ class DepartmentCriterias extends Component
 
     // Search and pagination
     public $search = '';
+
     public $perPage = 12;
 
     // Data collections
     public $criterias;
+
     public $activeCriterias;
+
     public $revisionCriterias;
+
     public $approvedCriterias;
+
     public $rejectedCriterias;
 
     // Pagination
@@ -32,24 +38,24 @@ class DepartmentCriterias extends Component
         'active' => 0,
         'revision' => 0,
         'approved' => 0,
-        'rejected' => 0
+        'rejected' => 0,
     ];
 
     // Status groups for department (different from club)
     private $revisionStatuses = [
         'first-check-revision',
         'industry-check-revision',
-        'control-check-revision'
+        'control-check-revision',
     ];
 
     private $approvedStatuses = [
         'fully-approved',
-        'partially-approved'
+        'partially-approved',
     ];
 
     private $rejectedStatuses = [
         'revoked',
-        'rejected'
+        'rejected',
     ];
 
     // Permissions
@@ -84,6 +90,7 @@ class DepartmentCriterias extends Component
 
         if (empty($categoryIds)) {
             $this->setEmptyCollections();
+
             return;
         }
 
@@ -93,30 +100,31 @@ class DepartmentCriterias extends Component
             'application.licence.league',
             'application.club',
             'category_document',
-            'application_status'
+            'application_status',
+            'application_criteria_deadlines.application_status',
         ])
-        ->whereIn('category_id', $categoryIds); // Обязательный пункт 2
+            ->whereIn('category_id', $categoryIds); // Обязательный пункт 2
 
         // Apply search filter
         if ($this->search) {
-            $baseQuery->where(function($q) {
-                $q->whereHas('application', function($subQuery) {
-                    $subQuery->whereHas('licence', function($licenceQuery) {
-                        $licenceQuery->where('title_ru', 'like', '%' . $this->search . '%')
-                                ->orWhere('title_kk', 'like', '%' . $this->search . '%')
-                                ->orWhere('title_en', 'like', '%' . $this->search . '%');
+            $baseQuery->where(function ($q) {
+                $q->whereHas('application', function ($subQuery) {
+                    $subQuery->whereHas('licence', function ($licenceQuery) {
+                        $licenceQuery->where('title_ru', 'like', '%'.$this->search.'%')
+                            ->orWhere('title_kk', 'like', '%'.$this->search.'%')
+                            ->orWhere('title_en', 'like', '%'.$this->search.'%');
                     })
-                    ->orWhereHas('club', function($clubQuery) {
-                        $clubQuery->where('short_name_ru', 'like', '%' . $this->search . '%')
-                                ->orWhere('short_name_kk', 'like', '%' . $this->search . '%')
-                                ->orWhere('short_name_en', 'like', '%' . $this->search . '%');
-                    });
+                        ->orWhereHas('club', function ($clubQuery) {
+                            $clubQuery->where('short_name_ru', 'like', '%'.$this->search.'%')
+                                ->orWhere('short_name_kk', 'like', '%'.$this->search.'%')
+                                ->orWhere('short_name_en', 'like', '%'.$this->search.'%');
+                        });
                 })
-                ->orWhereHas('category_document', function($categoryQuery) {
-                    $categoryQuery->where('title_ru', 'like', '%' . $this->search . '%')
-                            ->orWhere('title_kk', 'like', '%' . $this->search . '%')
-                            ->orWhere('title_en', 'like', '%' . $this->search . '%');
-                });
+                    ->orWhereHas('category_document', function ($categoryQuery) {
+                        $categoryQuery->where('title_ru', 'like', '%'.$this->search.'%')
+                            ->orWhere('title_kk', 'like', '%'.$this->search.'%')
+                            ->orWhere('title_en', 'like', '%'.$this->search.'%');
+                    });
             });
         }
 
@@ -124,24 +132,24 @@ class DepartmentCriterias extends Component
         $allCriterias = $baseQuery->get();
 
         // Вкладка "Активные" (пункт 4)
-        $this->activeCriterias = $allCriterias->filter(function($criteria) use ($activeStatusIds) {
+        $this->activeCriterias = $allCriterias->filter(function ($criteria) use ($activeStatusIds) {
             return $criteria->status_id && in_array($criteria->status_id, $activeStatusIds);
         });
 
         // Вкладка "На доработке" (пункт 5)
-        $this->revisionCriterias = $allCriterias->filter(function($criteria) {
+        $this->revisionCriterias = $allCriterias->filter(function ($criteria) {
             return $criteria->application_status &&
                    in_array($criteria->application_status->value, $this->revisionStatuses);
         });
 
         // Вкладка "Одобрено" (пункт 6)
-        $this->approvedCriterias = $allCriterias->filter(function($criteria) {
+        $this->approvedCriterias = $allCriterias->filter(function ($criteria) {
             return $criteria->application_status &&
                    in_array($criteria->application_status->value, $this->approvedStatuses);
         });
 
         // Вкладка "Отказано" (пункт 7)
-        $this->rejectedCriterias = $allCriterias->filter(function($criteria) {
+        $this->rejectedCriterias = $allCriterias->filter(function ($criteria) {
             return $criteria->application_status &&
                    in_array($criteria->application_status->value, $this->rejectedStatuses);
         });
@@ -157,7 +165,7 @@ class DepartmentCriterias extends Component
     {
         $user = auth()->user();
 
-        if (!$user->role) {
+        if (! $user->role) {
             return [];
         }
 
@@ -173,7 +181,7 @@ class DepartmentCriterias extends Component
     {
         $user = auth()->user();
 
-        if (!$user->role) {
+        if (! $user->role) {
             return [];
         }
 
@@ -282,7 +290,7 @@ class DepartmentCriterias extends Component
             'active' => $this->activeCriterias->count(),
             'revision' => $this->revisionCriterias->count(),
             'approved' => $this->approvedCriterias->count(),
-            'rejected' => $this->rejectedCriterias->count()
+            'rejected' => $this->rejectedCriterias->count(),
         ];
     }
 
@@ -315,7 +323,7 @@ class DepartmentCriterias extends Component
 
     public function getCriteriaStatusIcon($statusValue)
     {
-        return match($statusValue) {
+        return match ($statusValue) {
             'awaiting-documents' => 'fas fa-upload',
             'first-check-revision' => 'fas fa-exclamation-triangle',
             'industry-check-revision' => 'fas fa-exclamation-triangle',
@@ -339,7 +347,7 @@ class DepartmentCriterias extends Component
     {
         $user = auth()->user();
 
-        if (!$user || !$user->role) {
+        if (! $user || ! $user->role) {
             return 0;
         }
 
@@ -365,6 +373,25 @@ class DepartmentCriterias extends Component
         return ApplicationCriterion::whereIn('category_id', $categoryIds)
             ->whereIn('status_id', $statusIds)
             ->count();
+    }
+
+    public function getCriterionStatusColorByValue($statusValue)
+    {
+        return match ($statusValue) {
+            ApplicationStatusConstants::AWAITING_DOCUMENTS_VALUE => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            ApplicationStatusConstants::CONTROL_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+            ApplicationStatusConstants::FULLY_APPROVED_VALUE => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE => 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+            ApplicationStatusConstants::REVOKED_VALUE => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            ApplicationStatusConstants::REJECTED_VALUE => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+        };
     }
 
     public function render()

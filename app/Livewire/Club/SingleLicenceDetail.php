@@ -166,18 +166,30 @@ class SingleLicenceDetail extends Component
             return;
         }
 
-        // Check for active applications (category.value != 'rejected')
+        // Get clubs with active applications (category.value != 'rejected')
         $rejectedCategoryValue = 'rejected';
-        $existingApplications = Application::where('license_id', $this->licenceId)
+        $clubsWithActiveApplications = Application::where('license_id', $this->licenceId)
             ->whereIn('club_id', $this->myClubs)
             ->whereHas('application_status_category', function ($query) use ($rejectedCategoryValue) {
                 $query->where('value', '!=', $rejectedCategoryValue);
             })
-            ->exists();
+            ->pluck('club_id')
+            ->toArray();
 
-        if ($existingApplications) {
+        // Get clubs with valid deadlines
+        $clubsWithValidDeadlines = $this->licence->licence_deadlines()
+            ->whereIn('club_id', $this->myClubs)
+            ->where('start_at', '<=', $now)
+            ->where('end_at', '>=', $now)
+            ->pluck('club_id')
+            ->toArray();
+
+        // Find clubs that have valid deadlines but no active applications
+        $availableClubIds = array_diff($clubsWithValidDeadlines, $clubsWithActiveApplications);
+
+        if (empty($availableClubIds)) {
             $this->canApply = false;
-            $this->canApplyReason = 'У вас уже есть активная заявка на эту лицензию.';
+            $this->canApplyReason = 'У вас уже есть активные заявки на все клубы с действующим периодом подачи.';
 
             return;
         }
@@ -210,7 +222,26 @@ class SingleLicenceDetail extends Component
             return;
         }
 
-        $this->availableClubs = Club::whereIn('id', $validDeadlineClubIds)->get();
+        // Get clubs with active applications (category.value != 'rejected')
+        $rejectedCategoryValue = 'rejected';
+        $clubsWithActiveApplications = Application::where('license_id', $this->licenceId)
+            ->whereIn('club_id', $validDeadlineClubIds)
+            ->whereHas('application_status_category', function ($query) use ($rejectedCategoryValue) {
+                $query->where('value', '!=', $rejectedCategoryValue);
+            })
+            ->pluck('club_id')
+            ->toArray();
+
+        // Exclude clubs that already have active applications
+        $availableClubIds = array_diff($validDeadlineClubIds, $clubsWithActiveApplications);
+
+        if (empty($availableClubIds)) {
+            session()->flash('error', 'У вас уже есть активные заявки на все клубы с действующим периодом подачи.');
+
+            return;
+        }
+
+        $this->availableClubs = Club::whereIn('id', $availableClubIds)->get();
 
         if ($this->availableClubs->count() === 0) {
             session()->flash('error', 'У вас нет доступных клубов для подачи заявки.');

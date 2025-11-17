@@ -5,6 +5,7 @@ namespace App\Livewire\Club;
 use App\Constants\ApplicationStatusCategoryConstants;
 use App\Constants\ApplicationStatusConstants;
 use App\Models\Application;
+use App\Models\ApplicationCriteriaDeadline;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationDocument;
 use App\Models\ApplicationStatus;
@@ -107,6 +108,7 @@ class MyApplicationDetail extends Component
                 'user.role',
                 'application_criteria.category_document',
                 'application_criteria.application_status',
+                'application_criteria.application_criteria_deadlines.application_status',
                 'documents',
             ]);
 
@@ -177,11 +179,13 @@ class MyApplicationDetail extends Component
             ->groupBy('category_id')
             ->map(function ($criteria, $categoryId) {
                 $category = CategoryDocument::find($categoryId);
+                $firstCriterion = $criteria->first();
 
                 return [
                     'category' => $category,
                     'criteria' => $criteria, // Keep as collection, not array
                     'title' => $category->title_ru ?? 'Категория',
+                    'status' => $firstCriterion ? $firstCriterion->application_status : null,
                 ];
             })
             ->values()
@@ -306,11 +310,19 @@ class MyApplicationDetail extends Component
         }
 
         // Find criterion by ID directly
-        $criterion = ApplicationCriterion::with(['category_document', 'application_status'])
+        $criterion = ApplicationCriterion::with(['category_document', 'application_status', 'application_criteria_deadlines'])
             ->find($criterionId);
 
         if (! $criterion) {
             toastr()->error('Критерий не найден.');
+
+            return;
+        }
+
+        // Check deadline restrictions
+        $deadlineCheck = $this->checkCriterionDeadline($criterion);
+        if (! $deadlineCheck['allowed']) {
+            toastr()->error($deadlineCheck['message']);
 
             return;
         }
@@ -718,10 +730,18 @@ class MyApplicationDetail extends Component
             return;
         }
 
-        $criterion = ApplicationCriterion::find($criterionId);
+        $criterion = ApplicationCriterion::with('application_criteria_deadlines')->find($criterionId);
 
         if (! $criterion) {
             toastr()->error('Критерий не найден.');
+
+            return;
+        }
+
+        // Check deadline restrictions
+        $deadlineCheck = $this->checkCriterionDeadline($criterion);
+        if (! $deadlineCheck['allowed']) {
+            toastr()->error($deadlineCheck['message']);
 
             return;
         }
@@ -759,6 +779,9 @@ class MyApplicationDetail extends Component
                 return;
             }
 
+            // Save old status_id before updating
+            $oldStatusId = $criterion->status_id;
+
             // Update criterion status
             $criterion->update(['status_id' => $newStatus->id]);
 
@@ -782,6 +805,11 @@ class MyApplicationDetail extends Component
                     ->whereNull('is_industry_passed')
                     ->update(['is_industry_passed' => true]);
             }
+
+            // Delete deadline record if exists for this criterion and old status
+            ApplicationCriteriaDeadline::where('application_criteria_id', $criterionId)
+                ->where('status_id', $oldStatusId)
+                ->delete();
 
             DB::commit();
 
@@ -1107,6 +1135,86 @@ class MyApplicationDetail extends Component
         return $document->is_first_passed === null &&
                $document->is_industry_passed === null &&
                $document->is_final_passed === null;
+    }
+
+    /**
+     * Check if criterion can be submitted based on deadline
+     */
+    public function checkCriterionDeadline($criterion)
+    {
+        if (! $criterion->application_criteria_deadlines || $criterion->application_criteria_deadlines->count() === 0) {
+            return ['allowed' => true, 'message' => null];
+        }
+
+        $now = now();
+        $statusId = $criterion->status_id;
+
+        // Find active deadline for current status
+        $activeDeadline = $criterion->application_criteria_deadlines
+            ->where('status_id', $statusId)
+            ->filter(function ($deadline) use ($now) {
+                // Check if current time is within deadline range
+                $startOk = is_null($deadline->deadline_start_at) || $deadline->deadline_start_at->lte($now);
+                $endOk = $deadline->deadline_end_at->gte($now);
+
+                return $startOk && $endOk;
+            })
+            ->first();
+
+        if (! $activeDeadline) {
+            // Check if there's an expired deadline
+            $expiredDeadline = $criterion->application_criteria_deadlines
+                ->where('status_id', $statusId)
+                ->filter(function ($deadline) use ($now) {
+                    return $deadline->deadline_end_at->lt($now);
+                })
+                ->sortByDesc('deadline_end_at')
+                ->first();
+
+            if ($expiredDeadline) {
+                return [
+                    'allowed' => false,
+                    'message' => 'Дедлайн истек: '.$expiredDeadline->deadline_end_at->format('d.m.Y H:i').'. Невозможно отправить на проверку.',
+                ];
+            }
+
+            // Check if deadline hasn't started yet
+            $futureDeadline = $criterion->application_criteria_deadlines
+                ->where('status_id', $statusId)
+                ->filter(function ($deadline) use ($now) {
+                    return ! is_null($deadline->deadline_start_at) && $deadline->deadline_start_at->gt($now);
+                })
+                ->sortBy('deadline_start_at')
+                ->first();
+
+            if ($futureDeadline) {
+                return [
+                    'allowed' => false,
+                    'message' => 'Дедлайн еще не начался. Доступно с: '.$futureDeadline->deadline_start_at->format('d.m.Y H:i'),
+                ];
+            }
+        }
+
+        return ['allowed' => true, 'message' => null];
+    }
+
+    public function getCriterionStatusColorByValue($statusValue)
+    {
+        return match ($statusValue) {
+            ApplicationStatusConstants::AWAITING_DOCUMENTS_VALUE => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+            ApplicationStatusConstants::FIRST_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE => 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+            ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+            ApplicationStatusConstants::CONTROL_CHECK_REVISION_VALUE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+            ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE => 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200',
+            ApplicationStatusConstants::FULLY_APPROVED_VALUE => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+            ApplicationStatusConstants::PARTIALLY_APPROVED_VALUE => 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200',
+            ApplicationStatusConstants::REVOKED_VALUE => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
+            ApplicationStatusConstants::REJECTED_VALUE => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+            default => 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+        };
     }
 
     public function render()

@@ -269,13 +269,20 @@
                         <button
                             wire:click="setActiveTab('{{ $tab['category']->id }}')"
                             class="{{ $activeTab === $tab['category']->id ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300' }}
-                             flex items-center px-6 py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap"
+                             flex flex-col items-start px-6 py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap"
                         >
-                            <i class="fas fa-folder mr-2"></i>
-                            {{ $tab['title'] }}
-                            <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
-                                {{ count($tab['criteria']) }}
-                            </span>
+                            <div class="flex items-center">
+                                <i class="fas fa-folder mr-2"></i>
+                                {{ $tab['title'] }}
+                                <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
+                                    {{ count($tab['criteria']) }}
+                                </span>
+                            </div>
+                            @if($tab['status'])
+                                <span class="mt-2 {{ $this->getCriterionStatusColorByValue($tab['status']->value) }} px-2 py-1 rounded-md text-xs font-medium">
+                                    {{ $tab['status']->title_ru }}
+                                </span>
+                            @endif
                         </button>
                     @endforeach
                 </nav>
@@ -312,6 +319,72 @@
                                 </div>
                             </div>
 
+                            <!-- Deadlines Section -->
+                            @if($criterion->application_criteria_deadlines && $criterion->application_criteria_deadlines->count() > 0)
+                                <div class="mb-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                    <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-3 flex items-center">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        Установленные дедлайны для доработки
+                                    </h4>
+                                    <div class="space-y-3">
+                                        @foreach($criterion->application_criteria_deadlines->sortByDesc('created_at') as $deadline)
+                                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-yellow-300 dark:border-yellow-700">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center space-x-2 mb-2">
+                                                            <span class="{{ $this->getCriterionStatusColorByValue($deadline->application_status->value) }} px-2 py-1 rounded-md text-xs font-medium">
+                                                                {{ $deadline->application_status->title_ru }}
+                                                            </span>
+                                                            @php
+                                                                $now = now();
+                                                                $isExpired = $deadline->deadline_end_at->lt($now);
+                                                                $isUpcoming = $deadline->deadline_end_at->diffInDays($now) <= 3 && !$isExpired;
+                                                            @endphp
+                                                            @if($isExpired)
+                                                                <span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded-md text-xs font-medium">
+                                                                    <i class="fas fa-exclamation-circle mr-1"></i> Просрочен
+                                                                </span>
+                                                            @elseif($isUpcoming)
+                                                                <span class="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-2 py-1 rounded-md text-xs font-medium">
+                                                                    <i class="fas fa-clock mr-1"></i> Скоро истекает
+                                                                </span>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                            @if($deadline->deadline_start_at)
+                                                                <div class="text-gray-700 dark:text-gray-300">
+                                                                    <i class="fas fa-hourglass-start mr-1 text-blue-500"></i>
+                                                                    <span class="font-medium">Начало:</span>
+                                                                    {{ $deadline->deadline_start_at->format('d.m.Y H:i') }}
+                                                                </div>
+                                                            @endif
+                                                            <div class="text-gray-700 dark:text-gray-300">
+                                                                <i class="fas fa-hourglass-end mr-1 {{ $isExpired ? 'text-red-500' : 'text-yellow-500' }}"></i>
+                                                                <span class="font-medium">Крайний срок:</span>
+                                                                {{ $deadline->deadline_end_at->format('d.m.Y H:i') }}
+                                                            </div>
+                                                        </div>
+
+                                                        @if($isExpired)
+                                                            <div class="mt-2 text-xs text-red-600 dark:text-red-400">
+                                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                                Просрочен на {{ $deadline->deadline_end_at->diffForHumans($now, true) }}
+                                                            </div>
+                                                        @else
+                                                            <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                                                <i class="fas fa-info-circle mr-1"></i>
+                                                                Осталось {{ $deadline->deadline_end_at->diffForHumans($now, true) }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
                             <!-- Review Actions based on status -->
                             @if($this->canReviewCriterion($criterion))
                                 @php
@@ -335,8 +408,7 @@
                                     <div class="flex items-center space-x-3">
                                         @if($statusValue === 'awaiting-first-check')
                                             <button
-                                                wire:click="submitFirstCheck({{ $criterion->id }}, 'revision')"
-                                                wire:confirm="Отправить на доработку?"
+                                                wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'first')"
                                                 class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                                                 <i class="fas fa-undo mr-2"></i>
                                                 Отправить на доработку
@@ -350,8 +422,7 @@
                                             </button>
                                         @elseif($statusValue === 'awaiting-industry-check')
                                             <button
-                                                wire:click="submitIndustryCheck({{ $criterion->id }}, 'revision')"
-                                                wire:confirm="Отправить на доработку?"
+                                                wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'industry')"
                                                 class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                                                 <i class="fas fa-undo mr-2"></i>
                                                 Отправить на доработку
@@ -365,8 +436,7 @@
                                             </button>
                                         @elseif($statusValue === 'awaiting-control-check')
                                             <button
-                                                wire:click="submitControlCheck({{ $criterion->id }}, 'revision')"
-                                                wire:confirm="Отправить на доработку?"
+                                                wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'control')"
                                                 class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                                                 <i class="fas fa-undo mr-2"></i>
                                                 Отправить на доработку
@@ -1477,6 +1547,91 @@
                         class="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                         <i class="fas fa-ban mr-2"></i>
                         Отказать заявку
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Revision Deadline Modal -->
+    @if($showRevisionDeadlineModal)
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl mx-4 border border-gray-200 dark:border-gray-700">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <i class="fas fa-calendar-alt mr-2 text-yellow-500"></i>
+                            Указать дедлайн для доработки
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Укажите срок, до которого клуб должен исправить документы
+                        </p>
+                    </div>
+                    <button
+                        wire:click="closeRevisionDeadlineModal"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-4">
+                    <!-- Deadline Start (Optional) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-hourglass-start mr-2"></i>
+                            Дата начала (необязательно)
+                        </label>
+                        <input
+                            type="datetime-local"
+                            wire:model="deadlineStartAt"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                   focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500
+                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        @error('deadlineStartAt')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Deadline End (Optional) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <i class="fas fa-hourglass-end mr-2 text-yellow-500"></i>
+                            Крайний срок исправления (необязательно)
+                        </label>
+                        <input
+                            type="datetime-local"
+                            wire:model="deadlineEndAt"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                   focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500
+                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        @error('deadlineEndAt')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <p class="text-sm text-blue-800 dark:text-blue-200">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Указание дедлайна не обязательно. Если дедлайн указан, клуб будет уведомлен о необходимости исправить документы до указанного срока.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        wire:click="closeRevisionDeadlineModal"
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Отмена
+                    </button>
+                    <button
+                        wire:click="confirmRevisionWithDeadline"
+                        class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Отправить на доработку
                     </button>
                 </div>
             </div>

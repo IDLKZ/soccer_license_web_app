@@ -139,13 +139,20 @@
                         <button
                             wire:click="setActiveTab('{{ $tab['category']->id }}')"
                             class="{{ $activeTab === $tab['category']->id ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300' }}
-                             flex items-center px-6 py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap"
+                             flex flex-col items-start px-6 py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap"
                         >
-                            <i class="fas fa-folder mr-2"></i>
-                            {{ $tab['title'] }}
-                            <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
-                                {{ count($tab['criteria']) }}
-                            </span>
+                            <div class="flex items-center">
+                                <i class="fas fa-folder mr-2"></i>
+                                {{ $tab['title'] }}
+                                <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
+                                    {{ count($tab['criteria']) }}
+                                </span>
+                            </div>
+                            @if($tab['status'])
+                                <span class="mt-2 {{ $this->getCriterionStatusColorByValue($tab['status']->value) }} px-2 py-1 rounded-md text-xs font-medium">
+                                    {{ $tab['status']->title_ru }}
+                                </span>
+                            @endif
                         </button>
                     @endforeach
                 </nav>
@@ -185,37 +192,139 @@
                                 <div class="flex items-center space-x-2">
                                     @if($criterion->application_status && in_array($criterion->application_status->value, ['awaiting-documents', 'first-check-revision']))
                                         @if($this->canSubmitCriterion($criterion, 'first'))
-                                            <button
-                                                wire:click="submitCriterionForCheck({{ $criterion->id }}, 'first')"
-                                                wire:confirm="Отправить критерий на первичную проверку?"
-                                                class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
-                                                <i class="fas fa-paper-plane mr-2"></i>
-                                                Отправить на первичную проверку
-                                            </button>
+                                            @php
+                                                $deadlineCheck = $this->checkCriterionDeadline($criterion);
+                                            @endphp
+                                            @if($deadlineCheck['allowed'])
+                                                <button
+                                                    wire:click="submitCriterionForCheck({{ $criterion->id }}, 'first')"
+                                                    wire:confirm="Отправить критерий на первичную проверку?"
+                                                    class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-paper-plane mr-2"></i>
+                                                    Отправить на первичную проверку
+                                                </button>
+                                            @else
+                                                <div class="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg px-4 py-2">
+                                                    <p class="text-sm text-red-800 dark:text-red-200">
+                                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                        {{ $deadlineCheck['message'] }}
+                                                    </p>
+                                                </div>
+                                            @endif
                                         @endif
                                     @elseif($criterion->application_status && $criterion->application_status->value === 'industry-check-revision')
                                         @if($this->canSubmitCriterion($criterion, 'industry'))
-                                            <button
-                                                wire:click="submitCriterionForCheck({{ $criterion->id }}, 'industry')"
-                                                wire:confirm="Отправить критерий на отраслевую проверку?"
-                                                class="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
-                                                <i class="fas fa-paper-plane mr-2"></i>
-                                                Отправить на отраслевую проверку
-                                            </button>
+                                            @php
+                                                $deadlineCheck = $this->checkCriterionDeadline($criterion);
+                                            @endphp
+                                            @if($deadlineCheck['allowed'])
+                                                <button
+                                                    wire:click="submitCriterionForCheck({{ $criterion->id }}, 'industry')"
+                                                    wire:confirm="Отправить критерий на отраслевую проверку?"
+                                                    class="bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-paper-plane mr-2"></i>
+                                                    Отправить на отраслевую проверку
+                                                </button>
+                                            @else
+                                                <div class="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg px-4 py-2">
+                                                    <p class="text-sm text-red-800 dark:text-red-200">
+                                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                        {{ $deadlineCheck['message'] }}
+                                                    </p>
+                                                </div>
+                                            @endif
                                         @endif
                                     @elseif($criterion->application_status && $criterion->application_status->value === 'control-check-revision')
                                         @if($this->canSubmitCriterion($criterion, 'control'))
-                                            <button
-                                                wire:click="submitCriterionForCheck({{ $criterion->id }}, 'control')"
-                                                wire:confirm="Отправить критерий на контрольную проверку?"
-                                                class="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
-                                                <i class="fas fa-paper-plane mr-2"></i>
-                                                Отправить на контрольную проверку
-                                            </button>
+                                            @php
+                                                $deadlineCheck = $this->checkCriterionDeadline($criterion);
+                                            @endphp
+                                            @if($deadlineCheck['allowed'])
+                                                <button
+                                                    wire:click="submitCriterionForCheck({{ $criterion->id }}, 'control')"
+                                                    wire:confirm="Отправить критерий на контрольную проверку?"
+                                                    class="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                                                    <i class="fas fa-paper-plane mr-2"></i>
+                                                    Отправить на контрольную проверку
+                                                </button>
+                                            @else
+                                                <div class="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg px-4 py-2">
+                                                    <p class="text-sm text-red-800 dark:text-red-200">
+                                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                        {{ $deadlineCheck['message'] }}
+                                                    </p>
+                                                </div>
+                                            @endif
                                         @endif
                                     @endif
                                 </div>
                             </div>
+
+                            <!-- Deadlines Section -->
+                            @if($criterion->application_criteria_deadlines && $criterion->application_criteria_deadlines->count() > 0)
+                                <div class="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                    <h4 class="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-3 flex items-center">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        Установленные дедлайны для доработки
+                                    </h4>
+                                    <div class="space-y-3">
+                                        @foreach($criterion->application_criteria_deadlines->sortByDesc('created_at') as $deadline)
+                                            <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-yellow-300 dark:border-yellow-700">
+                                                <div class="flex items-start justify-between">
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center space-x-2 mb-2">
+                                                            <span class="{{ $this->getCriterionStatusColorByValue($deadline->application_status->value) }} px-2 py-1 rounded-md text-xs font-medium">
+                                                                {{ $deadline->application_status->title_ru }}
+                                                            </span>
+                                                            @php
+                                                                $now = now();
+                                                                $isExpired = $deadline->deadline_end_at->lt($now);
+                                                                $isUpcoming = $deadline->deadline_end_at->diffInDays($now) <= 3 && !$isExpired;
+                                                            @endphp
+                                                            @if($isExpired)
+                                                                <span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded-md text-xs font-medium">
+                                                                    <i class="fas fa-exclamation-circle mr-1"></i> Просрочен
+                                                                </span>
+                                                            @elseif($isUpcoming)
+                                                                <span class="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-2 py-1 rounded-md text-xs font-medium">
+                                                                    <i class="fas fa-clock mr-1"></i> Скоро истекает
+                                                                </span>
+                                                            @endif
+                                                        </div>
+
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                                            @if($deadline->deadline_start_at)
+                                                                <div class="text-gray-700 dark:text-gray-300">
+                                                                    <i class="fas fa-hourglass-start mr-1 text-blue-500"></i>
+                                                                    <span class="font-medium">Начало:</span>
+                                                                    {{ $deadline->deadline_start_at->format('d.m.Y H:i') }}
+                                                                </div>
+                                                            @endif
+                                                            <div class="text-gray-700 dark:text-gray-300">
+                                                                <i class="fas fa-hourglass-end mr-1 {{ $isExpired ? 'text-red-500' : 'text-yellow-500' }}"></i>
+                                                                <span class="font-medium">Крайний срок:</span>
+                                                                {{ $deadline->deadline_end_at->format('d.m.Y H:i') }}
+                                                            </div>
+                                                        </div>
+
+                                                        @if($isExpired)
+                                                            <div class="mt-2 text-xs text-red-600 dark:text-red-400">
+                                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                                Просрочен на {{ $deadline->deadline_end_at->diffForHumans($now, true) }}
+                                                            </div>
+                                                        @else
+                                                            <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                                                <i class="fas fa-info-circle mr-1"></i>
+                                                                Осталось {{ $deadline->deadline_end_at->diffForHumans($now, true) }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
 
                             <!-- Comments from Reviews -->
                             @if($criterion->first_comment || $criterion->industry_comment || $criterion->final_comment || $criterion->last_comment)
