@@ -75,6 +75,10 @@ class RolePermissionSeeder extends Seeder
                 'create-licence-deadlines',
                 'manage-licence-deadlines',
                 'delete-licence-deadlines',
+                'view-application-criteria-deadline',
+                'create-application-criteria-deadline',
+                'manage-application-criteria-deadline',
+                'delete-application-criteria-deadline',
                 'view-applications',
                 'manage-applications',
             ])->pluck('id')->toArray();

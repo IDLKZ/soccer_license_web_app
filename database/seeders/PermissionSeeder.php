@@ -612,6 +612,48 @@ class PermissionSeeder extends Seeder
                 'is_system' => true,
             ],
 
+            // Application Criteria Deadlines
+            [
+                'title_ru' => 'Просмотр дедлайнов критериев заявок',
+                'title_kk' => 'Өтінімдердің критерийлерінің мерзімдерін көру',
+                'title_en' => 'View Application Criteria Deadlines',
+                'description_ru' => 'Разрешение на просмотр дедлайнов для доработки критериев',
+                'description_kk' => 'Критерийлерді өңдеу мерзімдерін көру рұқсаты',
+                'description_en' => 'Permission to view application criteria revision deadlines',
+                'value' => 'view-application-criteria-deadline',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Создание дедлайнов критериев заявок',
+                'title_kk' => 'Өтінімдердің критерийлерінің мерзімдерін жасау',
+                'title_en' => 'Create Application Criteria Deadlines',
+                'description_ru' => 'Разрешение на создание дедлайнов для доработки критериев',
+                'description_kk' => 'Критерийлерді өңдеу мерзімдерін жасау рұқсаты',
+                'description_en' => 'Permission to create application criteria revision deadlines',
+                'value' => 'create-application-criteria-deadline',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Управление дедлайнами критериев заявок',
+                'title_kk' => 'Өтінімдердің критерийлерінің мерзімдерін басқару',
+                'title_en' => 'Manage Application Criteria Deadlines',
+                'description_ru' => 'Разрешение на редактирование дедлайнов для доработки критериев',
+                'description_kk' => 'Критерийлерді өңдеу мерзімдерін өңдеу рұқсаты',
+                'description_en' => 'Permission to edit application criteria revision deadlines',
+                'value' => 'manage-application-criteria-deadline',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Удаление дедлайнов критериев заявок',
+                'title_kk' => 'Өтінімдердің критерийлерінің мерзімдерін жою',
+                'title_en' => 'Delete Application Criteria Deadlines',
+                'description_ru' => 'Разрешение на удаление дедлайнов для доработки критериев',
+                'description_kk' => 'Критерийлерді өңдеу мерзімдерін жою рұқсаты',
+                'description_en' => 'Permission to delete application criteria revision deadlines',
+                'value' => 'delete-application-criteria-deadline',
+                'is_system' => true,
+            ],
+
             // Applications
             [
                 'title_ru' => 'Просмотр заявок',

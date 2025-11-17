@@ -101,6 +101,13 @@
                 </a>
                 @endcan
 
+                @can('view-application-criteria-deadline')
+                <a href="{{ route('admin.application-criteria-deadlines') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.application-criteria-deadlines') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
+                    <i class="fas fa-calendar-check w-5 text-center text-teal-500 dark:text-teal-400 group-hover:text-teal-600 dark:group-hover:text-teal-300"></i>
+                    <span class="ml-3 font-medium">Дедлайны критериев</span>
+                </a>
+                @endcan
+
                 @can('view-application-status-categories')
                 <a href="{{ route('admin.application-status-categories') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.application-status-categories') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
                     <i class="fas fa-tasks w-5 text-center text-red-500 dark:text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300"></i>

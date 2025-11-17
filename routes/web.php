@@ -51,6 +51,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/licences', LicenceManagement::class)->name('licences');
         Route::get('/licence-requirements', LicenceRequirementManagement::class)->name('licence-requirements');
         Route::get('/licence-deadlines', LicenceDeadlineManagement::class)->name('licence-deadlines');
+        Route::get('/application-criteria-deadlines', \App\Livewire\Admin\ApplicationCriteriaDeadlineManagement::class)->name('application-criteria-deadlines');
         Route::get('/application-status-categories', ApplicationStatusCategoryManagement::class)->name('application-status-categories');
         Route::get('/application-statuses', ApplicationStatusManagement::class)->name('application-statuses');
     });
