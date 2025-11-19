@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('licence_id')
                 ->nullable()
                 ->constrained('licences')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->foreignId('category_id')
                 ->nullable()

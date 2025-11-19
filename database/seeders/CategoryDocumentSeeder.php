@@ -52,7 +52,7 @@ class CategoryDocumentSeeder extends Seeder
             ],
             [
                 'id' => CategoryDocumentConstants::SOCIAL_DOCUMENTS_ID,
-                'title_ru' => 'Критерии социальной и экологической ответственности',
+                'title_ru' => 'Критерий социальной и экологической ответственности',
                 'title_kk' => 'Әлеуметтік және экологиялық жауапкершілік критерийлері',
                 'title_en' => 'Social and environmental responsibility criteria',
                 'value' => CategoryDocumentConstants::SOCIAL_DOCUMENTS_VALUE,

@@ -8,6 +8,7 @@ use App\Models\Application;
 use App\Models\ApplicationCriteriaDeadline;
 use App\Models\ApplicationCriterion;
 use App\Models\ApplicationDocument;
+use App\Models\ApplicationInitialReport;
 use App\Models\ApplicationReport;
 use App\Models\ApplicationSolution;
 use App\Models\ApplicationStatus;
@@ -45,7 +46,7 @@ class DepartmentApplicationDetail extends Component
 
     // Reports by criteria
     public $reportsByCriteria = []; // ['criteria_id' => ['reports' => [], 'count' => 0]]
-
+    public $initialReportsByCriteria = []; // ['criteria_id' => [reports]]
     public $departmentReports = []; // General department reports (criteria_id = null)
 
     public $solutions = []; // Commission solutions from application_solutions table
@@ -222,6 +223,9 @@ class DepartmentApplicationDetail extends Component
             // Load reports for all criteria
             $this->loadReportsForAllCriteria();
 
+            // Load initial reports for all criteria
+            $this->loadInitialReportsForAllCriteria();
+
             // Load general department reports
             $this->loadDepartmentReports();
 
@@ -272,6 +276,35 @@ class DepartmentApplicationDetail extends Component
             ->whereNull('criteria_id')
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Load initial reports for all criteria
+     */
+    private function loadInitialReportsForAllCriteria()
+    {
+        if (!$this->application) return;
+
+        // Get all criteria IDs from tabs
+        $criteriaIds = [];
+        foreach ($this->criteriaTabs as $tab) {
+            foreach ($tab['criteria'] as $criterion) {
+                $criteriaIds[] = $criterion->id;
+            }
+        }
+
+        // Load initial reports for each criteria
+        $initialReports = ApplicationInitialReport::with('application_criterion')
+            ->where('application_id', $this->application->id)
+            ->whereIn('criteria_id', $criteriaIds)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('criteria_id');
+
+        $this->initialReportsByCriteria = [];
+        foreach ($criteriaIds as $criteriaId) {
+            $this->initialReportsByCriteria[$criteriaId] = $initialReports->get($criteriaId, collect());
+        }
     }
 
     /**
@@ -1413,6 +1446,66 @@ class DepartmentApplicationDetail extends Component
             DB::rollBack();
             Log::error('Error rejecting application: '.$e->getMessage());
             toastr()->error('Произошла ошибка при отказе заявки.');
+        }
+    }
+
+    /**
+     * Download initial report from external service
+     */
+    public function downloadInitialReport($reportId)
+    {
+        // Set loading state
+        $this->downloadingReports[$reportId] = true;
+
+        try {
+            $reportServiceUrl = config('app.initial_report_service_url', env('INITIAL_REPORT_SERVICE_URL'));
+
+            if (!$reportServiceUrl) {
+                toastr()->error('URL сервиса генерации первичных отчетов не настроен');
+                $this->downloadingReports[$reportId] = false;
+                return;
+            }
+
+            // Send POST request to report service
+            $response = Http::timeout(30)
+                ->post($reportServiceUrl, [
+                    'report_id' => $reportId
+                ]);
+
+            if (!$response->successful()) {
+                Log::error("Initial report service returned error: " . $response->status() . " - " . $response->body());
+                toastr()->error('Ошибка при получении первичного отчета от сервиса');
+                $this->downloadingReports[$reportId] = false;
+                return;
+            }
+
+            // Get the file content
+            $fileContent = $response->body();
+
+            // Get the report from database for filename
+            $report = ApplicationInitialReport::find($reportId);
+            $filename = 'initial_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+            if ($report && $report->application_criterion && $report->application_criterion->category_document) {
+                $categoryName = Str::slug($report->application_criterion->category_document->title_ru ?? 'report');
+                $filename = 'initial_' . $categoryName . '_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            }
+
+            // Clear loading state before returning file
+            $this->downloadingReports[$reportId] = false;
+
+            // Return file download response
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading initial report: ' . $e->getMessage());
+            toastr()->error('Произошла ошибка при скачивании первичного отчета');
+            $this->downloadingReports[$reportId] = false;
         }
     }
 

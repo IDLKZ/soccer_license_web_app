@@ -224,7 +224,7 @@
                                 <td class="px-6 py-4">
                                     @if($club->club_type)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                                            {{ $club->club_type->title_ru }}
+                                            {{ $club->club_type?->title_ru ?? 'Неизвестно' }}
                                         </span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">—</span>
@@ -248,7 +248,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $club->created_at->format('d.m.Y') }}
+                                    {{ $club->created_at?->format('d.m.Y') ?? '—' }}
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">

@@ -171,7 +171,7 @@ class ApplicationStatusSeeder extends Seeder
                 'description_en' => null,
                 'value' => ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE,
                 'role_values' => [
-                    RoleConstants::CONTROL_DEPARTMENT_VALUE,
+                    RoleConstants::LICENSING_DEPARTMENT_VALUE,
                 ],
                 'is_active' => true,
                 'is_first' => false,

@@ -100,11 +100,11 @@
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $deadline->licence->title_ru }}
+                                        {{ $deadline->licence?->title_ru ?? 'Неизвестно' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
                                         @if($deadline->licence->season)
-                                            {{ $deadline->licence->season->title_ru }}
+                                            {{ $deadline->licence?->season?->title_ru ?? '—' }}
                                         @endif
                                     </div>
                                 </div>
@@ -119,10 +119,10 @@
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $deadline->club->short_name_ru }}
+                                        {{ $deadline->club?->short_name_ru ?? 'Неизвестно' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $deadline->club->short_name_kk }}
+                                        {{ $deadline->club?->short_name_kk ?? '—' }}
                                     </div>
                                 </div>
                             </div>
@@ -131,19 +131,19 @@
                         <td class="px-4 py-4 text-center">
                             <div class="text-sm text-gray-900 dark:text-gray-100">
                                 <i class="fas fa-calendar-start text-green-500 mr-1"></i>
-                                {{ $deadline->start_at->format('d.m.Y') }}
+                                {{ $deadline->start_at?->format('d.m.Y') ?? '—' }}
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <i class="fas fa-calendar-xmark text-red-500 mr-1"></i>
-                                {{ $deadline->end_at->format('d.m.Y') }}
+                                {{ $deadline->end_at?->format('d.m.Y') ?? '—' }}
                             </div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-center">
                             @php
                                 $now = now();
-                                $isActive = $now->between($deadline->start_at, $deadline->end_at);
-                                $isPast = $now->greaterThan($deadline->end_at);
-                                $isFuture = $now->lessThan($deadline->start_at);
+                                $isActive = $deadline->start_at && $deadline->end_at && $now->between($deadline->start_at, $deadline->end_at);
+                                $isPast = $deadline->end_at && $now->greaterThan($deadline->end_at);
+                                $isFuture = $deadline->start_at && $now->lessThan($deadline->start_at);
                             @endphp
                             @if($isPast)
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-700 dark:to-slate-700 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
@@ -231,8 +231,8 @@
                                     @foreach($licences as $licence)
                                     <option value="{{ $licence->id }}">
                                         {{ $licence->title_ru }}
-                                        @if($licence->season) - {{ $licence->season->title_ru }} @endif
-                                        @if($licence->league) ({{ $licence->league->title_ru }}) @endif
+                                        @if($licence->season) - {{ $licence->season?->title_ru ?? 'Без сезона' }} @endif
+                                        @if($licence->league) ({{ $licence->league?->title_ru ?? 'Без соревнования' }}) @endif
                                     </option>
                                     @endforeach
                                 </select>
@@ -314,8 +314,8 @@
                                     @foreach($licences as $licence)
                                     <option value="{{ $licence->id }}">
                                         {{ $licence->title_ru }}
-                                        @if($licence->season) - {{ $licence->season->title_ru }} @endif
-                                        @if($licence->league) ({{ $licence->league->title_ru }}) @endif
+                                        @if($licence->season) - {{ $licence->season?->title_ru ?? 'Без сезона' }} @endif
+                                        @if($licence->league) ({{ $licence->league?->title_ru ?? 'Без соревнования' }}) @endif
                                     </option>
                                     @endforeach
                                 </select>

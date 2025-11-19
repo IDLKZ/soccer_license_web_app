@@ -89,7 +89,7 @@
                 <p class="font-medium text-gray-900 dark:text-white mt-1">{{ $club->title_ru }}</p>
             </div>
             <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p class="text-sm text-gray-600 dark:text-gray-400">Лига</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Соревнование</p>
                 <p class="font-medium text-gray-900 dark:text-white mt-1">{{ $club->league->title_ru ?? 'Не указана' }}</p>
             </div>
             <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -154,8 +154,8 @@
                             <i class="fas fa-file-alt text-white"></i>
                         </div>
                         <div>
-                            <p class="font-medium text-gray-900 dark:text-white">{{ $application->licence->season->title_ru ?? 'Заявка' }}</p>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $application->application_status_category->title_ru ?? 'Статус неизвестен' }}</p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $application->licence?->season?->title_ru ?? 'Заявка' }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ $application->application_status_category?->title_ru ?? 'Статус неизвестен' }}</p>
                         </div>
                     </div>
                     <span class="text-sm text-gray-500 dark:text-gray-400">{{ $application->created_at->diffForHumans() }}</span>

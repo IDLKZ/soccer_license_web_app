@@ -141,7 +141,7 @@
                             @if($document->category_document)
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
                                 <i class="fas fa-folder mr-1 text-purple-600 dark:text-purple-400"></i>
-                                {{ $document->category_document->title_ru }}
+                                {{ $document->category_document?->title_ru ?? 'Неизвестно' }}
                             </span>
                             @else
                             <span class="text-xs text-gray-400 dark:text-gray-500 italic">Без категории</span>

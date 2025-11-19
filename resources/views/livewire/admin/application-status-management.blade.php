@@ -140,7 +140,7 @@
                             <td class="px-4 py-4">
                                 @if($status->application_status_category)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200">
-                                        {{ $status->application_status_category->title_ru }}
+                                        {{ $status->application_status_category?->title_ru ?? 'Неизвестно' }}
                                     </span>
                                 @else
                                     <span class="text-xs text-gray-400 dark:text-gray-500 italic">Нет категории</span>
@@ -161,7 +161,7 @@
                                             @endphp
                                             @if($role)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200">
-                                                    {{ $role->title_ru }}
+                                                    {{ $role?->title_ru ?? 'Неизвестно' }}
                                                 </span>
                                             @endif
                                         @endforeach

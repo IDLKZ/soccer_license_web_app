@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class ApplicationInitialReport
- * 
+ *
  * @property int $id
  * @property int|null $application_id
  * @property int|null $criteria_id
  * @property int $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Application|null $application
  * @property ApplicationCriterion|null $application_criterion
  *

@@ -56,7 +56,7 @@
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-colors">
                     <option value="">Все типы</option>
                     @foreach($clubTypes as $type)
-                    <option value="{{ $type->id }}">{{ $type->title_ru }}</option>
+                    <option value="{{ $type->id }}">{{ $type->title_ru ?? '-' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -148,7 +148,7 @@
                             @if($club->club_type)
                             <div class="text-sm">
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 dark:from-purple-900/50 dark:to-pink-900/50 dark:text-purple-300">
-                                    {{ $club->club_type->title_ru }}
+                                    {{ $club->club_type?->title_ru ?? '-' }}
                                 </span>
                             </div>
                             @endif
@@ -156,21 +156,21 @@
                         <td class="px-4 py-4">
                             @if($club->club_teams && $club->club_teams->first())
                             @php
-                                $admin = $club->club_teams->first()->user;
+                                $admin = $club->club_teams->first()?->user;
                             @endphp
                             @if($admin)
                             <div class="flex items-center">
                                 <div class="h-8 w-8 rounded-full mr-2 bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center">
                                     <span class="text-white text-xs font-bold">
-                                        {{ mb_substr($admin->first_name, 0, 1) }}{{ mb_substr($admin->last_name ?? '', 0, 1) }}
+                                        {{ mb_substr($admin->first_name ?? '', 0, 1) }}{{ mb_substr($admin->last_name ?? '', 0, 1) }}
                                     </span>
                                 </div>
                                 <div>
                                     <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                        {{ $admin->first_name }} {{ $admin->last_name ?? '' }}
+                                        {{ $admin->first_name ?? '' }} {{ $admin->last_name ?? '' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $admin->email }}
+                                        {{ $admin->email ?? '-' }}
                                     </div>
                                 </div>
                             </div>
@@ -197,13 +197,6 @@
                         </td>
                         <td class="px-4 py-4">
                             <div class="flex items-center justify-center space-x-2">
-                                @if($canEdit)
-                                <button wire:click="editClub({{ $club->id }})"
-                                        class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                                        title="Редактировать">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                @endif
                                 @if($canDelete)
                                     @if(auth()->user() && auth()->user()->role && !auth()->user()->role->is_administrative)
                                         {{-- Club members can leave the club --}}
@@ -212,14 +205,6 @@
                                                 class="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 transition-colors"
                                                 title="Выйти из клуба">
                                             <i class="fas fa-sign-out-alt"></i>
-                                        </button>
-                                    @else
-                                        {{-- Admin can delete the club --}}
-                                        <button wire:click="deleteClub({{ $club->id }})"
-                                                wire:confirm="Вы уверены, что хотите удалить этот клуб?"
-                                                class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                                                title="Удалить клуб">
-                                            <i class="fas fa-trash"></i>
                                         </button>
                                     @endif
                                 @endif
@@ -472,13 +457,13 @@
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <option value="">Выберите тип</option>
                                         @foreach($clubTypes as $type)
-                                        <option value="{{ $type->id }}">{{ $type->title_ru }}</option>
+                                        <option value="{{ $type->id }}">{{ $type->title_ru ?? '-' }}</option>
                                         @endforeach
                                     </select>
                                     @error('typeId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
-                                
+
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Администратор клуба <span class="text-red-500">*</span>
@@ -487,7 +472,7 @@
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <option value="">Выберите администратора</option>
                                         @foreach($administrators as $admin)
-                                        <option value="{{ $admin->id }}">{{ $admin->first_name }} {{ $admin->last_name ?? '' }} ({{ $admin->email }})</option>
+                                        <option value="{{ $admin->id }}">{{ $admin->first_name ?? '' }} {{ $admin->last_name ?? '' }} ({{ $admin->email ?? '-' }})</option>
                                         @endforeach
                                     </select>
                                     @error('administratorId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
@@ -772,13 +757,13 @@
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <option value="">Выберите тип</option>
                                         @foreach($clubTypes as $type)
-                                        <option value="{{ $type->id }}">{{ $type->title_ru }}</option>
+                                        <option value="{{ $type->id }}">{{ $type->title_ru ?? '-' }}</option>
                                         @endforeach
                                     </select>
                                     @error('typeId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                                 </div>
 
-                                
+
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Администратор клуба <span class="text-red-500">*</span>
@@ -787,7 +772,7 @@
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
                                         <option value="">Выберите администратора</option>
                                         @foreach($administrators as $admin)
-                                        <option value="{{ $admin->id }}">{{ $admin->first_name }} {{ $admin->last_name ?? '' }} ({{ $admin->email }})</option>
+                                        <option value="{{ $admin->id }}">{{ $admin->first_name ?? '' }} {{ $admin->last_name ?? '' }} ({{ $admin->email ?? '-' }})</option>
                                         @endforeach
                                     </select>
                                     @error('administratorId') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror

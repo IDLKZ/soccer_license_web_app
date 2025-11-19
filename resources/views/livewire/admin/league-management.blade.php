@@ -5,10 +5,10 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                        Управление лигами
+                        Управление соревнованиями
                     </h1>
                     <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        Создание и управление футбольными лигами
+                        Создание и управление футбольными соревнованиями
                     </p>
                 </div>
                 @if($canCreateLeagues)
@@ -17,7 +17,7 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        Создать лигу
+                        Создать соревнование
                     </button>
                 @endif
             </div>
@@ -34,7 +34,7 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Всего лиг</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Всего соревнований</h3>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $leagues->total() }}</p>
                     </div>
                 </div>
@@ -49,7 +49,7 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Активные лиги</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Активные соревнования</h3>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ \App\Models\League::where('is_active', true)->count() }}
                         </p>
@@ -66,7 +66,7 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Неактивные лиги</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Неактивные соревнования</h3>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">
                             {{ \App\Models\League::where('is_active', false)->count() }}
                         </p>
@@ -81,7 +81,7 @@
                 <!-- Search -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Поиск лиг
+                        Поиск соревнований
                     </label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -103,7 +103,7 @@
                     </label>
                     <select wire:model.live="filterStatus"
                             class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">Все лиги</option>
+                        <option value="">Все соревнования</option>
                         <option value="1">Активные</option>
                         <option value="0">Неактивные</option>
                     </select>
@@ -141,7 +141,7 @@
                     <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Лига
+                                Соревнования
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Описание
@@ -192,7 +192,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                                    {{ $league->created_at->format('d.m.Y') }}
+                                    {{ $league->created_at?->format('d.m.Y') ?? '—' }}
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium">
                                     <div class="flex items-center justify-end space-x-2">
@@ -222,7 +222,7 @@
 
                                         @if($canDeleteLeagues)
                                             <button wire:click="deleteLeague({{ $league->id }})"
-                                                    wire:confirm="Вы уверены, что хотите удалить эту лигу?"
+                                                    wire:confirm="Вы уверены, что хотите удалить это соревнование?"
                                                     class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                                     title="Удалить">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,12 +240,12 @@
                                         <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                         </svg>
-                                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Лиги не найдены</h3>
+                                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Соревания не найдены</h3>
                                         <p class="text-gray-500 dark:text-gray-400">
                                             @if($search || $filterStatus)
                                                 По вашему запросу ничего не найдено. Попробуйте изменить параметры поиска.
                                             @else
-                                                Лиги пока не созданы. Создайте первую лигу для начала работы.
+                                                Соревнования пока не созданы. Создайте первые соревнования для начала работы.
                                             @endif
                                         </p>
                                     </div>
@@ -336,7 +336,7 @@
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            Создание новой лиги
+                            Создание нового соревнования
                         </h3>
                         <button wire:click="closeCreateLeagueModal"
                                 class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -354,7 +354,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Название лиги (RU) *
+                                Название соревнования (RU) *
                             </label>
                             <input type="text"
                                    wire:model="titleRu"
@@ -367,12 +367,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Описание лиги (RU) *
+                                Описание соревнования (RU) *
                             </label>
                             <textarea wire:model="descriptionRu"
                                       rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                      placeholder="Описание лиги на русском языке"></textarea>
+                                      placeholder="Описание на русском языке"></textarea>
                             @error('descriptionRu')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -385,7 +385,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Лига атауы (KK) *
+                                Атауы (KK) *
                             </label>
                             <input type="text"
                                    wire:model="titleKk"
@@ -398,12 +398,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Лига сипаттамасы (KK) *
+                                Сипаттамасы (KK) *
                             </label>
                             <textarea wire:model="descriptionKk"
                                       rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                      placeholder="Лига сипаттамасы қазақ тілінде"></textarea>
+                                      placeholder="Сипаттамасы қазақ тілінде"></textarea>
                             @error('descriptionKk')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -416,7 +416,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                League Name (EN)
+                                Name (EN)
                             </label>
                             <input type="text"
                                    wire:model="titleEn"
@@ -429,12 +429,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                League Description (EN)
+                                Description (EN)
                             </label>
                             <textarea wire:model="descriptionEn"
                                       rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                      placeholder="League description in English"></textarea>
+                                      placeholder="description in English"></textarea>
                             @error('descriptionEn')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -444,10 +444,11 @@
                     <!-- Level Field -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Уровень лиги (1-10) *
+                            Уровень соревнования (1-10) *
                         </label>
                         <input type="number"
                                wire:model="level"
+                               value="1"
                                min="1"
                                max="10"
                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
@@ -461,7 +462,7 @@
                     <div>
                         <label class="flex items-center">
                             <input type="checkbox" wire:model="isActive" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Активная лига</span>
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Активные соревнования</span>
                         </label>
                     </div>
 
@@ -474,7 +475,7 @@
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
-                            Создать лигу
+                            Создать соревнование
                         </button>
                     </div>
                 </form>
@@ -489,7 +490,7 @@
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                            Редактирование лиги
+                            Редактирование соревнования
                         </h3>
                         <button wire:click="closeEditLeagueModal"
                                 class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -507,7 +508,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Название лиги (RU) *
+                                Название соревнования (RU) *
                             </label>
                             <input type="text"
                                    wire:model="titleRu"
@@ -520,12 +521,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Описание лиги (RU) *
+                                Описание соревнования (RU) *
                             </label>
                             <textarea wire:model="descriptionRu"
                                       rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                      placeholder="Описание лиги на русском языке"></textarea>
+                                      placeholder="Описание соревнований на русском языке"></textarea>
                             @error('descriptionRu')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -538,7 +539,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Лига атауы (KK) *
+                                Атауы (KK) *
                             </label>
                             <input type="text"
                                    wire:model="titleKk"
@@ -551,12 +552,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Лига сипаттамасы (KK) *
+                                Сипаттамасы (KK) *
                             </label>
                             <textarea wire:model="descriptionKk"
                                       rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                      placeholder="Лига сипаттамасы қазақ тілінде"></textarea>
+                                      placeholder="сипаттамасы қазақ тілінде"></textarea>
                             @error('descriptionKk')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -569,7 +570,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                League Name (EN)
+                                Name (EN)
                             </label>
                             <input type="text"
                                    wire:model="titleEn"
@@ -582,12 +583,12 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                League Description (EN)
+                                Description (EN)
                             </label>
                             <textarea wire:model="descriptionEn"
                                       rows="3"
                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                                      placeholder="League description in English"></textarea>
+                                      placeholder="description in English"></textarea>
                             @error('descriptionEn')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -597,7 +598,7 @@
                     <!-- Level Field -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Уровень лиги (1-10) *
+                            Уровень соревнований (1-10) *
                         </label>
                         <input type="number"
                                wire:model="level"
@@ -614,7 +615,7 @@
                     <div>
                         <label class="flex items-center">
                             <input type="checkbox" wire:model="isActive" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Активная лига</span>
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Активные соревнования</span>
                         </label>
                     </div>
 

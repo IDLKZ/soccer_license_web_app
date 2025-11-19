@@ -103,6 +103,10 @@ class DepartmentCriterias extends Component
             'application_status',
             'application_criteria_deadlines.application_status',
         ])
+            ->whereHas('application', function ($query) {
+                $query->whereNotNull('license_id')
+                      ->whereNotNull('club_id');
+            })
             ->whereIn('category_id', $categoryIds); // Обязательный пункт 2
 
         // Apply search filter
@@ -370,7 +374,11 @@ class DepartmentCriterias extends Component
         }
 
         // Count criteria that match both conditions (пункт 3)
-        return ApplicationCriterion::whereIn('category_id', $categoryIds)
+        return ApplicationCriterion::whereHas('application', function ($query) {
+                $query->whereNotNull('license_id')
+                      ->whereNotNull('club_id');
+            })
+            ->whereIn('category_id', $categoryIds)
             ->whereIn('status_id', $statusIds)
             ->count();
     }

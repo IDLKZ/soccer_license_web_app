@@ -63,11 +63,11 @@
             <div>
                 <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     <i class="fas fa-trophy mr-1 text-gray-400 dark:text-gray-500"></i>
-                    Лига
+                    Соревнования
                 </label>
                 <select wire:model.live="filterLeagueId"
                         class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 transition-colors">
-                    <option value="">Все лиги</option>
+                    <option value="">Все соревнования</option>
                     @foreach($leagues as $league)
                     <option value="{{ $league->id }}">{{ $league->title_ru }}</option>
                     @endforeach
@@ -91,7 +91,7 @@
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                             <div class="flex items-center">
                                 <i class="fas fa-calendar mr-1 text-gray-400 dark:text-gray-500"></i>
-                                Сезон / Лига
+                                Сезон / Соревнование
                             </div>
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
@@ -142,22 +142,22 @@
                             <div class="text-sm text-gray-900 dark:text-gray-100">
                                 @if($licence->season)
                                 <i class="fas fa-calendar text-green-500 dark:text-green-400 mr-1"></i>
-                                {{ $licence->season->title_ru }}
+                                {{ $licence->season?->title_ru ?? 'Неизвестно' }}
                                 @endif
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">
                                 @if($licence->league)
                                 <i class="fas fa-trophy text-yellow-500 dark:text-yellow-400 mr-1"></i>
-                                {{ $licence->league->title_ru }}
+                                {{ $licence->league?->title_ru ?? 'Неизвестно' }}
                                 @endif
                             </div>
                         </td>
                         <td class="px-4 py-4">
                             <div class="text-sm text-gray-900 dark:text-gray-100">
-                                {{ $licence->start_at->format('d.m.Y') }}
+                                {{ $licence->start_at?->format('d.m.Y') ?? '—' }}
                             </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                до {{ $licence->end_at->format('d.m.Y') }}
+                                до {{ $licence->end_at?->format('d.m.Y') ?? '—' }}
                             </div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-center">
@@ -253,10 +253,10 @@
                                     @error('seasonId') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Лига</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Соревнование</label>
                                     <select wire:model="leagueId"
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
-                                        <option value="">Выберите лигу</option>
+                                        <option value="">Выберите соревнование</option>
                                         @foreach($leagues as $league)
                                         <option value="{{ $league->id }}">{{ $league->title_ru }}</option>
                                         @endforeach
@@ -544,10 +544,10 @@
                                     @error('seasonId') <span class="text-red-500 dark:text-red-400 text-xs">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Лига</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Соревнование</label>
                                     <select wire:model="leagueId"
                                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
-                                        <option value="">Выберите лигу</option>
+                                        <option value="">Выберите соревнование</option>
                                         @foreach($leagues as $league)
                                         <option value="{{ $league->id }}">{{ $league->title_ru }}</option>
                                         @endforeach

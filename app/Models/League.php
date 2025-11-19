@@ -7,12 +7,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class League
- * 
+ *
  * @property int $id
  * @property string|null $image_url
  * @property string $title_ru
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $level
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Collection|Licence[] $licences
  *
  * @package App\Models
@@ -34,6 +35,17 @@ use Illuminate\Database\Eloquent\Model;
 class League extends Model
 {
 	protected $table = 'leagues';
+
+    use Sluggable;
+
+    public function sluggable(): array
+    {
+        return [
+            'value' => [
+                'source' => 'title_ru'
+            ]
+        ];
+    }
 
 	protected $casts = [
 		'is_active' => 'bool',

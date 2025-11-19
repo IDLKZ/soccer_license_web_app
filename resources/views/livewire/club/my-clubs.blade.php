@@ -86,7 +86,7 @@
                                 class="w-full pl-12 pr-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-purple-500/50 focus:border-purple-500 dark:focus:ring-purple-400/50 transition-all text-base appearance-none">
                             <option value="">Все типы</option>
                             @foreach($clubTypes as $type)
-                            <option value="{{ $type->id }}">{{ $type->title_ru }}</option>
+                            <option value="{{ $type->id }}">{{ $type->title_ru ?? '-' }}</option>
                             @endforeach
                         </select>
                         <i class="fas fa-tag absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -119,10 +119,10 @@
                     <!-- Club Name on Image -->
                     <div class="absolute bottom-0 left-0 right-0 p-6">
                         <h3 class="text-2xl font-black text-white mb-1 drop-shadow-lg">
-                            {{ $club->short_name_ru }}
+                            {{ $club->short_name_ru ?? 'Без названия' }}
                         </h3>
                         <p class="text-sm text-green-200 font-medium drop-shadow">
-                            {{ $club->short_name_kk }}
+                            {{ $club->short_name_kk ?? '-' }}
                         </p>
                     </div>
 
@@ -140,7 +140,7 @@
                 <!-- Club Content -->
                 <div class="p-6">
                     <p class="text-base text-gray-700 dark:text-gray-300 mb-4 line-clamp-2 font-medium">
-                        {{ $club->full_name_ru }}
+                        {{ $club->full_name_ru ?? '-' }}
                     </p>
 
                     <!-- Club Info Grid -->
@@ -150,7 +150,7 @@
                             <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover/item:bg-blue-200 dark:group-hover/item:bg-blue-900/50 transition-colors">
                                 <i class="fas fa-tag text-blue-600 dark:text-blue-400"></i>
                             </div>
-                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $club->club_type->title_ru }}</span>
+                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $club->club_type?->title_ru ?? '-' }}</span>
                         </div>
                         @endif
 
@@ -158,14 +158,14 @@
                             <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center group-hover/item:bg-purple-200 dark:group-hover/item:bg-purple-900/50 transition-colors">
                                 <i class="fas fa-id-card text-purple-600 dark:text-purple-400"></i>
                             </div>
-                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium font-mono">{{ $club->bin }}</span>
+                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium font-mono">{{ $club->bin ?? '-' }}</span>
                         </div>
 
                         <div class="flex items-center group/item">
                             <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center group-hover/item:bg-orange-200 dark:group-hover/item:bg-orange-900/50 transition-colors">
                                 <i class="fas fa-calendar text-orange-600 dark:text-orange-400"></i>
                             </div>
-                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $club->foundation_date->format('d.m.Y') }}</span>
+                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $club->foundation_date?->format('d.m.Y') ?? '-' }}</span>
                         </div>
 
                         @if($club->email)
@@ -181,7 +181,7 @@
                             <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center group-hover/item:bg-indigo-200 dark:group-hover/item:bg-indigo-900/50 transition-colors">
                                 <i class="fas fa-users text-indigo-600 dark:text-indigo-400"></i>
                             </div>
-                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $club->club_teams->count() }} участника</span>
+                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $club->club_teams?->count() ?? 0 }} участника</span>
                         </div>
                     </div>
 
@@ -198,7 +198,7 @@
                         <!-- Leave Club Button -->
                         <button wire:click="leaveClub({{ $club->id }})"
                                 class="inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold text-sm"
-                                onclick="return confirm('Вы уверены, что хотите выйти из клуба &quot;{{ $club->short_name_ru }}&quot;? Вы потеряете доступ к управлению этим клубом.')">
+                                onclick="return confirm('Вы уверены, что хотите выйти из клуба &quot;{{ $club->short_name_ru ?? $club->full_name_ru ?? 'этого клуба' }}&quot;? Вы потеряете доступ к управлению этим клубом.')">
                             <i class="fas fa-sign-out-alt mr-2"></i>
                             Выйти
                         </button>
@@ -466,7 +466,7 @@
                                                     class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
                                                 <option value="">Нет родительского клуба</option>
                                                 @foreach($parentClubs as $parent)
-                                                <option value="{{ $parent->id }}">{{ $parent->short_name_ru }}</option>
+                                                <option value="{{ $parent->id }}">{{ $parent->short_name_ru ?? $parent->full_name_ru ?? '-' }}</option>
                                                 @endforeach
                                             </select>
                                             @error('parentId') <span class="text-red-500 dark:text-red-400 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
@@ -731,7 +731,7 @@
                                                     class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all">
                                                 <option value="">Нет родительского клуба</option>
                                                 @foreach($parentClubs as $parent)
-                                                <option value="{{ $parent->id }}">{{ $parent->short_name_ru }}</option>
+                                                <option value="{{ $parent->id }}">{{ $parent->short_name_ru ?? $parent->full_name_ru ?? '-' }}</option>
                                                 @endforeach
                                             </select>
                                             @error('parentId') <span class="text-red-500 dark:text-red-400 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror

@@ -6,7 +6,13 @@
                 <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
                     <img src="{{ asset('logo_kff.png') }}" alt="KFF Logo" class="w-8 h-8 object-contain">
                 </div>
-                <span class="ml-3 text-xl font-bold text-white">Департамент</span>
+                <span class="ml-3 text-xl font-bold text-white">
+                    @if(\Illuminate\Support\Facades\Auth::user()->role->value == \App\Constants\RoleConstants::CONTROL_DEPARTMENT_VALUE)
+                        Комиссия
+                    @else
+                        Департамент
+                    @endif
+                </span>
             </div>
         </div>
 
@@ -16,7 +22,13 @@
                 <!-- Dashboard -->
                 <a href="/dashboard" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group">
                     <i class="fas fa-chart-line w-5 text-center text-indigo-400 group-hover:text-indigo-300"></i>
-                    <span class="ml-3 font-medium">Панель департамента</span>
+                    <span class="ml-3 font-medium">
+                        @if(\Illuminate\Support\Facades\Auth::user()->role->value == \App\Constants\RoleConstants::CONTROL_DEPARTMENT_VALUE)
+                            Панель комиссии
+                        @else
+                            Панель департамента
+                        @endif
+                    </span>
                 </a>
                 <!-- Справочники -->
                 <div class="pt-4 pb-2">

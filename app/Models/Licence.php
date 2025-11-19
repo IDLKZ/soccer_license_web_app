@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Licence
- * 
+ *
  * @property int $id
  * @property int|null $season_id
  * @property int|null $league_id
@@ -27,12 +27,13 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property League|null $league
  * @property Season|null $season
  * @property Collection|Application[] $applications
  * @property Collection|LicenceDeadline[] $licence_deadlines
  * @property Collection|LicenceRequirement[] $licence_requirements
+ * @property Collection|LicenseCertificate[] $license_certificates
  *
  * @package App\Models
  */
@@ -85,5 +86,10 @@ class Licence extends Model
 	public function licence_requirements()
 	{
 		return $this->hasMany(LicenceRequirement::class);
+	}
+
+	public function license_certificates()
+	{
+		return $this->hasMany(LicenseCertificate::class, 'license_id');
 	}
 }

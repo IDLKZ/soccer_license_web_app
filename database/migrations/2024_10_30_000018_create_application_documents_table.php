@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('application_id')
                 ->nullable()
                 ->constrained('applications')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->foreignId('category_id')
                 ->nullable()

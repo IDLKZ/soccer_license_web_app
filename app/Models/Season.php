@@ -7,12 +7,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Season
- * 
+ *
  * @property int $id
  * @property string $title_ru
  * @property string $title_kk
@@ -23,7 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Collection|Licence[] $licences
  *
  * @package App\Models
@@ -31,6 +32,17 @@ use Illuminate\Database\Eloquent\Model;
 class Season extends Model
 {
 	protected $table = 'seasons';
+
+    use Sluggable;
+
+    public function sluggable(): array
+    {
+        return [
+            'value' => [
+                'source' => 'title_ru'
+            ]
+        ];
+    }
 
 	protected $casts = [
 		'start' => 'datetime',

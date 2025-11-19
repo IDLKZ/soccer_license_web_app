@@ -7,12 +7,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class ApplicationStatus
- * 
+ *
  * @property int $id
  * @property int|null $category_id
  * @property int|null $previous_id
@@ -31,7 +32,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $result
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property ApplicationStatusCategory|null $application_status_category
  * @property ApplicationStatus|null $application_status
  * @property Collection|ApplicationCriterion[] $application_criteria
@@ -43,6 +44,17 @@ use Illuminate\Database\Eloquent\Model;
 class ApplicationStatus extends Model
 {
 	protected $table = 'application_statuses';
+
+    use Sluggable;
+
+    public function sluggable(): array
+    {
+        return [
+            'value' => [
+                'source' => 'title_ru'
+            ]
+        ];
+    }
 
 	protected $casts = [
 		'category_id' => 'int',

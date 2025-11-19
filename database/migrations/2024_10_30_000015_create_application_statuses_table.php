@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('category_id')
                 ->nullable()
                 ->constrained('application_status_categories')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->foreignId('previous_id')
                 ->nullable()
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreignId('next_id')
                 ->nullable()
                 ->constrained('application_statuses')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->string('title_ru');
             $table->string('title_kk');

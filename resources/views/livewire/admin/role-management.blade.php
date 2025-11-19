@@ -130,28 +130,28 @@
                                         </div>
                                         <div class="ml-3">
                                             <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                {{ $role->title_ru }}
-                                                @if($role->title_kk) <span class="text-xs text-gray-500 dark:text-gray-400">({{ $role->title_kk }})</span> @endif
+                                                {{ $role?->title_ru ?? '-' }}
+                                                @if($role?->title_kk) <span class="text-xs text-gray-500 dark:text-gray-400">({{ $role?->title_kk }})</span> @endif
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ $role->value }}
-                                                @if($role->is_system) <span class="ml-1 text-orange-500 dark:text-orange-400"><i class="fas fa-lock"></i></span> @endif
+                                                {{ $role?->value ?? '-' }}
+                                                @if($role?->is_system) <span class="ml-1 text-orange-500 dark:text-orange-400"><i class="fas fa-lock"></i></span> @endif
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-4">
                                     <div class="text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate">
-                                        {{ $role->description_ru ?: 'Нет описания' }}
+                                        {{ $role?->description_ru ?? 'Нет описания' }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-center">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
-                                        {{ $role->permissions->count() }} прав
+                                        {{ $role?->permissions?->count() ?? 0 }} прав
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-center">
-                                    @if($role->is_active)
+                                    @if($role?->is_active)
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700">
                                         <i class="fas fa-check-circle mr-1 text-green-600 dark:text-green-400"></i>
                                         Активна
@@ -166,21 +166,21 @@
                                 <td class="px-4 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         @if($canEditRoles)
-                                        <button wire:click="editRole({{ $role->id }})"
+                                        <button wire:click="editRole({{ $role?->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors duration-150"
                                                 title="Редактировать">
                                             <i class="fas fa-edit text-sm"></i>
                                         </button>
-                                        @if(!$role->is_system)
-                                        <button wire:click="toggleRoleStatus({{ $role->id }})"
+                                        @if(!$role?->is_system)
+                                        <button wire:click="toggleRoleStatus({{ $role?->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 transition-colors duration-150"
                                                 title="Изменить статус">
                                             <i class="fas fa-toggle-on text-sm"></i>
                                         </button>
                                         @endif
                                         @endif
-                                        @if($canDeleteRoles && !$role->is_system)
-                                        <button wire:click="deleteRole({{ $role->id }})"
+                                        @if($canDeleteRoles && !$role?->is_system)
+                                        <button wire:click="deleteRole({{ $role?->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-150"
                                                 title="Удалить"
                                                 onclick="return confirm('Вы уверены, что хотите удалить эту роль?')">
@@ -294,37 +294,37 @@
                                         </div>
                                         <div class="ml-3">
                                             <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                {{ $permission->title_ru }}
-                                                @if($permission->title_kk) <span class="text-xs text-gray-500 dark:text-gray-400">({{ $permission->title_kk }})</span> @endif
+                                                {{ $permission?->title_ru ?? '-' }}
+                                                @if($permission?->title_kk) <span class="text-xs text-gray-500 dark:text-gray-400">({{ $permission?->title_kk }})</span> @endif
                                             </div>
                                             <div class="text-xs text-gray-500 dark:text-gray-400">
-                                                {{ $permission->value }}
-                                                @if($permission->is_system) <span class="ml-1 text-orange-500 dark:text-orange-400"><i class="fas fa-lock"></i></span> @endif
+                                                {{ $permission?->value ?? '-' }}
+                                                @if($permission?->is_system) <span class="ml-1 text-orange-500 dark:text-orange-400"><i class="fas fa-lock"></i></span> @endif
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-4">
                                     <div class="text-sm text-gray-900 dark:text-gray-100 max-w-xs truncate">
-                                        {{ $permission->description_ru ?: 'Нет описания' }}
+                                        {{ $permission?->description_ru ?? 'Нет описания' }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-center">
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
-                                        {{ $permission->roles->count() }} ролей
+                                        {{ $permission?->roles?->count() ?? 0 }} ролей
                                     </span>
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-2">
                                         @if($canEditPermissions)
-                                        <button wire:click="editPermission({{ $permission->id }})"
+                                        <button wire:click="editPermission({{ $permission?->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors duration-150"
                                                 title="Редактировать">
                                             <i class="fas fa-edit text-sm"></i>
                                         </button>
                                         @endif
-                                        @if($canDeletePermissions && !$permission->is_system)
-                                        <button wire:click="deletePermission({{ $permission->id }})"
+                                        @if($canDeletePermissions && !$permission?->is_system)
+                                        <button wire:click="deletePermission({{ $permission?->id }})"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-150"
                                                 title="Удалить"
                                                 onclick="return confirm('Вы уверены, что хотите удалить это право?')">

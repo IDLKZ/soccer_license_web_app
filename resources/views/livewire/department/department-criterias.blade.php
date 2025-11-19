@@ -125,19 +125,19 @@
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex-1">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 line-clamp-2">
-                                    {{ $criteria->category_document->title_ru }}
+                                    {{ $criteria->category_document?->title_ru ?? 'Критерий' }}
                                 </h3>
-                                @if($criteria->category_document->title_kk != $criteria->category_document->title_ru)
+                                @if(($criteria->category_document?->title_kk ?? '') != ($criteria->category_document?->title_ru ?? ''))
                                     <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
-                                        {{ $criteria->category_document->title_kk }}
+                                        {{ $criteria->category_document?->title_kk ?? '-' }}
                                     </p>
                                 @endif
                             </div>
                         </div>
-                        <div class="{{ $this->getCriteriaStatusColor($criteria->application_status->value) }}
+                        <div class="{{ $this->getCriteriaStatusColor($criteria->application_status?->value ?? 'draft') }}
                                         px-2 py-2 rounded-full text-xs font-medium  my-3 flex-shrink-0">
-                            <i class="{{ $this->getCriteriaStatusIcon($criteria->application_status->value) }} mr-1"></i>
-                            {{ $criteria->application_status->title_ru }}
+                            <i class="{{ $this->getCriteriaStatusIcon($criteria->application_status?->value ?? 'draft') }} mr-1"></i>
+                            {{ $criteria->application_status?->title_ru ?? 'Не определен' }}
                         </div>
 
                         <!-- Application Info -->
@@ -145,31 +145,31 @@
                             <div class="flex items-center text-sm">
                                 <i class="fas fa-file-alt text-gray-400 mr-2 w-4"></i>
                                 <span class="text-gray-600 dark:text-gray-400 truncate">
-                                    {{ $criteria->application->licence->title_ru }}
+                                    {{ $criteria->application?->licence?->title_ru ?? 'Не указана' }}
                                 </span>
                             </div>
 
                             <div class="flex items-center text-sm">
                                 <i class="fas fa-building text-gray-400 mr-2 w-4"></i>
                                 <span class="text-gray-600 dark:text-gray-400 truncate">
-                                    {{ $criteria->application->club->short_name_ru }}
+                                    {{ $criteria->application?->club?->short_name_ru ?? '-' }}
                                 </span>
                             </div>
 
-                            @if($criteria->application->licence->season)
+                            @if($criteria->application?->licence?->season)
                                 <div class="flex items-center text-sm">
                                     <i class="fas fa-calendar text-gray-400 mr-2 w-4"></i>
                                     <span class="text-gray-600 dark:text-gray-400">
-                                        {{ $criteria->application->licence->season->title_ru }}
+                                        {{ $criteria->application?->licence?->season?->title_ru }}
                                     </span>
                                 </div>
                             @endif
 
-                            @if($criteria->application->licence->league)
+                            @if($criteria->application?->licence?->league)
                                 <div class="flex items-center text-sm">
                                     <i class="fas fa-trophy text-gray-400 mr-2 w-4"></i>
                                     <span class="text-gray-600 dark:text-gray-400 truncate">
-                                        {{ $criteria->application->licence->league->title_ru }}
+                                        {{ $criteria->application?->licence?->league?->title_ru }}
                                     </span>
                                 </div>
                             @endif
@@ -260,8 +260,8 @@
                             @php
                                 $latestDeadline = $criteria->application_criteria_deadlines->sortByDesc('created_at')->first();
                                 $now = now();
-                                $isExpired = $latestDeadline->deadline_end_at->lt($now);
-                                $isUpcoming = $latestDeadline->deadline_end_at->diffInDays($now) <= 3 && !$isExpired;
+                                $isExpired = $latestDeadline?->deadline_end_at?->lt($now) ?? false;
+                                $isUpcoming = ($latestDeadline?->deadline_end_at?->diffInDays($now) ?? 999) <= 3 && !$isExpired;
                             @endphp
                             <div class="mt-3 pt-3 border-t border-slate-200 dark:border-blue-800/40">
                                 <div class="flex items-center space-x-2 mb-2">
@@ -270,8 +270,8 @@
                                 </div>
                                 <div class="space-y-1">
                                     <div class="flex items-center justify-between text-xs">
-                                        <span class="{{ $this->getCriterionStatusColorByValue($latestDeadline->application_status->value) }} px-2 py-1 rounded text-xs">
-                                            {{ $latestDeadline->application_status->title_ru }}
+                                        <span class="{{ $this->getCriterionStatusColorByValue($latestDeadline?->application_status?->value ?? 'draft') }} px-2 py-1 rounded text-xs">
+                                            {{ $latestDeadline?->application_status?->title_ru ?? '-' }}
                                         </span>
                                         @if($isExpired)
                                             <span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded text-xs font-medium">
@@ -285,17 +285,17 @@
                                     </div>
                                     <div class="text-xs text-gray-600 dark:text-gray-400">
                                         <i class="fas fa-hourglass-end mr-1 {{ $isExpired ? 'text-red-500' : 'text-yellow-500' }}"></i>
-                                        До: {{ $latestDeadline->deadline_end_at->format('d.m.Y H:i') }}
+                                        До: {{ $latestDeadline?->deadline_end_at?->format('d.m.Y H:i') ?? '-' }}
                                     </div>
                                     @if($isExpired)
                                         <div class="text-xs text-red-600 dark:text-red-400">
                                             <i class="fas fa-exclamation-triangle mr-1"></i>
-                                            Просрочен на {{ $latestDeadline->deadline_end_at->diffForHumans($now, true) }}
+                                            Просрочен на {{ $latestDeadline?->deadline_end_at?->diffForHumans($now, true) ?? '-' }}
                                         </div>
                                     @else
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
                                             <i class="fas fa-info-circle mr-1"></i>
-                                            Осталось {{ $latestDeadline->deadline_end_at->diffForHumans($now, true) }}
+                                            Осталось {{ $latestDeadline?->deadline_end_at?->diffForHumans($now, true) ?? '-' }}
                                         </div>
                                     @endif
                                 </div>

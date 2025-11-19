@@ -97,10 +97,10 @@
                 <!-- Content -->
                 <div class="p-6">
                     <h3 class="text-xl font-black text-gray-900 dark:text-gray-100 mb-2 line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                        {{ $licence->title_ru }}
+                        {{ $licence->title_ru ?? 'Лицензия' }}
                     </h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-1">
-                        {{ $licence->title_kk }}
+                        {{ $licence->title_kk ?? '-' }}
                     </p>
 
                     <!-- Info Grid -->
@@ -110,7 +110,7 @@
                             <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center group-hover/item:bg-purple-200 dark:group-hover/item:bg-purple-900/50 transition-colors">
                                 <i class="fas fa-calendar-alt text-purple-600 dark:text-purple-400"></i>
                             </div>
-                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $licence->season->title_ru }}</span>
+                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $licence->season?->title_ru ?? '-' }}</span>
                         </div>
                         @endif
 
@@ -119,7 +119,7 @@
                             <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center group-hover/item:bg-indigo-200 dark:group-hover/item:bg-indigo-900/50 transition-colors">
                                 <i class="fas fa-trophy text-indigo-600 dark:text-indigo-400"></i>
                             </div>
-                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $licence->league->title_ru }}</span>
+                            <span class="ml-3 text-sm text-gray-600 dark:text-gray-400 font-medium">{{ $licence->league?->title_ru ?? '-' }}</span>
                         </div>
                         @endif
 
@@ -130,14 +130,14 @@
                             <div class="ml-3">
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Период действия</p>
                                 <p class="text-sm text-gray-700 dark:text-gray-300 font-semibold">
-                                    {{ $licence->start_at->format('d.m.Y') }} - {{ $licence->end_at->format('d.m.Y') }}
+                                    {{ $licence->start_at?->format('d.m.Y') ?? '-' }} - {{ $licence->end_at?->format('d.m.Y') ?? '-' }}
                                 </p>
                             </div>
                         </div>
 
-                        @if($licence->licence_deadlines->count() > 0)
+                        @if($licence->licence_deadlines?->count() > 0)
                         @php
-                            $deadline = $licence->licence_deadlines->first();
+                            $deadline = $licence->licence_deadlines?->first();
                             $statusBadge = $this->getDeadlineStatusBadge($deadline);
                         @endphp
 
@@ -153,7 +153,7 @@
                             <!-- Deadline Date -->
                             <div class="mt-2 flex items-center text-xs text-gray-600 dark:text-gray-400">
                                 <i class="fas fa-calendar-times mr-1.5"></i>
-                                <span>Дедлайн: {{ $deadline->end_at->format('d.m.Y H:i') }}</span>
+                                <span>Дедлайн: {{ $deadline?->end_at?->format('d.m.Y H:i') ?? '-' }}</span>
                             </div>
                         </div>
                         @endif

@@ -115,11 +115,11 @@
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $requirement->licence->title_ru }}
+                                        {{ $requirement->licence?->title_ru ?? 'Неизвестно' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
                                         @if($requirement->licence->season)
-                                            {{ $requirement->licence->season->title_ru }}
+                                            {{ $requirement->licence?->season?->title_ru ?? '—' }}
                                         @endif
                                     </div>
                                 </div>
@@ -130,13 +130,13 @@
                             @if($requirement->category_document)
                             <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                 <i class="fas fa-folder text-yellow-500 dark:text-yellow-400 mr-1"></i>
-                                {{ $requirement->category_document->title_ru }}
+                                {{ $requirement->category_document?->title_ru ?? 'Неизвестно' }}
                             </div>
                             @endif
                             @if($requirement->document)
                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <i class="fas fa-file-alt text-blue-500 dark:text-blue-400 mr-1"></i>
-                                {{ $requirement->document->title_ru }}
+                                {{ $requirement->document?->title_ru ?? 'Неизвестно' }}
                             </div>
                             @endif
                         </td>
@@ -255,8 +255,8 @@
                                     @foreach($licences as $licence)
                                     <option value="{{ $licence->id }}">
                                         {{ $licence->title_ru }}
-                                        @if($licence->season) - {{ $licence->season->title_ru }} @endif
-                                        @if($licence->league) ({{ $licence->league->title_ru }}) @endif
+                                        @if($licence->season) - {{ $licence->season?->title_ru ?? 'Без сезона' }} @endif
+                                        @if($licence->league) ({{ $licence->league?->title_ru ?? 'Без соревнования' }}) @endif
                                     </option>
                                     @endforeach
                                 </select>
@@ -396,8 +396,8 @@
                                     @foreach($licences as $licence)
                                     <option value="{{ $licence->id }}">
                                         {{ $licence->title_ru }}
-                                        @if($licence->season) - {{ $licence->season->title_ru }} @endif
-                                        @if($licence->league) ({{ $licence->league->title_ru }}) @endif
+                                        @if($licence->season) - {{ $licence->season?->title_ru ?? 'Без сезона' }} @endif
+                                        @if($licence->league) ({{ $licence->league?->title_ru ?? 'Без соревнования' }}) @endif
                                     </option>
                                     @endforeach
                                 </select>

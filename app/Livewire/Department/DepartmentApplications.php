@@ -61,6 +61,8 @@ class DepartmentApplications extends Component
             'application_criteria.category_document',
             'application_criteria.application_status'
         ])
+        ->whereNotNull('license_id')
+        ->whereNotNull('club_id')
         ->orderBy('created_at', 'desc');
 
         // Apply search filter

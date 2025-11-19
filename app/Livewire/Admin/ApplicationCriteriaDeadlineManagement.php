@@ -168,8 +168,8 @@ class ApplicationCriteriaDeadlineManagement extends Component
         $this->editingDeadlineId = $deadline->id;
         $this->applicationId = $deadline->application_id;
         $this->applicationCriteriaId = $deadline->application_criteria_id;
-        $this->deadlineStartAt = $deadline->deadline_start_at ? $deadline->deadline_start_at->format('Y-m-d\TH:i') : null;
-        $this->deadlineEndAt = $deadline->deadline_end_at->format('Y-m-d\TH:i');
+        $this->deadlineStartAt = $deadline->deadline_start_at?->format('Y-m-d\TH:i');
+        $this->deadlineEndAt = $deadline->deadline_end_at?->format('Y-m-d\TH:i') ?? '';
         $this->statusId = $deadline->status_id;
 
         // Load criteria for selected application

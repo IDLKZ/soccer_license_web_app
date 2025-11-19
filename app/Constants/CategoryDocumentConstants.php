@@ -41,6 +41,7 @@ class CategoryDocumentConstants
         RoleConstants::CLUB_ADMINISTRATOR_VALUE,
         RoleConstants::LICENSING_DEPARTMENT_VALUE,
         RoleConstants::SPORTING_DIRECTOR_VALUE,
+        RoleConstants::INFRASTRUCTURE_DEPARTMENT_VALUE,
         RoleConstants::CONTROL_DEPARTMENT_VALUE,
     ];
 
@@ -49,17 +50,21 @@ class CategoryDocumentConstants
         RoleConstants::LICENSING_DEPARTMENT_VALUE,
         RoleConstants::INFRASTRUCTURE_DEPARTMENT_VALUE,
         RoleConstants::CONTROL_DEPARTMENT_VALUE,
+        RoleConstants::LEGAL_SPECIALIST_VALUE,
     ];
 
     public const SOCIAL_DOCUMENTS_ROLES = [
         RoleConstants::CLUB_ADMINISTRATOR_VALUE,
         RoleConstants::LICENSING_DEPARTMENT_VALUE,
         RoleConstants::CONTROL_DEPARTMENT_VALUE,
+        RoleConstants::LEGAL_SPECIALIST_VALUE,
     ];
 
     public const HR_DOCUMENTS_ROLES = [
         RoleConstants::CLUB_ADMINISTRATOR_VALUE,
         RoleConstants::LICENSING_DEPARTMENT_VALUE,
         RoleConstants::CONTROL_DEPARTMENT_VALUE,
+        RoleConstants::SPORTING_DIRECTOR_VALUE,
+        RoleConstants::INFRASTRUCTURE_DEPARTMENT_VALUE,
     ];
 }

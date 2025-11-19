@@ -7,12 +7,13 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class CategoryDocument
- * 
+ *
  * @property int $id
  * @property string $title_ru
  * @property string $title_kk
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array|null $roles
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
+ *
  * @property Collection|ApplicationCriterion[] $application_criteria
  * @property Collection|ApplicationDocument[] $application_documents
  * @property Collection|Document[] $documents
@@ -33,6 +34,16 @@ use Illuminate\Database\Eloquent\Model;
 class CategoryDocument extends Model
 {
 	protected $table = 'category_documents';
+    use Sluggable;
+
+    public function sluggable(): array
+    {
+        return [
+            'value' => [
+                'source' => 'title_ru'
+            ]
+        ];
+    }
 
 	protected $casts = [
 		'level' => 'int',

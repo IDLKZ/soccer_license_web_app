@@ -139,7 +139,7 @@
                                     @endphp
                                     @if($role)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
-                                        {{ $role->title_ru }}
+                                        {{ $role?->title_ru ?? 'Неизвестно' }}
                                     </span>
                                     @endif
                                 @endforeach

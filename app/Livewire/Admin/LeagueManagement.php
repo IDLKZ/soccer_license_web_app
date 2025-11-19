@@ -9,7 +9,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-#[Title('Управление лигами')]
+#[Title('Управление соревнованиями')]
 class LeagueManagement extends Component
 {
     use WithPagination;
@@ -143,7 +143,7 @@ class LeagueManagement extends Component
         ]);
 
         $this->resetLeagueForm();
-        session()->flash('message', 'Лига успешно создана');
+        session()->flash('message', 'Соревнование успешно создано');
     }
 
     public function editLeague($leagueId)
@@ -192,7 +192,7 @@ class LeagueManagement extends Component
         $league->update($leagueData);
 
         $this->resetLeagueForm();
-        session()->flash('message', 'Лига успешно обновлена');
+        session()->flash('message', 'Соревнование успешно обновлен');
     }
 
     public function deleteLeague($leagueId)
@@ -201,16 +201,15 @@ class LeagueManagement extends Component
 
         $league = League::findOrFail($leagueId);
 
-        // TODO: Add check for clubs when Club model is implemented
         // Prevent deleting leagues with clubs
-        // if ($league->clubs()->count() > 0) {
-        //     session()->flash('error', 'Нельзя удалить лигу, привязанную к клубам');
-        //     return;
-        // }
+        if ($league->clubs()->count() > 0) {
+        session()->flash('error', 'Нельзя удалить соревнование, привязанное к клубам');
+        return;
+        }
 
         $league->delete();
 
-        session()->flash('message', 'Лига успешно удалена');
+        session()->flash('message', 'Соревнование успешно удалено');
     }
 
     public function toggleLeagueStatus($leagueId)
@@ -221,7 +220,7 @@ class LeagueManagement extends Component
         $league->is_active = !$league->is_active;
         $league->save();
 
-        session()->flash('message', 'Статус лиги изменен');
+        session()->flash('message', 'Статус соревнований изменен');
     }
 
     // Form Reset Methods

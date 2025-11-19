@@ -125,10 +125,10 @@
                                     </div>
                                     <div>
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $team->club->short_name_ru }}
+                                            {{ $team->club?->short_name_ru ?? 'Неизвестно' }}
                                         </div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $team->club->short_name_kk }}
+                                            {{ $team->club?->short_name_kk ?? '—' }}
                                         </div>
                                     </div>
                                 </div>
@@ -140,10 +140,10 @@
                                     </div>
                                     <div>
                                         <div class="text-sm font-medium text-gray-900 dark:text-white">
-                                            {{ $team->user->first_name }} {{ $team->user->last_name }}
+                                            {{ $team->user?->first_name ?? 'Неизвестно' }} {{ $team->user?->last_name ?? '' }}
                                         </div>
                                         <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $team->user->email }}
+                                            {{ $team->user?->email ?? '—' }}
                                         </div>
                                     </div>
                                 </div>
@@ -152,12 +152,12 @@
                                 @if($team->role)
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-800 dark:text-indigo-200">
                                         <i class="fas fa-shield-alt mr-1.5"></i>
-                                        {{ $team->role->title_ru }}
+                                        {{ $team->role?->title_ru ?? 'Неизвестно' }}
                                     </span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                {{ $team->created_at->format('d.m.Y H:i') }}
+                                {{ $team->created_at?->format('d.m.Y H:i') ?? '—' }}
                             </td>
                             @if($canEdit || $canDelete)
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -264,7 +264,7 @@
                                         <option value="{{ $user->id }}">
                                             {{ $user->first_name }} {{ $user->last_name }} ({{ $user->email }})
                                             @if($user->role)
-                                                - {{ $user->role->title_ru }}
+                                                - {{ $user->role?->title_ru ?? 'Без роли' }}
                                             @endif
                                         </option>
                                     @endforeach
@@ -360,7 +360,7 @@
                                         <option value="{{ $user->id }}">
                                             {{ $user->first_name }} {{ $user->last_name }} ({{ $user->email }})
                                             @if($user->role)
-                                                - {{ $user->role->title_ru }}
+                                                - {{ $user->role?->title_ru ?? 'Без роли' }}
                                             @endif
                                         </option>
                                     @endforeach

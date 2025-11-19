@@ -30,7 +30,7 @@
                     <option value="">Все заявки</option>
                     @foreach($applications as $application)
                     <option value="{{ $application->id }}">
-                        {{ $application->club->short_name_ru ?? 'Неизвестно' }} - {{ $application->licence->title_ru ?? 'Неизвестно' }}
+                        {{ $application->club?->short_name_ru ?? 'Неизвестно' }} - {{ $application->licence?->title_ru ?? 'Неизвестно' }}
                     </option>
                     @endforeach
                 </select>
@@ -88,10 +88,10 @@
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $deadline->application->club->short_name_ru ?? 'Неизвестно' }}
+                                        {{ $deadline->application?->club?->short_name_ru ?? 'Неизвестно' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $deadline->application->licence->title_ru ?? 'Неизвестно' }}
+                                        {{ $deadline->application?->licence?->title_ru ?? 'Неизвестно' }}
                                     </div>
                                 </div>
                             </div>
@@ -100,7 +100,7 @@
                         <td class="px-4 py-4">
                             @if($deadline->application_criterion)
                             <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {{ $deadline->application_criterion->category_document->title_ru ?? 'Неизвестно' }}
+                                {{ $deadline->application_criterion?->category_document?->title_ru ?? 'Неизвестно' }}
                             </div>
                             @endif
                         </td>
@@ -118,19 +118,23 @@
                                 {{ $deadline->deadline_start_at->format('d.m.Y H:i') }}
                             </div>
                             @endif
+                            @if($deadline->deadline_end_at)
                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 <i class="fas fa-hourglass-end text-red-500 mr-1"></i>
                                 {{ $deadline->deadline_end_at->format('d.m.Y H:i') }}
                             </div>
+                            @endif
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-center">
                             @php
                                 $now = now();
-                                $isPast = $now->greaterThan($deadline->deadline_end_at);
-                                $isActive = $deadline->deadline_start_at
-                                    ? $now->between($deadline->deadline_start_at, $deadline->deadline_end_at)
-                                    : $now->lessThanOrEqualTo($deadline->deadline_end_at);
-                                $isFuture = $deadline->deadline_start_at && $now->lessThan($deadline->deadline_start_at);
+                                $isPast = $deadline->deadline_end_at && $now->greaterThan($deadline->deadline_end_at);
+                                $isActive = $deadline->deadline_end_at && (
+                                    $deadline->deadline_start_at
+                                        ? $now->between($deadline->deadline_start_at, $deadline->deadline_end_at)
+                                        : $now->lessThanOrEqualTo($deadline->deadline_end_at)
+                                );
+                                $isFuture = $deadline->deadline_start_at && $deadline->deadline_end_at && $now->lessThan($deadline->deadline_start_at);
                             @endphp
                             @if($isPast)
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-red-100 to-rose-100 dark:from-red-900/30 dark:to-rose-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-700">
@@ -221,7 +225,7 @@
                             <option value="">Выберите заявку</option>
                             @foreach($applications as $app)
                             <option value="{{ $app->id }}">
-                                {{ $app->club->short_name_ru ?? 'Неизвестно' }} - {{ $app->licence->title_ru ?? 'Неизвестно' }}
+                                {{ $app->club?->short_name_ru ?? 'Неизвестно' }} - {{ $app->licence?->title_ru ?? 'Неизвестно' }}
                             </option>
                             @endforeach
                         </select>
@@ -241,7 +245,7 @@
                             <option value="">Выберите критерий</option>
                             @foreach($criteriaByApplication as $criterion)
                             <option value="{{ $criterion->id }}">
-                                {{ $criterion->category_document->title_ru ?? 'Неизвестно' }}
+                                {{ $criterion->category_document?->title_ru ?? 'Неизвестно' }}
                             </option>
                             @endforeach
                         </select>

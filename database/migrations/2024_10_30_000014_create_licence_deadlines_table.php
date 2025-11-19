@@ -16,12 +16,12 @@ return new class extends Migration
             $table->foreignId('licence_id')
                 ->nullable()
                 ->constrained('licences')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->foreignId('club_id')
                 ->nullable()
                 ->constrained('clubs')
-                ->onDelete('set null')
+                ->onDelete('cascade')
                 ->onUpdate('cascade');
             $table->date('start_at');
             $table->date('end_at');

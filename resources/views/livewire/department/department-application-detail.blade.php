@@ -32,9 +32,9 @@
                     </p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="{{ $this->getApplicationStatusColor($application->application_status_category->value) }} px-4 py-2 rounded-full text-sm font-medium inline-flex items-center">
+                    <span class="{{ $this->getApplicationStatusColor($application->application_status_category?->value ?? 'draft') }} px-4 py-2 rounded-full text-sm font-medium inline-flex items-center">
                         <i class="fas fa-info-circle mr-2"></i>
-                        {{ $application->application_status_category->title_ru }}
+                        {{ $application->application_status_category?->title_ru ?? 'Не определен' }}
                     </span>
 
                     @if($this->canRejectApplication())
@@ -58,23 +58,23 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Лицензия</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $licence->title_ru }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $licence?->title_ru ?? 'Не указана' }}</p>
                         </div>
                     </div>
 
                     <div class="space-y-3">
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Сезон</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $licence->season->title_ru ?? '-' }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $licence?->season?->title_ru ?? '-' }}</p>
                         </div>
                         <div>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Лига</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $licence->league->title_ru ?? '-' }}</p>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Соревнования</span>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $licence?->league?->title_ru ?? '-' }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Период действия</span>
                             <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {{ $licence->start_at->format('d.m.Y') }} - {{ $licence->end_at->format('d.m.Y') }}
+                                {{ $licence?->start_at?->format('d.m.Y') ?? '-' }} - {{ $licence?->end_at?->format('d.m.Y') ?? '-' }}
                             </p>
                         </div>
                     </div>
@@ -88,22 +88,22 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Клуб</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $club->short_name_ru ?? $club->full_name_ru }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $club?->short_name_ru ?? $club?->full_name_ru ?? '-' }}</p>
                         </div>
                     </div>
 
                     <div class="space-y-3">
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Полное название</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">{{ $club->full_name_ru }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 break-words">{{ $club?->full_name_ru ?? '-' }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">БИН</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $club->bin }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $club?->bin ?? '-' }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Дата основания</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $club->foundation_date->format('d.m.Y') }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $club?->foundation_date?->format('d.m.Y') ?? '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -116,22 +116,22 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Ответственный</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $user->role->title_ru ?? 'Пользователь' }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $user?->role?->title_ru ?? 'Пользователь' }}</p>
                         </div>
                     </div>
 
                     <div class="space-y-3">
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">ФИО</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user->name }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user?->name ?? '-' }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Email</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user->email }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user?->email ?? '-' }}</p>
                         </div>
                         <div>
                             <span class="text-xs text-gray-500 dark:text-gray-400">Телефон</span>
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user->phone_number ?? '-' }}</p>
+                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $user?->phone_number ?? '-' }}</p>
                         </div>
                     </div>
                 </div>
@@ -332,13 +332,13 @@
                                                 <div class="flex items-start justify-between">
                                                     <div class="flex-1">
                                                         <div class="flex items-center space-x-2 mb-2">
-                                                            <span class="{{ $this->getCriterionStatusColorByValue($deadline->application_status->value) }} px-2 py-1 rounded-md text-xs font-medium">
-                                                                {{ $deadline->application_status->title_ru }}
+                                                            <span class="{{ $this->getCriterionStatusColorByValue($deadline->application_status?->value ?? 'draft') }} px-2 py-1 rounded-md text-xs font-medium">
+                                                                {{ $deadline->application_status?->title_ru ?? '-' }}
                                                             </span>
                                                             @php
                                                                 $now = now();
-                                                                $isExpired = $deadline->deadline_end_at->lt($now);
-                                                                $isUpcoming = $deadline->deadline_end_at->diffInDays($now) <= 3 && !$isExpired;
+                                                                $isExpired = $deadline->deadline_end_at?->lt($now) ?? false;
+                                                                $isUpcoming = ($deadline->deadline_end_at?->diffInDays($now) ?? 999) <= 3 && !$isExpired;
                                                             @endphp
                                                             @if($isExpired)
                                                                 <span class="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded-md text-xs font-medium">
@@ -356,25 +356,25 @@
                                                                 <div class="text-gray-700 dark:text-gray-300">
                                                                     <i class="fas fa-hourglass-start mr-1 text-blue-500"></i>
                                                                     <span class="font-medium">Начало:</span>
-                                                                    {{ $deadline->deadline_start_at->format('d.m.Y H:i') }}
+                                                                    {{ $deadline->deadline_start_at?->format('d.m.Y H:i') ?? '-' }}
                                                                 </div>
                                                             @endif
                                                             <div class="text-gray-700 dark:text-gray-300">
                                                                 <i class="fas fa-hourglass-end mr-1 {{ $isExpired ? 'text-red-500' : 'text-yellow-500' }}"></i>
                                                                 <span class="font-medium">Крайний срок:</span>
-                                                                {{ $deadline->deadline_end_at->format('d.m.Y H:i') }}
+                                                                {{ $deadline->deadline_end_at?->format('d.m.Y H:i') ?? '-' }}
                                                             </div>
                                                         </div>
 
                                                         @if($isExpired)
                                                             <div class="mt-2 text-xs text-red-600 dark:text-red-400">
                                                                 <i class="fas fa-exclamation-triangle mr-1"></i>
-                                                                Просрочен на {{ $deadline->deadline_end_at->diffForHumans($now, true) }}
+                                                                Просрочен на {{ $deadline->deadline_end_at?->diffForHumans($now, true) ?? '-' }}
                                                             </div>
                                                         @else
                                                             <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
                                                                 <i class="fas fa-info-circle mr-1"></i>
-                                                                Осталось {{ $deadline->deadline_end_at->diffForHumans($now, true) }}
+                                                                Осталось {{ $deadline->deadline_end_at?->diffForHumans($now, true) ?? '-' }}
                                                             </div>
                                                         @endif
                                                     </div>
@@ -1510,11 +1510,11 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-xs text-gray-500 dark:text-gray-400">Клуб</label>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->application->club->short_name_ru ?? '-' }}</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->application?->club?->short_name_ru ?? '-' }}</p>
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-500 dark:text-gray-400">Лицензия</label>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->application->licence->title_ru ?? '-' }}</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->application?->licence?->title_ru ?? '-' }}</p>
                                 </div>
                             </div>
                         </div>

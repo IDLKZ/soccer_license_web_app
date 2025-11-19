@@ -79,6 +79,7 @@ class MyApplications extends Component
             'application_criteria.application_status'
         ])
         ->whereIn('club_id', $clubIds)
+        ->whereNotNull('license_id')
         ->orderBy('created_at', 'desc');
 
         // Apply search filter

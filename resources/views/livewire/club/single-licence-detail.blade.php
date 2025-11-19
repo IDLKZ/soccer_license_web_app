@@ -29,10 +29,10 @@
                                     Активная лицензия
                                 </span>
                                 @endif
-                                <h1 class="text-4xl font-black text-white mb-2">{{ $licence->title_ru }}</h1>
-                                <p class="text-xl text-purple-100 font-medium">{{ $licence->title_kk }}</p>
+                                <h1 class="text-4xl font-black text-white mb-2">{{ $licence->title_ru ?? 'Лицензия' }}</h1>
+                                <p class="text-xl text-purple-100 font-medium">{{ $licence->title_kk ?? '-' }}</p>
                                 @if($licence->title_en)
-                                <p class="text-lg text-purple-200 mt-1">{{ $licence->title_en }}</p>
+                                <p class="text-lg text-purple-200 mt-1">{{ $licence->title_en ?? '-' }}</p>
                                 @endif
                             </div>
                         </div>
@@ -55,7 +55,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-purple-200 font-medium">Сезон</p>
-                                <p class="text-white font-bold">{{ $licence->season->title_ru }}</p>
+                                <p class="text-white font-bold">{{ $licence->season?->title_ru ?? '-' }}</p>
                             </div>
                         </div>
                     </div>
@@ -68,8 +68,8 @@
                                 <i class="fas fa-trophy text-2xl text-white"></i>
                             </div>
                             <div>
-                                <p class="text-xs text-purple-200 font-medium">Лига</p>
-                                <p class="text-white font-bold">{{ $licence->league->title_ru }}</p>
+                                <p class="text-xs text-purple-200 font-medium">Соревнования</p>
+                                <p class="text-white font-bold">{{ $licence->league?->title_ru ?? '-' }}</p>
                             </div>
                         </div>
                     </div>
@@ -83,7 +83,7 @@
                             <div>
                                 <p class="text-xs text-purple-200 font-medium">Период действия</p>
                                 <p class="text-white font-bold text-sm">
-                                    {{ $licence->start_at->format('d.m.Y') }} - {{ $licence->end_at->format('d.m.Y') }}
+                                    {{ $licence->start_at?->format('d.m.Y') ?? '-' }} - {{ $licence->end_at?->format('d.m.Y') ?? '-' }}
                                 </p>
                             </div>
                         </div>
@@ -154,19 +154,19 @@
                 <div class="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-4 border-2 border-orange-200 dark:border-orange-700">
                     <div class="flex items-start justify-between mb-2">
                         <div>
-                            <h3 class="font-bold text-gray-900 dark:text-gray-100">{{ $deadline->club->short_name_ru }}</h3>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ $deadline->club->short_name_kk }}</p>
+                            <h3 class="font-bold text-gray-900 dark:text-gray-100">{{ $deadline->club?->short_name_ru ?? 'Клуб' }}</h3>
+                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ $deadline->club?->short_name_kk ?? '-' }}</p>
                         </div>
                         <i class="fas fa-building text-2xl text-orange-400"></i>
                     </div>
                     <div class="mt-3 pt-3 border-t border-orange-200 dark:border-orange-700">
                         <p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Период подачи заявки</p>
                         <p class="text-sm font-bold text-gray-900 dark:text-gray-100">
-                            {{ $deadline->start_at->format('d.m.Y') }}
+                            {{ $deadline->start_at?->format('d.m.Y') ?? '-' }}
                         </p>
                         <p class="text-xs text-red-600 dark:text-red-400 font-semibold mt-2">
                             <i class="fas fa-calendar-times mr-1"></i>
-                            Дедлайн: {{ $deadline->end_at->format('d.m.Y H:i') }}
+                            Дедлайн: {{ $deadline->end_at?->format('d.m.Y H:i') ?? '-' }}
                         </p>
                     </div>
                 </div>
@@ -194,9 +194,9 @@
                             class="flex-shrink-0 px-6 py-3 rounded-t-lg font-bold transition-all duration-300 {{ $activeCategory == $category->id ? 'bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 border-t-4 border-purple-500' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700' }}">
                         <span class="flex items-center">
                             <i class="fas fa-folder mr-2"></i>
-                            {{ $category->title_ru }}
+                            {{ $category->title_ru ?? 'Категория' }}
                             <span class="ml-2 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold">
-                                {{ $requirementsByCategory[$category->id]->count() }}
+                                {{ $requirementsByCategory[$category->id]?->count() ?? 0 }}
                             </span>
                         </span>
                     </button>
@@ -214,7 +214,7 @@
                     <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 p-4 rounded-lg mb-6">
                         <p class="text-sm text-blue-800 dark:text-blue-300">
                             <i class="fas fa-info-circle mr-2"></i>
-                            {{ $category->description_ru }}
+                            {{ $category->description_ru ?? '' }}
                         </p>
                     </div>
                     @endif
@@ -238,17 +238,17 @@
                                     @endif
 
                                     <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                                        {{ $requirement->document->title_ru }}
+                                        {{ $requirement->document?->title_ru ?? 'Документ' }}
                                     </h3>
                                 </div>
 
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                    {{ $requirement->document->title_kk }}
+                                    {{ $requirement->document?->title_kk ?? '-' }}
                                 </p>
 
-                                @if($requirement->document->description_ru)
+                                @if($requirement->document?->description_ru)
                                 <div class="text-sm mb-3 leading-relaxed prose-content">
-                                    {!! $requirement->document->description_ru !!}
+                                    {!! $requirement->document?->description_ru ?? '' !!}
                                 </div>
                                 @endif
 
@@ -336,8 +336,8 @@
                             <div class="flex items-center">
                                 <i class="fas fa-building text-gray-600 dark:text-gray-400 mr-3"></i>
                                 <div>
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $availableClubs->first()->short_name_ru }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $availableClubs->first()->short_name_kk }}</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $availableClubs->first()?->short_name_ru ?? 'Клуб' }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $availableClubs->first()?->short_name_kk ?? '-' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -347,8 +347,8 @@
                             <label class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:border-green-400 dark:hover:border-green-500 has-[:checked]:border-green-500 dark:has-[:checked]:border-green-400 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20 transition">
                                 <input type="radio" wire:model="selectedClubId" value="{{ $club->id }}" class="w-4 h-4 text-green-600 mr-3">
                                 <div class="flex-1">
-                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $club->short_name_ru }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $club->short_name_kk }}</p>
+                                    <p class="font-semibold text-gray-900 dark:text-gray-100">{{ $club->short_name_ru ?? 'Клуб' }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ $club->short_name_kk ?? '-' }}</p>
                                 </div>
                             </label>
                             @endforeach

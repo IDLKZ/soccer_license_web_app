@@ -154,24 +154,24 @@
                                 <div class="flex-1">
                                     <div class="flex items-center mb-2">
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mr-3">
-                                            {{ $application->licence->title_ru ?? 'Без названия' }}
+                                            {{ $application->licence?->title_ru ?? 'Без названия' }}
                                         </h3>
-                                        <span class="{{ $this->getApplicationStatusColor($application->application_status_category->value) }} px-3 py-1 rounded-full text-xs font-medium inline-flex items-center">
-                                            <i class="{{ $this->getApplicationStatusIcon($application->application_status_category->value) }} mr-1"></i>
-                                            {{ $application->application_status_category->title_ru }}
+                                        <span class="{{ $this->getApplicationStatusColor($application->application_status_category?->value ?? 'draft') }} px-3 py-1 rounded-full text-xs font-medium inline-flex items-center">
+                                            <i class="{{ $this->getApplicationStatusIcon($application->application_status_category?->value ?? 'draft') }} mr-1"></i>
+                                            {{ $application->application_status_category?->title_ru ?? 'Не определен' }}
                                         </span>
                                     </div>
                                     <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
                                         <i class="fas fa-building mr-2"></i>
-                                        {{ $application->club->short_name_ru ?? $application->club->full_name_ru ?? 'Неизвестный клуб' }}
+                                        {{ $application->club?->short_name_ru ?? $application->club?->full_name_ru ?? 'Неизвестный клуб' }}
                                     </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     @if($application->deadline)
                                     <div class="text-right">
                                         <p class="text-xs text-gray-500 dark:text-gray-400">Дедлайн</p>
-                                        <p class="text-sm font-medium {{ $application->deadline->isPast() ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
-                                            {{ $application->deadline->format('d.m.Y') }}
+                                        <p class="text-sm font-medium {{ $application->deadline?->isPast() ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
+                                            {{ $application->deadline?->format('d.m.Y') ?? '-' }}
                                         </p>
                                     </div>
                                     @endif
@@ -188,12 +188,12 @@
                                 <div class="grid grid-cols-1 gap-2 text-sm">
                                     <div>
                                         <span class="text-gray-500 dark:text-gray-400">Сезон:</span>
-                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $application->licence->season->title_ru ?? '-' }}</span>
+                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $application->licence?->season?->title_ru ?? '-' }}</span>
                                     </div>
-                                    @if($application->licence->league)
+                                    @if($application->licence?->league)
                                     <div>
-                                        <span class="text-gray-500 dark:text-gray-400">Лига:</span>
-                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $application->licence->league->title_ru ?? '-' }}</span>
+                                        <span class="text-gray-500 dark:text-gray-400">Соревнование:</span>
+                                        <span class="ml-2 text-gray-900 dark:text-gray-100">{{ $application->licence?->league?->title_ru ?? '-' }}</span>
                                     </div>
                                     @endif
                                 </div>
@@ -201,11 +201,11 @@
                             @endif
 
                             <!-- Criteria Status -->
-                            @if($application->application_criteria->count() > 0)
+                            @if($application->application_criteria?->count() > 0)
                             <div class="mb-4">
                                 <div class="flex items-center mb-3">
                                     <i class="fas fa-tasks text-blue-500 mr-2"></i>
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Критерии ({{ $application->application_criteria->count() }})</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Критерии ({{ $application->application_criteria?->count() ?? 0 }})</span>
                                 </div>
 
                                 <div class="space-y-2">
@@ -213,27 +213,27 @@
                                         <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
                                             <div class="flex flex-col flex-1 mr-2">
                                                 <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                    {{ $criterion->category_document->title_ru ?? 'Критерий' }}
+                                                    {{ $criterion->category_document?->title_ru ?? 'Критерий' }}
                                                 </span>
                                                 @if($criterion->application_status)
                                                     <span class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                        {{ $criterion->application_status->title_ru }}
+                                                        {{ $criterion->application_status?->title_ru ?? '-' }}
                                                     </span>
                                                 @endif
                                             </div>
                                             <div class="flex items-center space-x-2">
                                                 @if($criterion->application_status)
-                                                    <span class="{{ $this->getStatusBadgeColor($criterion->application_status->value) }} px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
-                                                        @if(str_contains($criterion->application_status->value, 'revision'))
+                                                    <span class="{{ $this->getStatusBadgeColor($criterion->application_status?->value ?? 'draft') }} px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
+                                                        @if(str_contains($criterion->application_status?->value ?? '', 'revision'))
                                                             <i class="fas fa-undo mr-1"></i>
-                                                        @elseif(str_contains($criterion->application_status->value, 'awaiting'))
+                                                        @elseif(str_contains($criterion->application_status?->value ?? '', 'awaiting'))
                                                             <i class="fas fa-clock mr-1"></i>
-                                                        @elseif(str_contains($criterion->application_status->value, 'approved'))
+                                                        @elseif(str_contains($criterion->application_status?->value ?? '', 'approved'))
                                                             <i class="fas fa-check mr-1"></i>
-                                                        @elseif($criterion->application_status->value === 'rejected' || $criterion->application_status->value === 'revoked')
+                                                        @elseif(($criterion->application_status?->value ?? '') === 'rejected' || ($criterion->application_status?->value ?? '') === 'revoked')
                                                             <i class="fas fa-times mr-1"></i>
                                                         @endif
-                                                        {{ $criterion->application_status->title_ru }}
+                                                        {{ $criterion->application_status?->title_ru ?? '-' }}
                                                     </span>
                                                 @endif
                                             </div>
@@ -250,7 +250,7 @@
                                         @foreach($criteriaStats['by_status'] as $statusValue => $data)
                                             @if($data['status'])
                                                 <span class="{{ $this->getStatusBadgeColor($statusValue) }} px-2 py-1 rounded text-xs">
-                                                    {{ $data['status']->title_ru }}: {{ $data['count'] }}
+                                                    {{ $data['status']?->title_ru ?? '-' }}: {{ $data['count'] ?? 0 }}
                                                 </span>
                                             @endif
                                         @endforeach
@@ -262,7 +262,7 @@
                             <!-- Action Buttons -->
                             <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                                 <div class="text-xs text-gray-500 dark:text-gray-400">
-                                    Создана: {{ $application->created_at->format('d.m.Y H:i') }}
+                                    Создана: {{ $application->created_at?->format('d.m.Y H:i') ?? '-' }}
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <a href="{{ route('department.application.detail', $application->id) }}" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">

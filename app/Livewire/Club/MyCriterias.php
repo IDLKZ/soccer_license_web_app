@@ -104,6 +104,7 @@ class MyCriterias extends Component
 
         // Get application IDs for user's clubs
         $applicationIds = Application::whereIn('club_id', $clubIds)
+            ->whereNotNull('license_id')
             ->pluck('id')
             ->toArray();
 
@@ -122,6 +123,10 @@ class MyCriterias extends Component
             'application_status',
             'application_criteria_deadlines.application_status',
         ])
+            ->whereHas('application', function ($query) {
+                $query->whereNotNull('license_id')
+                      ->whereNotNull('club_id');
+            })
             ->whereIn('application_id', $applicationIds)
             ->whereIn('category_id', $categoryIds);
 
@@ -389,6 +394,7 @@ class MyCriterias extends Component
 
         // Get application IDs for user's clubs
         $applicationIds = Application::whereIn('club_id', $clubIds)
+            ->whereNotNull('license_id')
             ->pluck('id')
             ->toArray();
 
@@ -405,7 +411,11 @@ class MyCriterias extends Component
         ];
 
         // Count criteria that match all conditions
-        return ApplicationCriterion::whereIn('application_id', $applicationIds)
+        return ApplicationCriterion::whereHas('application', function ($query) {
+                $query->whereNotNull('license_id')
+                      ->whereNotNull('club_id');
+            })
+            ->whereIn('application_id', $applicationIds)
             ->whereIn('category_id', $categoryIds)
             ->whereHas('application_status', function ($query) use ($activeStatuses) {
                 $query->whereIn('value', $activeStatuses);

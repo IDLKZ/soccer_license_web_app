@@ -60,7 +60,7 @@ class ApplicationObserver
 
                 return;
             }
-            //Create ApplicationSolution
+            // Create ApplicationSolution
             ApplicationSolution::create([
                 'application_id' => $application->id,
             ]);
@@ -78,11 +78,87 @@ class ApplicationObserver
     }
 
     /**
+     * Handle the Application "deleting" event.
+     *
+     * This method is called before the application is deleted.
+     * We use 'deleting' instead of 'deleted' to ensure cascading deletes
+     * happen before the parent record is removed.
+     */
+    public function deleting(Application $application): void
+    {
+        try {
+            // Delete related application criteria deadlines
+            if ($application->application_criteria_deadlines()->exists()) {
+                $deadlinesCount = $application->application_criteria_deadlines()->count();
+                $application->application_criteria_deadlines()->delete();
+                Log::info("Deleted {$deadlinesCount} application criteria deadlines for application ID: {$application->id}");
+            }
+
+            // Delete related application criteria
+            if ($application->application_criteria()->exists()) {
+                $criteriaCount = $application->application_criteria()->count();
+                $application->application_criteria()->delete();
+                Log::info("Deleted {$criteriaCount} application criteria for application ID: {$application->id}");
+            }
+
+            // Delete related application documents (pivot table records)
+            $documentsCount = \App\Models\ApplicationDocument::where('application_id', $application->id)->count();
+            if ($documentsCount > 0) {
+                \App\Models\ApplicationDocument::where('application_id', $application->id)->delete();
+                Log::info("Deleted {$documentsCount} application documents for application ID: {$application->id}");
+            }
+
+            // Delete related application initial reports
+            if ($application->application_initial_reports()->exists()) {
+                $initialReportsCount = $application->application_initial_reports()->count();
+                $application->application_initial_reports()->delete();
+                Log::info("Deleted {$initialReportsCount} application initial reports for application ID: {$application->id}");
+            }
+
+            // Delete related application reports
+            if ($application->application_reports()->exists()) {
+                $reportsCount = $application->application_reports()->count();
+                $application->application_reports()->delete();
+                Log::info("Deleted {$reportsCount} application reports for application ID: {$application->id}");
+            }
+
+            // Delete related application solutions
+            if ($application->application_solutions()->exists()) {
+                $solutionsCount = $application->application_solutions()->count();
+                $application->application_solutions()->delete();
+                Log::info("Deleted {$solutionsCount} application solutions for application ID: {$application->id}");
+            }
+
+            // Delete related application steps
+            if ($application->application_steps()->exists()) {
+                $stepsCount = $application->application_steps()->count();
+                $application->application_steps()->delete();
+                Log::info("Deleted {$stepsCount} application steps for application ID: {$application->id}");
+            }
+
+            Log::info("Successfully cleaned up related records for application ID: {$application->id}");
+        } catch (\Exception $e) {
+            Log::error("Error deleting related records for application ID: {$application->id}", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Re-throw the exception to prevent the application from being deleted if cleanup fails
+            throw $e;
+        }
+    }
+
+    /**
      * Handle the Application "deleted" event.
+     *
+     * This method is called after the application has been deleted.
+     * Can be used for logging or notifications.
      */
     public function deleted(Application $application): void
     {
-        //
+        Log::info('Application deleted successfully', [
+            'id' => $application->id,
+        ]);
     }
 
     /**

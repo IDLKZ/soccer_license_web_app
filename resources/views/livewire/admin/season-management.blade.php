@@ -194,9 +194,9 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900 dark:text-gray-100">
                                     @if($season->start && $season->end)
-                                        <div>{{ $season->start->format('d.m.Y') }} - {{ $season->end->format('d.m.Y') }}</div>
+                                        <div>{{ $season->start?->format('d.m.Y') ?? '—' }} - {{ $season->end?->format('d.m.Y') ?? '—' }}</div>
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $season->start->diffInDays($season->end) }} дней
+                                            {{ $season->start && $season->end ? $season->start->diffInDays($season->end) : 0 }} дней
                                         </div>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
