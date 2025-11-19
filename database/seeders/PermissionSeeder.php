@@ -695,6 +695,38 @@ class PermissionSeeder extends Seeder
                 'value' => 'delete-applications',
                 'is_system' => true,
             ],
+
+            // Full Applications Management (Admin & Licensing Department)
+            [
+                'title_ru' => 'Просмотр всех заявок',
+                'title_kk' => 'Барлық өтінімдерді көру',
+                'title_en' => 'View Full Applications',
+                'description_ru' => 'Разрешение на просмотр всех заявок в системе',
+                'description_kk' => 'Жүйедегі барлық өтінімдерді көру рұқсаты',
+                'description_en' => 'Permission to view all applications in the system',
+                'value' => 'view-full-application',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Управление всеми заявками',
+                'title_kk' => 'Барлық өтінімдерді басқару',
+                'title_en' => 'Manage Full Applications',
+                'description_ru' => 'Разрешение на управление всеми заявками в системе',
+                'description_kk' => 'Жүйедегі барлық өтінімдерді басқару рұқсаты',
+                'description_en' => 'Permission to manage all applications in the system',
+                'value' => 'manage-full-application',
+                'is_system' => true,
+            ],
+            [
+                'title_ru' => 'Удаление всех заявок',
+                'title_kk' => 'Барлық өтінімдерді жою',
+                'title_en' => 'Delete Full Applications',
+                'description_ru' => 'Разрешение на удаление всех заявок в системе',
+                'description_kk' => 'Жүйедегі барлық өтінімдерді жою рұқсаты',
+                'description_en' => 'Permission to delete all applications in the system',
+                'value' => 'delete-full-application',
+                'is_system' => true,
+            ],
         ];
 
         foreach ($permissions as $permission) {

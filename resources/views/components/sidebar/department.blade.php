@@ -51,6 +51,13 @@
                     <span class="ml-3 font-medium">Заявки на лицензирование</span>
                 </a>
 
+                @can('view-full-application')
+                <a href="{{ route('department.all-applications') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-indigo-800 dark:hover:bg-indigo-800 hover:text-white rounded-lg transition-colors group {{ request()->routeIs('department.all-applications') || request()->routeIs('department.all-application-detailed') ? 'bg-indigo-800 text-white' : '' }}">
+                    <i class="fas fa-file-alt w-5 text-center text-indigo-400 group-hover:text-indigo-300 {{ request()->routeIs('department.all-applications') || request()->routeIs('department.all-application-detailed') ? 'text-indigo-300' : '' }}"></i>
+                    <span class="ml-3 font-medium">Все заявки</span>
+                </a>
+                @endcan
+
                 <div class="pt-4 pb-2">
                     <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Справочные данные</p>
                 </div>

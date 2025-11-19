@@ -1,30 +1,32 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Livewire\Auth\Login;
-use App\Livewire\Admin\UserManagement;
-use App\Livewire\Admin\RoleManagement;
-use App\Livewire\Admin\SeasonManagement;
+use App\Livewire\Admin\ApplicationDetailedManagement;
+use App\Livewire\Admin\ApplicationFullManagement;
+use App\Livewire\Admin\ApplicationStatusCategoryManagement;
+use App\Livewire\Admin\ApplicationStatusManagement;
 use App\Livewire\Admin\CategoryDocumentManagement;
+use App\Livewire\Admin\ClubManagement as AdminClubManagement;
+use App\Livewire\Admin\ClubTeamManagement;
 use App\Livewire\Admin\DocumentManagement;
 use App\Livewire\Admin\LeagueManagement;
-use App\Livewire\Admin\ClubManagement as AdminClubManagement;
-use App\Livewire\Admin\ApplicationStatusCategoryManagement;
-use App\Livewire\Club\ClubManagement;
-use App\Livewire\Admin\ApplicationStatusManagement;
-use App\Livewire\Admin\ClubTeamManagement;
+use App\Livewire\Admin\LicenceDeadlineManagement;
 use App\Livewire\Admin\LicenceManagement;
 use App\Livewire\Admin\LicenceRequirementManagement;
-use App\Livewire\Admin\LicenceDeadlineManagement;
+use App\Livewire\Admin\RoleManagement;
+use App\Livewire\Admin\SeasonManagement;
+use App\Livewire\Admin\UserManagement;
+use App\Livewire\Auth\Login;
+use App\Livewire\Club\ClubManagement;
+use App\Livewire\Club\MyApplicationDetail;
+use App\Livewire\Club\MyApplications;
 use App\Livewire\Club\MyClubs;
+use App\Livewire\Club\MyCriterias;
 use App\Livewire\Club\MyLicences;
 use App\Livewire\Club\SingleLicenceDetail;
-use App\Livewire\Club\MyApplications;
-use App\Livewire\Club\MyApplicationDetail;
-use App\Livewire\Club\MyCriterias;
-use App\Livewire\Department\DepartmentApplications;
 use App\Livewire\Department\DepartmentApplicationDetail;
+use App\Livewire\Department\DepartmentApplications;
 use App\Livewire\Department\DepartmentCriterias;
+use Illuminate\Support\Facades\Route;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -54,6 +56,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/application-criteria-deadlines', \App\Livewire\Admin\ApplicationCriteriaDeadlineManagement::class)->name('application-criteria-deadlines');
         Route::get('/application-status-categories', ApplicationStatusCategoryManagement::class)->name('application-status-categories');
         Route::get('/application-statuses', ApplicationStatusManagement::class)->name('application-statuses');
+        Route::get('/applications', ApplicationFullManagement::class)->name('applications');
+        Route::get('/application/{application_id}', ApplicationDetailedManagement::class)->name('application-detailed');
     });
 
     // Club routes
@@ -72,6 +76,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/applications', DepartmentApplications::class)->name('applications');
         Route::get('/application/{application_id}', DepartmentApplicationDetail::class)->name('application.detail');
         Route::get('/criterias', DepartmentCriterias::class)->name('criterias');
+        Route::get('/all-applications', ApplicationFullManagement::class)->name('all-applications');
+        Route::get('/all-application/{application_id}', ApplicationDetailedManagement::class)->name('all-application-detailed');
     });
 
     // Logout
@@ -79,6 +85,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         auth()->logout();
         request()->session()->invalidate();
         request()->session()->regenerateToken();
+
         return redirect('/');
     })->name('logout');
 });

@@ -81,6 +81,9 @@ class RolePermissionSeeder extends Seeder
                 'delete-application-criteria-deadline',
                 'view-applications',
                 'manage-applications',
+                'view-full-application',
+                'manage-full-application',
+                'delete-full-application',
             ])->pluck('id')->toArray();
 
             // Sync permissions to licensing department role

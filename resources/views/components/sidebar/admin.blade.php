@@ -121,6 +121,13 @@
                     <span class="ml-3 font-medium">Статусы заявок</span>
                 </a>
                 @endcan
+
+                @can('view-full-application')
+                <a href="{{ route('admin.applications') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.applications') || request()->routeIs('admin.application-detailed') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
+                    <i class="fas fa-file-alt w-5 text-center text-indigo-500 dark:text-indigo-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-300"></i>
+                    <span class="ml-3 font-medium">Заявки</span>
+                </a>
+                @endcan
             </div>
         </nav>
 
