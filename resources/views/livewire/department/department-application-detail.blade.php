@@ -870,9 +870,19 @@
                                 <i class="fas fa-clipboard-list text-indigo-500 mr-2"></i>
                                 Отчеты по критерию
                             </h3>
-                            <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-3 py-1 rounded-full text-sm font-medium">
-                                {{ count($reportsByCriteria[$criterion->id]) }} {{ count($reportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($reportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}
-                            </span>
+                            <div class="flex items-center space-x-3">
+                                <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-3 py-1 rounded-full text-sm font-medium">
+                                    {{ count($reportsByCriteria[$criterion->id]) }} {{ count($reportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($reportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}
+                                </span>
+                                @if($criterion->application_status && $criterion->application_status->value === 'awaiting-control-check')
+                                    <button
+                                        wire:click="openGenerateReportModal({{ $criterion->id }})"
+                                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Генерировать отчет
+                                    </button>
+                                @endif
+                            </div>
                         </div>
 
                         @if(!empty($reportsByCriteria[$criterion->id]))
@@ -1914,6 +1924,104 @@
                         class="bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
                         <i class="fas fa-exchange-alt mr-2"></i>
                         Изменить статус
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Generate Report Modal -->
+    @if($showGenerateReportModal)
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+            <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl mx-4 border border-gray-200 dark:border-gray-700">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            <i class="fas fa-clipboard-list mr-2 text-green-500"></i>
+                            Генерация отчета по критерию
+                        </h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Выберите документы, которые должны быть включены в отчет
+                        </p>
+                    </div>
+                    <button
+                        wire:click="closeGenerateReportModal"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    @if(!empty($availableDocumentsForReport))
+                        <div class="space-y-3 max-h-96 overflow-y-auto">
+                            @foreach($availableDocumentsForReport as $doc)
+                                <label class="flex items-start p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        wire:model.live="selectedDocumentIds"
+                                        value="{{ $doc['id'] }}"
+                                        class="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded">
+                                    <div class="ml-3 flex-1">
+                                        <div class="font-medium text-gray-900 dark:text-gray-100">
+                                            {{ $doc['title_ru'] }}
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            @if($doc['status'])
+                                                <span class="text-green-500">Принят</span>
+                                            @else
+                                                <span class="text-red-500">Отклонен ({{$doc['comment']}})</span>
+                                            @endif
+                                        </div>
+                                        @if(isset($doc['file_url']))
+                                            <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                <i class="fas fa-file mr-1"></i>
+                                                {{ basename($doc['file_url']) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+
+                        <div class="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Выбранные документы будут переданы в сервис для генерации отчета. Выберите как минимум один документ.
+                            </p>
+                        </div>
+
+                        @if(!empty($selectedDocumentIds) && is_array($selectedDocumentIds))
+                            <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                <p class="text-sm font-medium text-green-800 dark:text-green-200">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    Выбрано документов: {{ count($selectedDocumentIds) }}
+                                </p>
+                            </div>
+                        @endif
+                    @else
+                        <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>Нет доступных документов для этого критерия</p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        wire:click="closeGenerateReportModal"
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Отмена
+                    </button>
+                    <button
+                        wire:click="generateReport"
+                        {{ (!is_array($selectedDocumentIds) || count($selectedDocumentIds) === 0) ? 'disabled' : '' }}
+                        class="bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-check mr-2"></i>
+                        Сгенерировать отчет ({{ is_array($selectedDocumentIds) ? count($selectedDocumentIds) : 0 }})
                     </button>
                 </div>
             </div>

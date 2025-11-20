@@ -184,69 +184,12 @@ class ApplicationCriterionObserver
             return;
         }
 
-        // Create consolidated application report if all criteria are ready
-        try {
-            // Get the ID of awaiting-control-check status
-            $currentStatusId = $applicationCriterion->status_id;
+        // General application report (criteria_id = null) will be created automatically
+        // after all criteria reports are generated via the "Generate Report" button
 
-            // Get all other criteria for the same application
-            $otherCriteria = ApplicationCriterion::where('application_id', $applicationCriterion->application_id)
-                ->where('id', '!=', $applicationCriterion->id)
-                ->get();
-
-            // Check if all other criteria have status_id >= current status_id
-            $allCriteriaReady = true;
-            foreach ($otherCriteria as $criterion) {
-                if ($criterion->status_id < $currentStatusId) {
-                    $allCriteriaReady = false;
-                    Log::info("Criterion #{$criterion->id} has status_id {$criterion->status_id} < {$currentStatusId}, not creating ApplicationReport yet");
-                    break;
-                }
-            }
-
-            // Only create consolidated report if all criteria are ready
-            if ($allCriteriaReady) {
-                // Check if report already exists for this application to avoid duplicates
-                $existingReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
-                    ->whereNull('criteria_id') // Only check reports without specific criteria_id
-                    ->first();
-
-                if (! $existingReport) {
-                    // Create ApplicationReport with only application_id (no criteria_id)
-                    ApplicationReport::create([
-                        'application_id' => $applicationCriterion->application_id,
-                        'criteria_id' => null,
-                        'status' => 1, // Default status
-                    ]);
-
-                    Log::info("ApplicationReport created for application #{$applicationCriterion->application_id} as all criteria reached awaiting-control-check");
-                } else {
-                    Log::info("ApplicationReport already exists for application #{$applicationCriterion->application_id}, skipping creation.");
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Failed to create ApplicationReport for application #{$applicationCriterion->application_id}: ".$e->getMessage());
-        }
-
-        // Always create individual criterion report (regardless of all criteria status)
-        try {
-            $existingCriterionReport = ApplicationReport::where('application_id', $applicationCriterion->application_id)
-                ->where('criteria_id', $applicationCriterion->id)
-                ->first();
-
-            if (! $existingCriterionReport) {
-                ApplicationReport::create([
-                    'application_id' => $applicationCriterion->application_id,
-                    'criteria_id' => $applicationCriterion->id,
-                    'status' => true,
-                ]);
-                Log::info("ApplicationReport created for criterion #{$applicationCriterion->id}");
-            } else {
-                Log::info("ApplicationReport already exists for criterion #{$applicationCriterion->id}, skipping creation.");
-            }
-        } catch (\Exception $e) {
-            Log::error("Failed to create ApplicationReport for criterion #{$applicationCriterion->id}: ".$e->getMessage());
-        }
+        // Individual criterion reports are now created manually via "Generate Report" button
+        // with document selection, so we don't auto-create them here anymore
+        Log::info("Criterion #{$applicationCriterion->id} reached awaiting-control-check. Report can be generated manually.");
     }
 
     /**

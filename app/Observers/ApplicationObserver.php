@@ -47,31 +47,55 @@ class ApplicationObserver
                 return;
             }
 
-            // Check if category value is 'approved'
-            if ($category->value !== ApplicationStatusCategoryConstants::APPROVED_VALUE) {
+            // Check if category value is 'approved' or 'revoked'
+            if (!in_array($category->value, [
+                ApplicationStatusCategoryConstants::APPROVED_VALUE,
+                ApplicationStatusCategoryConstants::REVOKED_VALUE
+            ])) {
                 return;
             }
 
-            // Check if certificate already exists
-            $existingCertificate = LicenseCertificate::where('application_id', $application->id)->first();
+            // Check if ApplicationSolution already exists to avoid duplicate creation
+            $existingSolution = ApplicationSolution::where('application_id', $application->id)->first();
 
-            if ($existingCertificate) {
-                Log::info("LicenseCertificate already exists for application #{$application->id}, skipping creation.");
+            if ($existingSolution) {
+                Log::info("ApplicationSolution already exists for application #{$application->id}, skipping creation.");
 
                 return;
             }
-            // Create ApplicationSolution
+            // Get list_documents from general report (criteria_id = null)
+            $generalReport = \App\Models\ApplicationReport::where('application_id', $application->id)
+                ->whereNull('criteria_id')
+                ->first();
+
+            $listDocuments = [];
+            if ($generalReport && !empty($generalReport->list_documents) && is_array($generalReport->list_documents)) {
+                $listDocuments = $generalReport->list_documents;
+                Log::info("ApplicationSolution will be created with " . count($listDocuments) . " documents from general report for application #{$application->id}");
+            } else {
+                Log::warning("No general report found or list_documents is empty for application #{$application->id}, creating ApplicationSolution without documents");
+            }
+
+            // Create ApplicationSolution (for both 'approved' and 'revoked')
             ApplicationSolution::create([
                 'application_id' => $application->id,
-            ]);
-            // Create LicenseCertificate
-            LicenseCertificate::create([
-                'application_id' => $application->id,
-                'license_id' => $application->license_id,
-                'club_id' => $application->club_id,
+                'list_documents' => $listDocuments,
             ]);
 
-            Log::info("LicenseCertificate created for application #{$application->id}");
+            Log::info("ApplicationSolution created for application #{$application->id} with " . count($listDocuments) . " documents");
+
+            // Create LicenseCertificate ONLY if status is 'approved'
+            if ($category->value === ApplicationStatusCategoryConstants::APPROVED_VALUE) {
+                LicenseCertificate::create([
+                    'application_id' => $application->id,
+                    'license_id' => $application->license_id,
+                    'club_id' => $application->club_id,
+                ]);
+
+                Log::info("LicenseCertificate created for application #{$application->id}");
+            } else {
+                Log::info("LicenseCertificate NOT created for application #{$application->id} because status is '{$category->value}' (not 'approved')");
+            }
         } catch (\Exception $e) {
             Log::error("Failed to create LicenseCertificate for application #{$application->id}: ".$e->getMessage());
         }

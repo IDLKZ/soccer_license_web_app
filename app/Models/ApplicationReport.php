@@ -31,13 +31,15 @@ class ApplicationReport extends Model
 	protected $casts = [
 		'application_id' => 'int',
 		'criteria_id' => 'int',
-		'status' => 'int'
+		'status' => 'int',
+		'list_documents' => 'array'
 	];
 
 	protected $fillable = [
 		'application_id',
 		'criteria_id',
-		'status'
+		'status',
+		'list_documents'
 	];
 
 	public function application()

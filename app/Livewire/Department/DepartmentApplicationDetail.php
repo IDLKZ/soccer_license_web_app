@@ -130,6 +130,15 @@ class DepartmentApplicationDetail extends Component
 
     public $changeReuploadDocumentIds = [];
 
+    // Generate report modal
+    public $showGenerateReportModal = false;
+
+    public $reportCriterionId = null;
+
+    public $selectedDocumentIds = [];
+
+    public $availableDocumentsForReport = [];
+
     public function mount($application_id)
     {
         $this->applicationId = $application_id;
@@ -1969,6 +1978,215 @@ class DepartmentApplicationDetail extends Component
             DB::rollBack();
             Log::error('Error changing to partially approved: '.$e->getMessage());
             toastr()->error('Ошибка при изменении статуса.');
+        }
+    }
+
+    /**
+     * Open generate report modal for a criterion
+     */
+    public function openGenerateReportModal($criterionId)
+    {
+        $criterion = ApplicationCriterion::with(['application', 'category_document', 'application_status'])
+            ->find($criterionId);
+
+        if (! $criterion) {
+            toastr()->error('Критерий не найден.');
+
+            return;
+        }
+
+        // Check if criterion is at awaiting-control-check status
+        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE) {
+            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки.');
+
+            return;
+        }
+
+        // Check if report already exists for this criterion
+        $existingReport = ApplicationReport::where('application_id', $criterion->application_id)
+            ->where('criteria_id', $criterionId)
+            ->first();
+
+        if ($existingReport) {
+            toastr()->error('Отчет для этого критерия уже существует.');
+
+            return;
+        }
+
+        $this->reportCriterionId = $criterionId;
+        $this->selectedDocumentIds = [];
+
+        // Load documents for this criterion's category
+        $documents = ApplicationDocument::with('document')
+            ->where('application_id', $criterion->application_id)
+            ->where('category_id', $criterion->category_id)
+            ->get();
+
+        $this->availableDocumentsForReport = $documents->map(function ($appDoc) {
+            return [
+                'id' => $appDoc->id,
+                'document_id' => $appDoc->document_id,
+                'title_ru' => $appDoc->document->title_ru ?? 'Документ',
+                'title_kk' => $appDoc->document->title_kk ?? 'Құжат',
+                'title_en' => $appDoc->document->title_en ?? 'Document',
+                'file_url' => $appDoc->file_url,
+                'status' => $appDoc->is_industry_passed,
+                'comment' => $appDoc->industry_comment
+            ];
+        })->toArray();
+
+        $this->showGenerateReportModal = true;
+    }
+
+    /**
+     * Close generate report modal
+     */
+    public function closeGenerateReportModal()
+    {
+        $this->showGenerateReportModal = false;
+        $this->reportCriterionId = null;
+        $this->selectedDocumentIds = [];
+        $this->availableDocumentsForReport = [];
+    }
+
+    /**
+     * Create general report if all criteria reports exist
+     */
+    private function createGeneralReportIfAllCriteriaReportsExist($applicationId)
+    {
+        // Check if general report already exists
+        $existingGeneralReport = ApplicationReport::where('application_id', $applicationId)
+            ->whereNull('criteria_id')
+            ->first();
+
+        if ($existingGeneralReport) {
+            Log::info("General report already exists for application #{$applicationId}");
+            return;
+        }
+
+        // Get awaiting-control-check status ID
+        $awaitingControlCheckStatusId = ApplicationStatus::where('value', ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE)->value('id');
+
+        // Get ALL criteria for this application
+        $allCriteria = ApplicationCriterion::where('application_id', $applicationId)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($allCriteria)) {
+            Log::info("No criteria found for application #{$applicationId}");
+            return;
+        }
+
+        // Get criteria with awaiting-control-check status
+        $criteriaWithAwaitingControlCheck = ApplicationCriterion::where('application_id', $applicationId)
+            ->where('status_id', $awaitingControlCheckStatusId)
+            ->pluck('id')
+            ->toArray();
+
+        // IMPORTANT: Check if ALL criteria have reached awaiting-control-check status
+        if (count($allCriteria) !== count($criteriaWithAwaitingControlCheck)) {
+            Log::info("Not all criteria have reached awaiting-control-check status for application #{$applicationId}. Total criteria: " . count($allCriteria) . ", Criteria with awaiting-control-check: " . count($criteriaWithAwaitingControlCheck));
+            return;
+        }
+
+        // Now check if all these criteria have reports
+        $criteriaWithReports = ApplicationReport::where('application_id', $applicationId)
+            ->whereNotNull('criteria_id')
+            ->whereIn('criteria_id', $criteriaWithAwaitingControlCheck)
+            ->pluck('criteria_id')
+            ->unique()
+            ->toArray();
+
+        // Compare: do all criteria have reports?
+        $allCriteriaHaveReports = count($criteriaWithAwaitingControlCheck) === count($criteriaWithReports);
+
+        if (!$allCriteriaHaveReports) {
+            Log::info("Not all criteria have reports yet for application #{$applicationId}. Criteria with awaiting-control-check: " . count($criteriaWithAwaitingControlCheck) . ", Reports count: " . count($criteriaWithReports));
+            return;
+        }
+
+        // All criteria have reports! Create general report
+        Log::info("All criteria reports exist for application #{$applicationId}, creating general report");
+
+        // Collect all list_documents from criteria reports
+        $criteriaReports = ApplicationReport::where('application_id', $applicationId)
+            ->whereNotNull('criteria_id')
+            ->get();
+
+        $allDocuments = [];
+        foreach ($criteriaReports as $criteriaReport) {
+            if (!empty($criteriaReport->list_documents) && is_array($criteriaReport->list_documents)) {
+                $allDocuments = array_merge($allDocuments, $criteriaReport->list_documents);
+            }
+        }
+
+        // Remove duplicates and reindex
+        $allDocuments = array_values(array_unique($allDocuments));
+
+        // Sort in ascending order
+        sort($allDocuments, SORT_NUMERIC);
+
+        // Create general ApplicationReport
+        ApplicationReport::create([
+            'application_id' => $applicationId,
+            'criteria_id' => null,
+            'status' => 1,
+            'list_documents' => $allDocuments,
+        ]);
+
+        Log::info("General ApplicationReport created for application #{$applicationId} with " . count($allDocuments) . " documents from " . count($criteriaReports) . " criteria reports");
+    }
+
+    /**
+     * Generate report with selected documents
+     */
+    public function generateReport()
+    {
+        if (empty($this->selectedDocumentIds)) {
+            toastr()->error('Необходимо выбрать хотя бы один документ для отчета.');
+
+            return;
+        }
+
+        $criterion = ApplicationCriterion::find($this->reportCriterionId);
+
+        if (! $criterion) {
+            toastr()->error('Критерий не найден.');
+
+            return;
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Sort selected document IDs in ascending order
+            $sortedDocumentIds = $this->selectedDocumentIds;
+            sort($sortedDocumentIds, SORT_NUMERIC);
+
+            // Create ApplicationReport with selected document IDs
+            ApplicationReport::create([
+                'application_id' => $criterion->application_id,
+                'criteria_id' => $criterion->id,
+                'status' => true,
+                'list_documents' => $sortedDocumentIds,
+            ]);
+
+            // Check if all criteria reports are now created and create general report if needed
+            $this->createGeneralReportIfAllCriteriaReportsExist($criterion->application_id);
+
+            DB::commit();
+
+            toastr()->success('Отчет успешно сгенерирован.');
+            $this->closeGenerateReportModal();
+
+            // Reload reports
+            $this->loadReportsForAllCriteria();
+            $this->loadDepartmentReports();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error generating report: '.$e->getMessage());
+            toastr()->error('Ошибка при генерации отчета.');
         }
     }
 

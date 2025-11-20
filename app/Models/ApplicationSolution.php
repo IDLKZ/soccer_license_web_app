@@ -34,7 +34,8 @@ class ApplicationSolution extends Model
 	protected $casts = [
 		'application_id' => 'int',
 		'secretary_id' => 'int',
-		'meeting_date' => 'datetime'
+		'meeting_date' => 'datetime',
+		'list_documents' => 'array'
 	];
 
 	protected $hidden = [
@@ -48,7 +49,8 @@ class ApplicationSolution extends Model
 		'secretary_name',
 		'meeting_date',
 		'meeting_place',
-		'department_name'
+		'department_name',
+		'list_documents'
 	];
 
 	public function application()
