@@ -15,6 +15,7 @@ use App\Models\ApplicationStatus;
 use App\Models\ApplicationStep;
 use App\Models\CategoryDocument;
 use App\Models\LicenceRequirement;
+use App\Models\LicenseCertificate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -50,7 +51,7 @@ class DepartmentApplicationDetail extends Component
     public $departmentReports = []; // General department reports (criteria_id = null)
 
     public $solutions = []; // Commission solutions from application_solutions table
-
+    public $licenseCertificates = []; // License certificates for approved applications
     public $downloadingReports = []; // Track which reports are being downloaded
 
     // Permissions
@@ -231,6 +232,9 @@ class DepartmentApplicationDetail extends Component
 
             // Load commission solutions
             $this->loadSolutions();
+
+            // Load license certificates (only for approved applications)
+            $this->loadLicenseCertificates();
         }
     }
 
@@ -320,6 +324,24 @@ class DepartmentApplicationDetail extends Component
             ->where('application_id', $this->application->id)
             ->orderBy('created_at', 'desc')
             ->get();
+    }
+
+    /**
+     * Load license certificates for approved applications
+     */
+    private function loadLicenseCertificates()
+    {
+        if (!$this->application) return;
+
+        // Only load certificates if application is approved (category_id == 6)
+        if ($this->application->category_id == ApplicationStatusCategoryConstants::APPROVED_ID) {
+            $this->licenseCertificates = LicenseCertificate::
+                where('application_id', $this->application->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $this->licenseCertificates = [];
+        }
     }
 
     public function getReportsForCriterion($criterionId)
@@ -1692,6 +1714,67 @@ class DepartmentApplicationDetail extends Component
             Log::error('Error downloading solution: '.$e->getMessage());
             toastr()->error('Произошла ошибка при скачивании решения');
             $this->downloadingReports['solution_'.$solutionId] = false;
+        }
+    }
+
+    /**
+     * Download license certificate from external service
+     */
+    public function downloadLicenseCertificate($certificateId)
+    {
+        // Set loading state
+        $this->downloadingReports['certificate_' . $certificateId] = true;
+
+        try {
+            $certificateServiceUrl = config('app.certificate_service_url', env('CERTIFICATE_SERVICE_URL'));
+
+            if (!$certificateServiceUrl) {
+                toastr()->error('URL сервиса генерации лицензий не настроен');
+                $this->downloadingReports['certificate_' . $certificateId] = false;
+                return;
+            }
+
+            // Send POST request to certificate service
+            $response = Http::timeout(30)
+                ->post($certificateServiceUrl, [
+                    'certificate_id' => $certificateId
+                ]);
+
+            if (!$response->successful()) {
+                Log::error("Certificate service returned error: " . $response->status() . " - " . $response->body());
+                toastr()->error('Ошибка при получении лицензии от сервиса');
+                $this->downloadingReports['certificate_' . $certificateId] = false;
+                return;
+            }
+
+            // Get the file content
+            $fileContent = $response->body();
+
+            // Get the certificate from database for filename
+            $certificate = LicenseCertificate::find($certificateId);
+            $filename = 'license_certificate_' . $certificateId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+
+            if ($certificate && $certificate->application && $certificate->application->club) {
+                $clubName = Str::slug($certificate->application->club->name_ru ?? 'club');
+                $seasonYear = $certificate->application->licence->season->year ?? date('Y');
+                $filename = $clubName . '_license_' . $seasonYear . '_' . $certificateId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            }
+
+            // Clear loading state before returning file
+            $this->downloadingReports['certificate_' . $certificateId] = false;
+
+            // Return file download response
+            return response()->streamDownload(function () use ($fileContent) {
+                echo $fileContent;
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error downloading certificate: ' . $e->getMessage());
+            toastr()->error('Произошла ошибка при скачивании лицензии');
+            $this->downloadingReports['certificate_' . $certificateId] = false;
         }
     }
 
