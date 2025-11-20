@@ -202,10 +202,10 @@ class LeagueManagement extends Component
         $league = League::findOrFail($leagueId);
 
         // Prevent deleting leagues with clubs
-        if ($league->clubs()->count() > 0) {
-        session()->flash('error', 'Нельзя удалить соревнование, привязанное к клубам');
-        return;
-        }
+//        if ($league->clubs()->count() > 0) {
+//        session()->flash('error', 'Нельзя удалить соревнование, привязанное к клубам');
+//        return;
+//        }
 
         $league->delete();
 
