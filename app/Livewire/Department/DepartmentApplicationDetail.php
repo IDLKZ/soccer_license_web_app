@@ -467,6 +467,55 @@ class DepartmentApplicationDetail extends Component
         $this->closeAcceptModal();
     }
 
+    // Accept all documents for current criterion
+    public function acceptAllDocuments($criterionId)
+    {
+        $criterion = ApplicationCriterion::with('application_status')->find($criterionId);
+
+        if (! $criterion || ! $this->canReviewCriterion($criterion)) {
+            toastr()->error('У вас нет прав для проверки этого критерия.');
+            return;
+        }
+
+        $statusValue = $criterion->application_status->value ?? null;
+
+        // Get all documents for this category
+        $documents = ApplicationDocument::where('application_id', $this->application->id)
+            ->where('category_id', $criterion->category_id)
+            ->get();
+
+        // Filter documents that need review based on status
+        $documentsToAccept = collect();
+
+        if ($statusValue === ApplicationStatusConstants::AWAITING_FIRST_CHECK_VALUE) {
+            // Accept documents where is_first_passed == null AND is_industry_passed == null AND is_final_passed == null
+            $documentsToAccept = $documents->filter(function ($doc) {
+                return $doc->is_first_passed === null &&
+                       $doc->is_industry_passed === null &&
+                       $doc->is_final_passed === null;
+            });
+        } elseif ($statusValue === ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE) {
+            // Accept documents where is_first_passed == true AND is_industry_passed == true AND is_final_passed == null
+            $documentsToAccept = $documents->filter(function ($doc) {
+                return $doc->is_first_passed === true &&
+                       $doc->is_industry_passed === true &&
+                       $doc->is_final_passed === null;
+            });
+        }
+
+        if ($documentsToAccept->isEmpty()) {
+            toastr()->info('Нет документов для принятия на данном этапе.');
+            return;
+        }
+
+        // Set review decision (accept) for all documents
+        foreach ($documentsToAccept as $doc) {
+            $this->setReviewDecision($doc->id, true, '');
+        }
+
+        toastr()->success('Все документы (' . $documentsToAccept->count() . ') отмечены как принятые.');
+    }
+
     // Open reject modal
     public function openRejectModal($documentId, $documentTitle)
     {
@@ -1066,15 +1115,18 @@ class DepartmentApplicationDetail extends Component
                 return;
             }
 
-            // Check comment
-            if (empty($this->finalCommentsByCriterion[$criterion->id])) {
-                toastr()->error('Необходимо указать комментарий по каждому критерию.');
+            // Check comment - required only for partially-approved and revoked
+            $decision = $this->finalDecisionsByCriterion[$criterion->id];
+            if (in_array($decision, ['partially-approved', 'revoked'])) {
+                if (empty($this->finalCommentsByCriterion[$criterion->id])) {
+                    toastr()->error('Необходимо указать комментарий для решений "Одобрено частично" и "Отозвано".');
 
-                return;
+                    return;
+                }
             }
 
             // Check reupload documents for partially-approved
-            if ($this->finalDecisionsByCriterion[$criterion->id] === 'partially-approved') {
+            if ($decision === 'partially-approved') {
                 if (empty($this->reuploadDocumentIdsByCriterion[$criterion->id])) {
                     toastr()->error('Для частичного одобрения необходимо указать документы для повторной загрузки.');
 
