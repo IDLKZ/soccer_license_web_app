@@ -232,7 +232,7 @@
                 <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'approved' ? 'border-green-500 bg-green-100 dark:bg-green-800' : 'border-gray-300 dark:border-gray-600' }}">
                     <input type="radio" wire:model.live="applicationFinalDecision" value="approved" class="mt-1 mr-3">
                     <div class="flex-1">
-                        <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия одобрена</div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия выдана</div>
                         <div class="text-sm text-gray-600 dark:text-gray-400">Все требования выполнены, лицензия выдается</div>
                     </div>
                 </label>
@@ -240,7 +240,7 @@
                 <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer {{ $applicationFinalDecision === 'revoked' ? 'border-red-500 bg-red-100 dark:bg-red-800' : 'border-gray-300 dark:border-gray-600' }}">
                     <input type="radio" wire:model.live="applicationFinalDecision" value="revoked" class="mt-1 mr-3">
                     <div class="flex-1">
-                        <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия отозвана</div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">Лицензия не выдана</div>
                         <div class="text-sm text-gray-600 dark:text-gray-400">Лицензия отзывается</div>
                     </div>
                 </label>
