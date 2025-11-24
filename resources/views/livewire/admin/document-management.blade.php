@@ -520,125 +520,100 @@
     </div>
     @endif
 
-    <!-- Summernote Integration Script -->
-    <script>
-        document.addEventListener('livewire:init', () => {
-            // Summernote configuration
-            const summernoteConfig = {
-                height: 150,
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'italic', 'underline', 'clear']],
-                    ['fontname', ['fontname']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ]
-            };
+    <script data-navigate-once>
+    document.addEventListener('livewire:init', () => {
+        // Summernote configuration
+        const summernoteConfig = {
+            height: 150,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['fontname', ['fontname']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        };
 
-            // Initialize Create Modal Summernote
-            Livewire.on('openCreateModal', () => {
-                setTimeout(() => {
-                    $('.summernote-create').each(function() {
-                        const id = $(this).attr('id');
-                        if (id) {
-                            $(this).summernote(summernoteConfig);
-
-                            // Sync with Livewire on change
-                            $(this).on('summernote.change', function(we, contents, $editable) {
-                                const wireModel = id.replace('create-', '');
-                                const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
-                                @this.set(camelCase, contents);
-                            });
-                        }
-                    });
-                }, 300);
-            });
-
-            // Initialize Edit Modal Summernote
-            Livewire.on('openEditModal', (data) => {
-                setTimeout(() => {
-                    $('.summernote-edit').each(function() {
-                        const id = $(this).attr('id');
-                        if (id) {
-                            const wireModel = id.replace('edit-', '');
-                            const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
-
-                            // Get the value from Livewire component
-                            const value = @this.get(camelCase) || '';
-
-                            // Initialize with value
-                            $(this).summernote(summernoteConfig);
-                            $(this).summernote('code', value);
-
-                            // Sync with Livewire on change
-                            $(this).on('summernote.change', function(we, contents, $editable) {
-                                @this.set(camelCase, contents);
-                            });
-                        }
-                    });
-                }, 300);
-            });
-
-            // Destroy Summernote when modals close
-            Livewire.on('closeCreateModal', () => {
+        // Initialize Create Modal Summernote
+        Livewire.on('openCreateModal', () => {
+            setTimeout(() => {
                 $('.summernote-create').each(function() {
-                    if ($(this).summernote('instance')) {
-                        $(this).summernote('destroy');
-                    }
-                });
-            });
+                    const id = $(this).attr('id');
+                    if (id && !$(this).summernote('instance')) {
+                        $(this).summernote(summernoteConfig);
 
-            Livewire.on('closeEditModal', () => {
-                $('.summernote-edit').each(function() {
-                    if ($(this).summernote('instance')) {
-                        $(this).summernote('destroy');
-                    }
-                });
-            });
-
-            // Watch for showCreateModal changes
-            Livewire.hook('morph.updated', ({ component, cleanup }) => {
-                if (@this.showCreateModal) {
-                    setTimeout(() => {
-                        $('.summernote-create').each(function() {
-                            if (!$(this).summernote('instance')) {
-                                const id = $(this).attr('id');
-                                $(this).summernote(summernoteConfig);
-
-                                $(this).on('summernote.change', function(we, contents, $editable) {
-                                    const wireModel = id.replace('create-', '');
-                                    const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
-                                    @this.set(camelCase, contents);
-                                });
-                            }
+                        // Sync with Livewire on change
+                        $(this).on('summernote.change', function(e, contents, $editable) {
+                            const wireModel = id.replace('create-', '');
+                            const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+                            Livewire.find($(this).closest('[wire\\:id]').attr('wire:id')).set(camelCase, contents);
                         });
-                    }, 300);
+
+                        // Also sync on blur for better reliability
+                        $(this).on('summernote.blur', function() {
+                            const wireModel = id.replace('create-', '');
+                            const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+                            Livewire.find($(this).closest('[wire\\:id]').attr('wire:id')).set(camelCase, $(this).summernote('code'));
+                        });
+                    }
+                });
+            }, 100);
+        });
+
+        // Initialize Edit Modal Summernote
+        Livewire.on('openEditModal', () => {
+            setTimeout(async () => {
+                const wireId = $('[wire\\:id]').first().attr('wire:id');
+                const component = Livewire.find(wireId);
+
+                for (const element of $('.summernote-edit').toArray()) {
+                    const $element = $(element);
+                    const id = $element.attr('id');
+
+                    if (id && !$element.summernote('instance')) {
+                        const wireModel = id.replace('edit-', '');
+                        const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
+
+                        // Get the value from Livewire component using async method
+                        const value = await component.get(camelCase) || '';
+
+                        // Initialize with value
+                        $element.summernote(summernoteConfig);
+                        $element.summernote('code', value);
+
+                        // Sync with Livewire on change
+                        $element.on('summernote.change', function(e, contents, $editable) {
+                            component.set(camelCase, contents);
+                        });
+
+                        // Also sync on blur for better reliability
+                        $element.on('summernote.blur', function() {
+                            component.set(camelCase, $element.summernote('code'));
+                        });
+                    }
                 }
+            }, 100);
+        });
 
-                if (@this.showEditModal) {
-                    setTimeout(() => {
-                        $('.summernote-edit').each(function() {
-                            if (!$(this).summernote('instance')) {
-                                const id = $(this).attr('id');
-                                const wireModel = id.replace('edit-', '');
-                                const camelCase = wireModel.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase(); });
-
-                                const value = @this.get(camelCase) || '';
-
-                                $(this).summernote(summernoteConfig);
-                                $(this).summernote('code', value);
-
-                                $(this).on('summernote.change', function(we, contents, $editable) {
-                                    @this.set(camelCase, contents);
-                                });
-                            }
-                        });
-                    }, 300);
+        // Destroy Summernote when modals close
+        Livewire.on('closeCreateModal', () => {
+            $('.summernote-create').each(function() {
+                if ($(this).summernote('instance')) {
+                    $(this).summernote('destroy');
                 }
             });
         });
+
+        Livewire.on('closeEditModal', () => {
+            $('.summernote-edit').each(function() {
+                if ($(this).summernote('instance')) {
+                    $(this).summernote('destroy');
+                }
+            });
+        });
+    });
     </script>
 </div>
