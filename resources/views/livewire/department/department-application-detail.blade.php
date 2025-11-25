@@ -141,7 +141,7 @@
         <!-- Final Decision Progress (2.4.1) -->
         @php
             $finalStats = $this->getFinalDecisionStats();
-            $showFinalProgress = $finalStats['awaiting'] > 0;
+            $showFinalProgress = $finalStats['awaiting'] > 0 && auth()->user()->role_id == 6;
         @endphp
 
         @if($showFinalProgress)
@@ -898,7 +898,7 @@
                                 <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-3 py-1 rounded-full text-sm font-medium">
                                     {{ count($reportsByCriteria[$criterion->id]) }} {{ count($reportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($reportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}
                                 </span>
-                                @if($criterion->application_status && $criterion->application_status->value === 'awaiting-control-check')
+                                @if($criterion->application_status && ($criterion->application_status->value === 'awaiting-control-check' || $criterion->application_status->value === 'awaiting-final-decision'))
                                     <button
                                         wire:click="openGenerateReportModal({{ $criterion->id }})"
                                         class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors">
