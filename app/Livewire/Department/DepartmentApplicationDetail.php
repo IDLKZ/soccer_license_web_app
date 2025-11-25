@@ -2202,7 +2202,7 @@ class DepartmentApplicationDetail extends Component
         }
 
         // Get awaiting-control-check status ID
-        $awaitingControlCheckStatusId = ApplicationStatus::where('value', ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE)->value('id');
+        $awaitingControlCheckStatusId = ApplicationStatus::where('value', ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE)->orWhere('value', ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE)->value('id');
 
         // Get ALL criteria for this application
         $allCriteria = ApplicationCriterion::where('application_id', $applicationId)
