@@ -139,9 +139,10 @@
         </div>
 
         <!-- Final Decision Progress (2.4.1) -->
+        @if(auth()->user()->role_id == 6)
         @php
             $finalStats = $this->getFinalDecisionStats();
-            $showFinalProgress = $finalStats['awaiting'] > 0 && auth()->user()->role_id == 6;
+            $showFinalProgress = $finalStats['awaiting'] > 0;
         @endphp
 
         @if($showFinalProgress)
@@ -166,6 +167,7 @@
                 @endif
             </div>
         </div>
+        @endif
         @endif
 
         <!-- Application Status Change Buttons (2.4.3) -->

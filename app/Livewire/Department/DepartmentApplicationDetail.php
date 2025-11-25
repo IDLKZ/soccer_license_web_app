@@ -2131,9 +2131,9 @@ class DepartmentApplicationDetail extends Component
             return;
         }
 
-        // Check if criterion is at awaiting-control-check status
-        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE || $criterion->application_status->value !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
-            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки.');
+        // Check if criterion is at awaiting-control-check or awaiting-final-decision status
+        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE && $criterion->application_status->value !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
+            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки или финального решения.');
 
             return;
         }
