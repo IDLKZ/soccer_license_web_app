@@ -143,6 +143,46 @@ class DepartmentApplicationDetail extends Component
 
     public $availableDocumentsForReport = [];
 
+    // Edit Solution Modal
+    public $showEditSolutionModal = false;
+
+    public $editingSolutionId = null;
+
+    public $secretaryName = '';
+
+    public $secretaryPosition = '';
+
+    public $directorPosition = '';
+
+    public $directorName = '';
+
+    public $solutionType = '';
+
+    public $meetingDate = '';
+
+    public $meetingPlace = '';
+
+    public $departmentName = '';
+
+    public $listCriteria = []; // Array of criteria items
+
+    public $availableCriteriaForSolution = []; // Available criteria with last_comment != null
+
+    public $newCriteriaTitle = '';
+
+    public $newCriteriaType = '';
+
+    public $newCriteriaDeadline = '';
+
+    // Edit Certificate Modal
+    public $showEditCertificateModal = false;
+
+    public $editingCertificateId = null;
+
+    public $certificateTypeRu = '';
+
+    public $certificateTypeKk = '';
+
     public function mount($application_id)
     {
         $this->applicationId = $application_id;
@@ -2288,6 +2328,179 @@ class DepartmentApplicationDetail extends Component
             Log::error('Error generating report: '.$e->getMessage());
             toastr()->error('Ошибка при генерации отчета.');
         }
+    }
+
+    public function openEditSolutionModal($solutionId)
+    {
+        $solution = ApplicationSolution::find($solutionId);
+
+        if (!$solution) {
+            toastr()->error('Решение не найдено.');
+            return;
+        }
+
+        $this->editingSolutionId = $solution->id;
+        $this->secretaryName = $solution->secretary_name ?? '';
+        $this->secretaryPosition = $solution->secretary_position ?? '';
+        $this->directorPosition = $solution->director_position ?? '';
+        $this->directorName = $solution->director_name ?? '';
+        $this->solutionType = $solution->type ?? '';
+        $this->meetingDate = $solution->meeting_date ? $solution->meeting_date->format('Y-m-d') : '';
+        $this->meetingPlace = $solution->meeting_place ?? '';
+        $this->departmentName = $solution->department_name ?? '';
+        $this->listCriteria = $solution->list_criteria ?? [];
+
+        $this->loadAvailableCriteria();
+
+        $this->showEditSolutionModal = true;
+    }
+
+    private function loadAvailableCriteria()
+    {
+        $this->availableCriteriaForSolution = ApplicationCriterion::with('category_document')
+            ->where('application_id', $this->applicationId)
+            ->where('status_id', 10)
+            ->get()
+            ->toArray();
+    }
+
+    public function addCriteriaToList()
+    {
+        // Validate new criteria fields
+        if (empty($this->newCriteriaTitle)) {
+            toastr()->error('Выберите критерий.');
+            return;
+        }
+
+        if (empty($this->newCriteriaDeadline)) {
+            toastr()->error('Укажите срок.');
+            return;
+        }
+
+        // Check if criteria already exists in list
+        foreach ($this->listCriteria as $item) {
+            if ($item['title'] === $this->newCriteriaTitle) {
+                toastr()->error('Этот критерий уже добавлен в список.');
+                return;
+            }
+        }
+
+        // Add to list
+        $this->listCriteria[] = [
+            'title' => $this->newCriteriaTitle,
+            'type' => $this->newCriteriaType ?? '',
+            'deadline' => $this->newCriteriaDeadline,
+        ];
+
+        // Reset fields
+        $this->newCriteriaTitle = '';
+        $this->newCriteriaType = '';
+        $this->newCriteriaDeadline = '';
+
+        toastr()->success('Критерий добавлен.');
+    }
+
+    public function removeCriteriaFromList($index)
+    {
+        if (isset($this->listCriteria[$index])) {
+            unset($this->listCriteria[$index]);
+            $this->listCriteria = array_values($this->listCriteria); // Re-index array
+            toastr()->success('Критерий удален.');
+        }
+    }
+
+    public function updateSolution()
+    {
+        $solution = ApplicationSolution::find($this->editingSolutionId);
+
+        if (!$solution) {
+            toastr()->error('Решение не найдено.');
+            return;
+        }
+
+        $solution->update([
+            'secretary_name' => $this->secretaryName,
+            'secretary_position' => $this->secretaryPosition,
+            'director_position' => $this->directorPosition,
+            'director_name' => $this->directorName,
+            'type' => $this->solutionType,
+            'meeting_date' => $this->meetingDate ? \Carbon\Carbon::parse($this->meetingDate) : null,
+            'meeting_place' => $this->meetingPlace,
+            'department_name' => $this->departmentName,
+            'list_criteria' => $this->listCriteria,
+        ]);
+
+        toastr()->success('Решение успешно обновлено.');
+        $this->closeEditSolutionModal();
+
+        // Reload solutions
+        $this->loadApplication();
+    }
+
+    public function closeEditSolutionModal()
+    {
+        $this->showEditSolutionModal = false;
+        $this->editingSolutionId = null;
+        $this->secretaryName = '';
+        $this->secretaryPosition = '';
+        $this->directorPosition = '';
+        $this->directorName = '';
+        $this->solutionType = '';
+        $this->meetingDate = '';
+        $this->meetingPlace = '';
+        $this->departmentName = '';
+        $this->listCriteria = [];
+        $this->availableCriteriaForSolution = [];
+        $this->newCriteriaTitle = '';
+        $this->newCriteriaType = '';
+        $this->newCriteriaDeadline = '';
+        $this->dispatch('closeEditSolutionModal');
+    }
+
+    public function openEditCertificateModal($certificateId)
+    {
+        $certificate = LicenseCertificate::find($certificateId);
+
+        if (!$certificate) {
+            toastr()->error('Сертификат не найден.');
+            return;
+        }
+
+        $this->editingCertificateId = $certificate->id;
+        $this->certificateTypeRu = $certificate->type_ru ?? '';
+        $this->certificateTypeKk = $certificate->type_kk ?? '';
+
+        $this->showEditCertificateModal = true;
+    }
+
+    public function updateCertificate()
+    {
+        $certificate = LicenseCertificate::find($this->editingCertificateId);
+
+        if (!$certificate) {
+            toastr()->error('Сертификат не найден.');
+            return;
+        }
+
+        $certificate->update([
+            'type_ru' => $this->certificateTypeRu,
+            'type_kk' => $this->certificateTypeKk,
+        ]);
+
+        toastr()->success('Сертификат успешно обновлен.');
+        $this->closeEditCertificateModal();
+
+        // Reload application
+        $this->loadApplication();
+    }
+
+    public function closeEditCertificateModal()
+    {
+        $this->showEditCertificateModal = false;
+        $this->editingCertificateId = null;
+        $this->certificateTypeRu = '';
+        $this->certificateTypeKk = '';
+        $this->dispatch('closeEditCertificateModal');
     }
 
     public function render()
