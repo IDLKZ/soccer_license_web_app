@@ -23,12 +23,16 @@ class UserManagement extends Component
 
     // Modal States
     public $showCreateModal = false;
+
     public $showEditModal = false;
+
     public $editingUserId = null;
 
     // Search & Filters
     public $search = '';
+
     public $filterRole = '';
+
     public $filterStatus = '';
 
     // Form Data
@@ -44,7 +48,7 @@ class UserManagement extends Component
     #[Validate('required|email|max:255')]
     public $email = '';
 
-    #[Validate('required|string|max:50')]
+    #[Validate('nullable|string|max:50')]
     public $phone = '';
 
     #[Validate('required|string|max:255')]
@@ -66,6 +70,7 @@ class UserManagement extends Component
     public $photo = '';
 
     public $isActive = true;
+
     public $verified = false;
 
     // Relationships Data
@@ -122,17 +127,17 @@ class UserManagement extends Component
 
         // Search
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('first_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                  ->orWhere('email', 'like', '%' . $this->search . '%')
-                  ->orWhere('username', 'like', '%' . $this->search . '%')
-                  ->orWhere('phone', 'like', '%' . $this->search . '%');
+            $query->where(function ($q) {
+                $q->where('first_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('last_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('email', 'like', '%'.$this->search.'%')
+                    ->orWhere('username', 'like', '%'.$this->search.'%')
+                    ->orWhere('phone', 'like', '%'.$this->search.'%');
             });
         }
 
         // Filters
-        if (!empty($this->filterRole)) {
+        if (! empty($this->filterRole)) {
             $query->where('role_id', $this->filterRole);
         }
 
@@ -156,7 +161,7 @@ class UserManagement extends Component
         $this->validate([
             'firstName' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
-            'phone' => 'required|string|max:50',
+            'phone' => 'nullable|string|max:50',
             'username' => 'required|string|max:255|unique:users,username',
             'roleId' => 'required|integer|exists:roles,id',
             'password' => 'required|string|min:8',
@@ -220,9 +225,9 @@ class UserManagement extends Component
 
         $this->validate([
             'firstName' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $this->editingUserId,
-            'phone' => 'required|string|max:50',
-            'username' => 'required|string|max:255|unique:users,username,' . $this->editingUserId,
+            'email' => 'required|email|max:255|unique:users,email,'.$this->editingUserId,
+            'phone' => 'nullable|string|max:50',
+            'username' => 'required|string|max:255|unique:users,username,'.$this->editingUserId,
             'roleId' => 'required|integer|exists:roles,id',
             'password' => 'nullable|string|min:8',
         ]);
@@ -242,7 +247,7 @@ class UserManagement extends Component
         ];
 
         // Only update password if provided
-        if (!empty($this->password)) {
+        if (! empty($this->password)) {
             $userData['password'] = Hash::make($this->password);
         }
 
@@ -271,6 +276,7 @@ class UserManagement extends Component
         // Prevent deleting yourself
         if ($user->id === auth()->id()) {
             session()->flash('error', 'Нельзя удалить свою учетную запись');
+
             return;
         }
 
@@ -293,10 +299,11 @@ class UserManagement extends Component
         // Prevent deactivating yourself
         if ($user->id === auth()->id()) {
             session()->flash('error', 'Нельзя деактивировать свою учетную запись');
+
             return;
         }
 
-        $user->is_active = !$user->is_active;
+        $user->is_active = ! $user->is_active;
         $user->save();
 
         session()->flash('message', 'Статус пользователя изменен');
@@ -319,6 +326,7 @@ class UserManagement extends Component
         if ($user->image_url) {
             return Storage::url($user->image_url);
         }
+
         return null;
     }
 

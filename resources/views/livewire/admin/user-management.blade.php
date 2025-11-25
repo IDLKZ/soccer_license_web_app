@@ -304,7 +304,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Телефон*
+                                        Телефон <span class="text-gray-500 dark:text-gray-400 text-xs font-normal">(необязательно)</span>
                                     </label>
                                     <input type="text"
                                            wire:model="phone"
@@ -505,7 +505,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Телефон*
+                                        Телефон <span class="text-gray-500 dark:text-gray-400 text-xs font-normal">(необязательно)</span>
                                     </label>
                                     <input type="text"
                                            wire:model="phone"

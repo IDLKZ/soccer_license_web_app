@@ -6,21 +6,20 @@
 
 namespace App\Models;
 
+use App\Constants\RoleConstants;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as AuthenticatableUser;
 use Illuminate\Notifications\Notifiable;
-use App\Constants\RoleConstants;
 
 /**
  * Class User
- * 
+ *
  * @property int $id
  * @property int|null $role_id
  * @property string|null $image_url
  * @property string $email
- * @property string $phone
+ * @property string|null $phone
  * @property string $username
  * @property string|null $iin
  * @property string $first_name
@@ -33,7 +32,6 @@ use App\Constants\RoleConstants;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * 
  * @property Role|null $role
  * @property Collection|ApplicationCriterion[] $application_criteria
  * @property Collection|ApplicationDocument[] $application_documents
@@ -41,8 +39,6 @@ use App\Constants\RoleConstants;
  * @property Collection|ApplicationStep[] $application_steps
  * @property Collection|Application[] $applications
  * @property Collection|ClubTeam[] $club_teams
- *
- * @package App\Models
  */
 class User extends AuthenticatableUser
 {
@@ -50,15 +46,15 @@ class User extends AuthenticatableUser
 
     protected $table = 'users';
 
-	  protected $casts = [
+    protected $casts = [
         'role_id' => 'int',
         'is_active' => 'bool',
-        'verified' => 'bool'
+        'verified' => 'bool',
     ];
 
     protected $hidden = [
         'password',
-        'remember_token'
+        'remember_token',
     ];
 
     protected $fillable = [
@@ -75,10 +71,10 @@ class User extends AuthenticatableUser
         'password',
         'is_active',
         'verified',
-        'remember_token'
+        'remember_token',
     ];
 
-	public function role()
+    public function role()
     {
         return $this->belongsTo(Role::class);
     }

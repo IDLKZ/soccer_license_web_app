@@ -247,7 +247,7 @@
             </div>
 
             <!-- Submit Button -->
-            @if($applicationFinalDecision)
+            @if($applicationFinalDecision && $this->canApplyApplicationFinalDecision())
                 <button
                     wire:click="changeApplicationStatus"
                     wire:confirm="Вы уверены, что хотите изменить статус заявки?"
@@ -255,6 +255,13 @@
                     <i class="fas fa-check-circle mr-2"></i>
                     Применить решение
                 </button>
+            @elseif($applicationFinalDecision && !$this->canApplyApplicationFinalDecision())
+                <div class="p-3 bg-amber-50 dark:bg-amber-900 rounded-lg border border-amber-200 dark:border-amber-700">
+                    <p class="text-sm text-amber-800 dark:text-amber-200">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        У вас нет прав для применения финального решения. Только сотрудники с ролью, указанной в категории "Финальное решение", могут применить это решение.
+                    </p>
+                </div>
             @endif
         </div>
         @endif

@@ -47,11 +47,15 @@ class DepartmentApplicationDetail extends Component
 
     // Reports by criteria
     public $reportsByCriteria = []; // ['criteria_id' => ['reports' => [], 'count' => 0]]
+
     public $initialReportsByCriteria = []; // ['criteria_id' => [reports]]
+
     public $departmentReports = []; // General department reports (criteria_id = null)
 
     public $solutions = []; // Commission solutions from application_solutions table
+
     public $licenseCertificates = []; // License certificates for approved applications
+
     public $downloadingReports = []; // Track which reports are being downloaded
 
     // Permissions
@@ -296,7 +300,9 @@ class DepartmentApplicationDetail extends Component
      */
     private function loadInitialReportsForAllCriteria()
     {
-        if (!$this->application) return;
+        if (! $this->application) {
+            return;
+        }
 
         // Get all criteria IDs from tabs
         $criteriaIds = [];
@@ -340,12 +346,13 @@ class DepartmentApplicationDetail extends Component
      */
     private function loadLicenseCertificates()
     {
-        if (!$this->application) return;
+        if (! $this->application) {
+            return;
+        }
 
         // Only load certificates if application is approved (category_id == 6)
         if ($this->application->category_id == ApplicationStatusCategoryConstants::APPROVED_ID) {
-            $this->licenseCertificates = LicenseCertificate::
-                where('application_id', $this->application->id)
+            $this->licenseCertificates = LicenseCertificate::where('application_id', $this->application->id)
                 ->orderBy('created_at', 'desc')
                 ->get();
         } else {
@@ -474,6 +481,7 @@ class DepartmentApplicationDetail extends Component
 
         if (! $criterion || ! $this->canReviewCriterion($criterion)) {
             toastr()->error('У вас нет прав для проверки этого критерия.');
+
             return;
         }
 
@@ -505,6 +513,7 @@ class DepartmentApplicationDetail extends Component
 
         if ($documentsToAccept->isEmpty()) {
             toastr()->info('Нет документов для принятия на данном этапе.');
+
             return;
         }
 
@@ -513,7 +522,7 @@ class DepartmentApplicationDetail extends Component
             $this->setReviewDecision($doc->id, true, '');
         }
 
-        toastr()->success('Все документы (' . $documentsToAccept->count() . ') отмечены как принятые.');
+        toastr()->success('Все документы ('.$documentsToAccept->count().') отмечены как принятые.');
     }
 
     // Open reject modal
@@ -1213,6 +1222,31 @@ class DepartmentApplicationDetail extends Component
         });
     }
 
+    // Check if current user has permission to apply final decision at application level (2.4.3)
+    public function canApplyApplicationFinalDecision()
+    {
+        $user = auth()->user();
+        if (! $user || ! $user->role) {
+            return false;
+        }
+
+        // Get final-decision category
+        $finalDecisionCategory = \App\Models\ApplicationStatusCategory::where('value', ApplicationStatusCategoryConstants::FINAL_DECISION_VALUE)->first();
+
+        if (! $finalDecisionCategory) {
+            return false;
+        }
+
+        $roleValues = $finalDecisionCategory->role_values ?? [];
+
+        // Ensure role_values is an array
+        if (is_string($roleValues)) {
+            $roleValues = json_decode($roleValues, true) ?? [];
+        }
+
+        return is_array($roleValues) && in_array($user->role->value, $roleValues);
+    }
+
     // Get available final decisions based on criteria statuses
     public function getAvailableFinalDecisions()
     {
@@ -1232,6 +1266,12 @@ class DepartmentApplicationDetail extends Component
 
         if (! $this->applicationFinalDecision) {
             toastr()->error('Необходимо выбрать решение.');
+
+            return;
+        }
+
+        if (! $this->canApplyApplicationFinalDecision()) {
+            toastr()->error('У вас нет прав для применения финального решения.');
 
             return;
         }
@@ -1543,22 +1583,24 @@ class DepartmentApplicationDetail extends Component
         try {
             $reportServiceUrl = config('app.initial_report_service_url', env('INITIAL_REPORT_SERVICE_URL'));
 
-            if (!$reportServiceUrl) {
+            if (! $reportServiceUrl) {
                 toastr()->error('URL сервиса генерации первичных отчетов не настроен');
                 $this->downloadingReports[$reportId] = false;
+
                 return;
             }
 
             // Send POST request to report service
             $response = Http::timeout(30)
                 ->post($reportServiceUrl, [
-                    'report_id' => $reportId
+                    'report_id' => $reportId,
                 ]);
 
-            if (!$response->successful()) {
-                Log::error("Initial report service returned error: " . $response->status() . " - " . $response->body());
+            if (! $response->successful()) {
+                Log::error('Initial report service returned error: '.$response->status().' - '.$response->body());
                 toastr()->error('Ошибка при получении первичного отчета от сервиса');
                 $this->downloadingReports[$reportId] = false;
+
                 return;
             }
 
@@ -1567,11 +1609,11 @@ class DepartmentApplicationDetail extends Component
 
             // Get the report from database for filename
             $report = ApplicationInitialReport::find($reportId);
-            $filename = 'initial_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            $filename = 'initial_report_'.$reportId.'_'.now()->format('Y-m-d_H-i-s').'.pdf';
 
             if ($report && $report->application_criterion && $report->application_criterion->category_document) {
                 $categoryName = Str::slug($report->application_criterion->category_document->title_ru ?? 'report');
-                $filename = 'initial_' . $categoryName . '_report_' . $reportId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+                $filename = 'initial_'.$categoryName.'_report_'.$reportId.'_'.now()->format('Y-m-d_H-i-s').'.pdf';
             }
 
             // Clear loading state before returning file
@@ -1582,11 +1624,11 @@ class DepartmentApplicationDetail extends Component
                 echo $fileContent;
             }, $filename, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error downloading initial report: ' . $e->getMessage());
+            Log::error('Error downloading initial report: '.$e->getMessage());
             toastr()->error('Произошла ошибка при скачивании первичного отчета');
             $this->downloadingReports[$reportId] = false;
         }
@@ -1784,27 +1826,29 @@ class DepartmentApplicationDetail extends Component
     public function downloadLicenseCertificate($certificateId)
     {
         // Set loading state
-        $this->downloadingReports['certificate_' . $certificateId] = true;
+        $this->downloadingReports['certificate_'.$certificateId] = true;
 
         try {
             $certificateServiceUrl = config('app.certificate_service_url', env('CERTIFICATE_SERVICE_URL'));
 
-            if (!$certificateServiceUrl) {
+            if (! $certificateServiceUrl) {
                 toastr()->error('URL сервиса генерации лицензий не настроен');
-                $this->downloadingReports['certificate_' . $certificateId] = false;
+                $this->downloadingReports['certificate_'.$certificateId] = false;
+
                 return;
             }
 
             // Send POST request to certificate service
             $response = Http::timeout(30)
                 ->post($certificateServiceUrl, [
-                    'certificate_id' => $certificateId
+                    'certificate_id' => $certificateId,
                 ]);
 
-            if (!$response->successful()) {
-                Log::error("Certificate service returned error: " . $response->status() . " - " . $response->body());
+            if (! $response->successful()) {
+                Log::error('Certificate service returned error: '.$response->status().' - '.$response->body());
                 toastr()->error('Ошибка при получении лицензии от сервиса');
-                $this->downloadingReports['certificate_' . $certificateId] = false;
+                $this->downloadingReports['certificate_'.$certificateId] = false;
+
                 return;
             }
 
@@ -1813,29 +1857,29 @@ class DepartmentApplicationDetail extends Component
 
             // Get the certificate from database for filename
             $certificate = LicenseCertificate::find($certificateId);
-            $filename = 'license_certificate_' . $certificateId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+            $filename = 'license_certificate_'.$certificateId.'_'.now()->format('Y-m-d_H-i-s').'.pdf';
 
             if ($certificate && $certificate->application && $certificate->application->club) {
                 $clubName = Str::slug($certificate->application->club->name_ru ?? 'club');
                 $seasonYear = $certificate->application->licence->season->year ?? date('Y');
-                $filename = $clubName . '_license_' . $seasonYear . '_' . $certificateId . '_' . now()->format('Y-m-d_H-i-s') . '.pdf';
+                $filename = $clubName.'_license_'.$seasonYear.'_'.$certificateId.'_'.now()->format('Y-m-d_H-i-s').'.pdf';
             }
 
             // Clear loading state before returning file
-            $this->downloadingReports['certificate_' . $certificateId] = false;
+            $this->downloadingReports['certificate_'.$certificateId] = false;
 
             // Return file download response
             return response()->streamDownload(function () use ($fileContent) {
                 echo $fileContent;
             }, $filename, [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Content-Disposition' => 'attachment; filename="'.$filename.'"',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error downloading certificate: ' . $e->getMessage());
+            Log::error('Error downloading certificate: '.$e->getMessage());
             toastr()->error('Произошла ошибка при скачивании лицензии');
-            $this->downloadingReports['certificate_' . $certificateId] = false;
+            $this->downloadingReports['certificate_'.$certificateId] = false;
         }
     }
 
@@ -2083,7 +2127,7 @@ class DepartmentApplicationDetail extends Component
                 'title_en' => $appDoc->document->title_en ?? 'Document',
                 'file_url' => $appDoc->file_url,
                 'status' => $appDoc->is_industry_passed,
-                'comment' => $appDoc->industry_comment
+                'comment' => $appDoc->industry_comment,
             ];
         })->toArray();
 
@@ -2113,6 +2157,7 @@ class DepartmentApplicationDetail extends Component
 
         if ($existingGeneralReport) {
             Log::info("General report already exists for application #{$applicationId}");
+
             return;
         }
 
@@ -2126,6 +2171,7 @@ class DepartmentApplicationDetail extends Component
 
         if (empty($allCriteria)) {
             Log::info("No criteria found for application #{$applicationId}");
+
             return;
         }
 
@@ -2137,7 +2183,8 @@ class DepartmentApplicationDetail extends Component
 
         // IMPORTANT: Check if ALL criteria have reached awaiting-control-check status
         if (count($allCriteria) !== count($criteriaWithAwaitingControlCheck)) {
-            Log::info("Not all criteria have reached awaiting-control-check status for application #{$applicationId}. Total criteria: " . count($allCriteria) . ", Criteria with awaiting-control-check: " . count($criteriaWithAwaitingControlCheck));
+            Log::info("Not all criteria have reached awaiting-control-check status for application #{$applicationId}. Total criteria: ".count($allCriteria).', Criteria with awaiting-control-check: '.count($criteriaWithAwaitingControlCheck));
+
             return;
         }
 
@@ -2152,8 +2199,9 @@ class DepartmentApplicationDetail extends Component
         // Compare: do all criteria have reports?
         $allCriteriaHaveReports = count($criteriaWithAwaitingControlCheck) === count($criteriaWithReports);
 
-        if (!$allCriteriaHaveReports) {
-            Log::info("Not all criteria have reports yet for application #{$applicationId}. Criteria with awaiting-control-check: " . count($criteriaWithAwaitingControlCheck) . ", Reports count: " . count($criteriaWithReports));
+        if (! $allCriteriaHaveReports) {
+            Log::info("Not all criteria have reports yet for application #{$applicationId}. Criteria with awaiting-control-check: ".count($criteriaWithAwaitingControlCheck).', Reports count: '.count($criteriaWithReports));
+
             return;
         }
 
@@ -2167,7 +2215,7 @@ class DepartmentApplicationDetail extends Component
 
         $allDocuments = [];
         foreach ($criteriaReports as $criteriaReport) {
-            if (!empty($criteriaReport->list_documents) && is_array($criteriaReport->list_documents)) {
+            if (! empty($criteriaReport->list_documents) && is_array($criteriaReport->list_documents)) {
                 $allDocuments = array_merge($allDocuments, $criteriaReport->list_documents);
             }
         }
@@ -2186,7 +2234,7 @@ class DepartmentApplicationDetail extends Component
             'list_documents' => $allDocuments,
         ]);
 
-        Log::info("General ApplicationReport created for application #{$applicationId} with " . count($allDocuments) . " documents from " . count($criteriaReports) . " criteria reports");
+        Log::info("General ApplicationReport created for application #{$applicationId} with ".count($allDocuments).' documents from '.count($criteriaReports).' criteria reports');
     }
 
     /**
