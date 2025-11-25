@@ -180,7 +180,7 @@ class ApplicationCriterionObserver
         $statusValue = $applicationCriterion->application_status->value;
 
         // Check if status is awaiting-control-check
-        if ($statusValue !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE) {
+        if ($statusValue !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE && $statusValue !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
             return;
         }
 
