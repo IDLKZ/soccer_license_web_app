@@ -2111,6 +2111,7 @@
                                     ФИО секретаря
                                 </label>
                                 <input type="text"
+                                       placeholder="С. Жугралин"
                                        wire:model="secretaryName"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
                             </div>
@@ -2120,6 +2121,7 @@
                                     Должность секретаря
                                 </label>
                                 <input type="text"
+                                       placeholder="Секретарь"
                                        wire:model="secretaryPosition"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
                             </div>
@@ -2129,6 +2131,7 @@
                                     ФИО директора
                                 </label>
                                 <input type="text"
+                                       placeholder="А. Гусаров"
                                        wire:model="directorName"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
                             </div>
@@ -2138,6 +2141,7 @@
                                     Должность директора
                                 </label>
                                 <input type="text"
+                                       placeholder="Председатель КЛФК"
                                        wire:model="directorPosition"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
                             </div>
@@ -2157,6 +2161,7 @@
                                     Тип
                                 </label>
                                 <input type="text"
+                                       placeholder="КФФ/UEFA"
                                        wire:model="solutionType"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
                             </div>
