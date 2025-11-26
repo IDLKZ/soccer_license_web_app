@@ -38,7 +38,9 @@ class LicenseCertificate extends Model
 	protected $fillable = [
 		'application_id',
 		'license_id',
-		'club_id'
+		'club_id',
+		'type_ru',
+		'type_kk'
 	];
 
 	public function application()

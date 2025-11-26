@@ -35,7 +35,8 @@ class ApplicationSolution extends Model
 		'application_id' => 'int',
 		'secretary_id' => 'int',
 		'meeting_date' => 'datetime',
-		'list_documents' => 'array'
+		'list_documents' => 'array',
+		'list_criteria' => 'array'
 	];
 
 	protected $hidden = [
@@ -47,10 +48,15 @@ class ApplicationSolution extends Model
 		'application_id',
 		'secretary_id',
 		'secretary_name',
+		'secretary_position',
+		'director_position',
+		'director_name',
+		'type',
 		'meeting_date',
 		'meeting_place',
 		'department_name',
-		'list_documents'
+		'list_documents',
+		'list_criteria'
 	];
 
 	public function application()

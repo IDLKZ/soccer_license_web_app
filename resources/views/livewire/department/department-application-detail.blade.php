@@ -139,6 +139,7 @@
         </div>
 
         <!-- Final Decision Progress (2.4.1) -->
+        @if(auth()->user()->role_id == 6)
         @php
             $finalStats = $this->getFinalDecisionStats();
             $showFinalProgress = $finalStats['awaiting'] > 0;
@@ -166,6 +167,7 @@
                 @endif
             </div>
         </div>
+        @endif
         @endif
 
         <!-- Application Status Change Buttons (2.4.3) -->
@@ -898,7 +900,7 @@
                                 <span class="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-3 py-1 rounded-full text-sm font-medium">
                                     {{ count($reportsByCriteria[$criterion->id]) }} {{ count($reportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($reportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}
                                 </span>
-                                @if($criterion->application_status && $criterion->application_status->value === 'awaiting-control-check')
+                                @if($criterion->application_status && ($criterion->application_status->value === 'awaiting-control-check' || $criterion->application_status->value === 'awaiting-final-decision'))
                                     <button
                                         wire:click="openGenerateReportModal({{ $criterion->id }})"
                                         class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors">
@@ -1114,19 +1116,28 @@
                                             </span>
                                         </div>
 
-                                        <button
-                                            wire:click="downloadSolution({{ $solution->id }})"
-                                            wire:loading.attr="disabled"
-                                            class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
-                                            <span wire:loading wire:target="downloadSolution({{ $solution->id }})">
-                                                <i class="fas fa-spinner fa-spin mr-1.5"></i>
-                                                Генерация...
-                                            </span>
-                                            <span wire:loading.remove wire:target="downloadSolution({{ $solution->id }})">
-                                                <i class="fas fa-download mr-1.5"></i>
-                                                Скачать
-                                            </span>
-                                        </button>
+                                        <div class="flex gap-2">
+                                            <button
+                                                wire:click="openEditSolutionModal({{ $solution->id }})"
+                                                class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
+                                                <i class="fas fa-edit mr-1.5"></i>
+                                                Редактировать
+                                            </button>
+
+                                            <button
+                                                wire:click="downloadSolution({{ $solution->id }})"
+                                                wire:loading.attr="disabled"
+                                                class="inline-flex items-center px-3 py-1.5 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                                <span wire:loading wire:target="downloadSolution({{ $solution->id }})">
+                                                    <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                    Генерация...
+                                                </span>
+                                                <span wire:loading.remove wire:target="downloadSolution({{ $solution->id }})">
+                                                    <i class="fas fa-download mr-1.5"></i>
+                                                    Скачать
+                                                </span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1200,20 +1211,28 @@
                                                 Лицензия
                                             </span>
                                         </div>
-
-                                        <button
-                                            wire:click="downloadLicenseCertificate({{ $certificate->id }})"
-                                            wire:loading.attr="disabled"
-                                            class="inline-flex items-center px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                        <div class="flex gap-2">
+                                            <button
+                                                wire:click="openEditCertificateModal({{ $certificate->id }})"
+                                                class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
+                                                <i class="fas fa-edit mr-1.5"></i>
+                                                Редактировать
+                                            </button>
+                                            <button
+                                                wire:click="downloadLicenseCertificate({{ $certificate->id }})"
+                                                wire:loading.attr="disabled"
+                                                class="inline-flex items-center px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 dark:bg-yellow-500 dark:hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
                                             <span wire:loading wire:target="downloadLicenseCertificate({{ $certificate->id }})">
                                                 <i class="fas fa-spinner fa-spin mr-1.5"></i>
                                                 Генерация...
                                             </span>
-                                            <span wire:loading.remove wire:target="downloadLicenseCertificate({{ $certificate->id }})">
+                                                <span wire:loading.remove wire:target="downloadLicenseCertificate({{ $certificate->id }})">
                                                 <i class="fas fa-download mr-1.5"></i>
                                                 Скачать
                                             </span>
-                                        </button>
+                                            </button>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
@@ -2053,5 +2072,298 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    <!-- Edit Solution Modal -->
+    @if($showEditSolutionModal)
+    <div class="fixed inset-0 z-50 overflow-y-auto" style="z-index: 9999;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75" wire:click="closeEditSolutionModal"></div>
+
+            <!-- Center modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+
+            <!-- Modal panel -->
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-gray-200 dark:border-gray-700 relative z-10">
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-edit mr-3"></i>
+                            Редактирование решения
+                        </h3>
+                        <button
+                            wire:click="closeEditSolutionModal"
+                            class="text-white hover:text-gray-200 transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 max-h-[70vh] overflow-y-auto">
+                    <div class="space-y-6">
+                        <!-- Main Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    ФИО секретаря
+                                </label>
+                                <input type="text"
+                                       placeholder="С. Жугралин"
+                                       wire:model="secretaryName"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Должность секретаря
+                                </label>
+                                <input type="text"
+                                       placeholder="Секретарь"
+                                       wire:model="secretaryPosition"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    ФИО директора
+                                </label>
+                                <input type="text"
+                                       placeholder="А. Гусаров"
+                                       wire:model="directorName"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Должность директора
+                                </label>
+                                <input type="text"
+                                       placeholder="Председатель КЛФК"
+                                       wire:model="directorPosition"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Директивный орган
+                                </label>
+                                <input type="text"
+                                       placeholder="Комиссия по лицензированию футбольных клубов КФФ"
+                                       wire:model="departmentName"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Тип
+                                </label>
+                                <input type="text"
+                                       placeholder="КФФ/UEFA"
+                                       wire:model="solutionType"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Дата заседания
+                                </label>
+                                <input type="date"
+                                       wire:model="meetingDate"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Место проведения заседания
+                                </label>
+                                <input type="text"
+                                       placeholder="г.Астана, пр. Бауыржана Момышулы 5а."
+                                       wire:model="meetingPlace"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                            </div>
+                        </div>
+
+                        @if(count($availableCriteriaForSolution) > 0)
+                            <!-- List of Criteria -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                        <i class="fas fa-list mr-2"></i>
+                                        Список критериев
+                                    </h4>
+                                </div>
+
+                                @if(count($listCriteria) > 0)
+                                    <div class="space-y-2 mb-4">
+                                        @foreach($listCriteria as $index => $criteria)
+                                            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                <div class="flex-1 grid grid-cols-3 gap-3">
+                                                    <div>
+                                                        <span class="text-xs text-gray-500 dark:text-gray-400">Критерий:</span>
+                                                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $criteria['title'] }}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-xs text-gray-500 dark:text-gray-400">Замечание:</span>
+                                                        <p class="text-sm text-gray-700 dark:text-gray-300">{{ $criteria['type'] ?: '—' }}</p>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-xs text-gray-500 dark:text-gray-400">Срок:</span>
+                                                        <p class="text-sm text-gray-700 dark:text-gray-300">{{ $criteria['deadline'] }}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    wire:click="removeCriteriaFromList({{ $index }})"
+                                                    class="p-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                                        <i class="fas fa-inbox text-2xl mb-2"></i>
+                                        <p>Критерии не добавлены</p>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <!-- Add New Criteria Form -->
+                            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <h4 class="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">
+                                    <i class="fas fa-plus-circle mr-2"></i>
+                                    Добавить критерий
+                                </h4>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Критерий
+                                        </label>
+                                        <select
+                                            wire:model="newCriteriaTitle"
+                                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                                            <option value="">Выберите критерий</option>
+                                            @foreach($availableCriteriaForSolution as $criterion)
+                                                <option value="{{ $criterion['category_document']['title_ru'] }}">{{ $criterion['category_document']['title_ru'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Санкция
+                                        </label>
+                                        <input type="text"
+                                               wire:model="newCriteriaType"
+                                               placeholder="Замечание"
+                                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                            Срок
+                                        </label>
+                                        <input type="date"
+                                               wire:model="newCriteriaDeadline"
+                                               placeholder="ДД.ММ.ГГГГ"
+                                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                                    </div>
+                                </div>
+
+                                <button
+                                    wire:click="addCriteriaToList"
+                                    class="mt-3 inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Добавить критерий
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                    <button
+                        wire:click="closeEditSolutionModal"
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Отмена
+                    </button>
+                    <button
+                        wire:click="updateSolution"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                        <i class="fas fa-save mr-2"></i>
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Edit Certificate Modal -->
+    @if($showEditCertificateModal)
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" wire:click="closeEditCertificateModal">
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-200 dark:border-gray-700 relative z-10" wire:click.stop>
+            <div class="bg-white dark:bg-gray-800">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        <i class="fas fa-edit mr-2 text-blue-600"></i>
+                        Редактировать сертификат
+                    </h3>
+                    <button
+                        wire:click="closeEditCertificateModal"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6">
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Тип (English)
+                            </label>
+                            <input type="text"
+                                   wire:model="certificateTypeRu"
+                                   placeholder="to participate in UEFA club tournaments"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Тип (Қазақша)
+                            </label>
+                            <input type="text"
+                                   wire:model="certificateTypeKk"
+                                   placeholder="«Қазақстан Футбол федерациясы» Қауымдастығы <br> ЗТБ-мен ұйымдастырылатын жарыстарына қатысу үшін"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                    <button
+                        wire:click="closeEditCertificateModal"
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-medium py-2 px-4 rounded-lg transition-colors">
+                        <i class="fas fa-times mr-2"></i>
+                        Отмена
+                    </button>
+                    <button
+                        wire:click="updateCertificate"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+                        <i class="fas fa-save mr-2"></i>
+                        Сохранить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     @endif
 </div>
