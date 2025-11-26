@@ -2201,8 +2201,11 @@ class DepartmentApplicationDetail extends Component
             return;
         }
 
-        // Get awaiting-control-check status ID
-        $awaitingControlCheckStatusId = ApplicationStatus::where('value', ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE)->orWhere('value', ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE)->value('id');
+        // Get awaiting-control-check and awaiting-final-decision status IDs
+        $allowedStatusIds = ApplicationStatus::whereIn('value', [
+            ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE,
+            ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE
+        ])->pluck('id')->toArray();
 
         // Get ALL criteria for this application
         $allCriteria = ApplicationCriterion::where('application_id', $applicationId)
@@ -2215,15 +2218,15 @@ class DepartmentApplicationDetail extends Component
             return;
         }
 
-        // Get criteria with awaiting-control-check status
-        $criteriaWithAwaitingControlCheck = ApplicationCriterion::where('application_id', $applicationId)
-            ->where('status_id', $awaitingControlCheckStatusId)
+        // Get criteria with awaiting-control-check or awaiting-final-decision status
+        $criteriaWithAllowedStatus = ApplicationCriterion::where('application_id', $applicationId)
+            ->whereIn('status_id', $allowedStatusIds)
             ->pluck('id')
             ->toArray();
 
-        // IMPORTANT: Check if ALL criteria have reached awaiting-control-check status
-        if (count($allCriteria) !== count($criteriaWithAwaitingControlCheck)) {
-            Log::info("Not all criteria have reached awaiting-control-check status for application #{$applicationId}. Total criteria: ".count($allCriteria).', Criteria with awaiting-control-check: '.count($criteriaWithAwaitingControlCheck));
+        // IMPORTANT: Check if ALL criteria have reached allowed status
+        if (count($allCriteria) !== count($criteriaWithAllowedStatus)) {
+            Log::info("Not all criteria have reached allowed status for application #{$applicationId}. Total criteria: ".count($allCriteria).', Criteria with allowed status: '.count($criteriaWithAllowedStatus));
 
             return;
         }
@@ -2231,16 +2234,16 @@ class DepartmentApplicationDetail extends Component
         // Now check if all these criteria have reports
         $criteriaWithReports = ApplicationReport::where('application_id', $applicationId)
             ->whereNotNull('criteria_id')
-            ->whereIn('criteria_id', $criteriaWithAwaitingControlCheck)
+            ->whereIn('criteria_id', $criteriaWithAllowedStatus)
             ->pluck('criteria_id')
             ->unique()
             ->toArray();
 
         // Compare: do all criteria have reports?
-        $allCriteriaHaveReports = count($criteriaWithAwaitingControlCheck) === count($criteriaWithReports);
+        $allCriteriaHaveReports = count($criteriaWithAllowedStatus) === count($criteriaWithReports);
 
         if (! $allCriteriaHaveReports) {
-            Log::info("Not all criteria have reports yet for application #{$applicationId}. Criteria with awaiting-control-check: ".count($criteriaWithAwaitingControlCheck).', Reports count: '.count($criteriaWithReports));
+            Log::info("Not all criteria have reports yet for application #{$applicationId}. Criteria with allowed status: ".count($criteriaWithAllowedStatus).', Reports count: '.count($criteriaWithReports));
 
             return;
         }
