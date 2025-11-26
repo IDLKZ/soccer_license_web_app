@@ -53,7 +53,7 @@ class ClubManagement extends Component
     #[Validate('required|string|size:12|unique:clubs,bin')]
     public $bin = '';
 
-    #[Validate('required|date')]
+    #[Validate('nullable|date')]
     public $foundationDate = '';
 
     #[Validate('required|string|max:500')]
@@ -188,7 +188,7 @@ class ClubManagement extends Component
             'shortNameRu' => 'required|string|max:100',
             'shortNameKk' => 'required|string|max:100',
             'bin' => 'required|string|size:12|unique:clubs,bin',
-            'foundationDate' => 'required|date',
+            'foundationDate' => 'nullable|date',
             'legalAddress' => 'required|string|max:500',
             'actualAddress' => 'required|string|max:500',
         ]);
@@ -269,7 +269,7 @@ class ClubManagement extends Component
             'shortNameRu' => 'required|string|max:100',
             'shortNameKk' => 'required|string|max:100',
             'bin' => 'required|string|size:12|unique:clubs,bin,' . $this->editingClubId,
-            'foundationDate' => 'required|date',
+            'foundationDate' => 'nullable|date',
             'legalAddress' => 'required|string|max:500',
             'actualAddress' => 'required|string|max:500',
         ]);

@@ -34,7 +34,7 @@ return new class extends Migration
             $table->text('description_kk')->nullable();
             $table->text('description_en')->nullable();
             $table->string('bin', 12)->unique();
-            $table->date('foundation_date');
+            $table->date('foundation_date')->nullable();
             $table->text('legal_address');
             $table->text('actual_address');
             $table->text('website')->nullable();
