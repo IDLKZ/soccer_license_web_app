@@ -338,42 +338,67 @@
                         <div>
                             <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                                 @if($clubs->onFirstPage())
-                                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed">
                                         Предыдущая
                                     </span>
                                 @else
-                                    <button wire:click="gotoPage('{{ $clubs->previousPageUrl() }}')"
-                                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <button wire:click="previousPage"
+                                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
                                         Предыдущая
                                     </button>
                                 @endif
 
-                                @foreach($clubs->links()[0] as $link)
-                                    @if($link['active'])
-                                        <span aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
-                                            {{ $link['label'] }}
+                                @php
+                                    $currentPage = $clubs->currentPage();
+                                    $lastPage = $clubs->lastPage();
+                                    $start = max(1, $currentPage - 2);
+                                    $end = min($lastPage, $currentPage + 2);
+                                @endphp
+
+                                @if($start > 1)
+                                    <button wire:click="gotoPage(1)"
+                                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        1
+                                    </button>
+                                    @if($start > 2)
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            ...
+                                        </span>
+                                    @endif
+                                @endif
+
+                                @for($page = $start; $page <= $end; $page++)
+                                    @if($page == $currentPage)
+                                        <span aria-current="page" class="relative inline-flex items-center px-4 py-2 border border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-sm font-medium text-blue-600 dark:text-blue-400">
+                                            {{ $page }}
                                         </span>
                                     @else
-                                        @if($link['url'])
-                                            <button wire:click="gotoPage('{{ $link['url'] }}')"
-                                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                                                {{ $link['label'] }}
-                                            </button>
-                                        @else
-                                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                                                {{ $link['label'] }}
-                                            </span>
-                                        @endif
+                                        <button wire:click="gotoPage({{ $page }})"
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            {{ $page }}
+                                        </button>
                                     @endif
-                                @endforeach
+                                @endfor
+
+                                @if($end < $lastPage)
+                                    @if($end < $lastPage - 1)
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            ...
+                                        </span>
+                                    @endif
+                                    <button wire:click="gotoPage({{ $lastPage }})"
+                                            class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        {{ $lastPage }}
+                                    </button>
+                                @endif
 
                                 @if($clubs->onLastPage())
-                                    <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-50 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                    <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm font-medium text-gray-400 dark:text-gray-500 cursor-not-allowed">
                                         Следующая
                                     </span>
                                 @else
-                                    <button wire:click="gotoPage('{{ $clubs->nextPageUrl() }}')"
-                                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <button wire:click="nextPage"
+                                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
                                         Следующая
                                     </button>
                                 @endif
