@@ -50,7 +50,7 @@ class ClubManagement extends Component
     #[Validate('nullable|string|max:100')]
     public $shortNameEn = '';
 
-    #[Validate('required|string|size:12|unique:clubs,bin')]
+    #[Validate('required|string|size:12')]
     public $bin = '';
 
     #[Validate('nullable|date')]
@@ -187,7 +187,7 @@ class ClubManagement extends Component
             'fullNameKk' => 'required|string|max:255',
             'shortNameRu' => 'required|string|max:100',
             'shortNameKk' => 'required|string|max:100',
-            'bin' => 'required|string|size:12|unique:clubs,bin',
+            'bin' => 'required|string|size:12',
             'foundationDate' => 'nullable|date',
             'legalAddress' => 'required|string|max:500',
             'actualAddress' => 'required|string|max:500',
@@ -268,7 +268,7 @@ class ClubManagement extends Component
             'fullNameKk' => 'required|string|max:255',
             'shortNameRu' => 'required|string|max:100',
             'shortNameKk' => 'required|string|max:100',
-            'bin' => 'required|string|size:12|unique:clubs,bin,' . $this->editingClubId,
+            'bin' => 'required|string|size:12',
             'foundationDate' => 'nullable|date',
             'legalAddress' => 'required|string|max:500',
             'actualAddress' => 'required|string|max:500',
