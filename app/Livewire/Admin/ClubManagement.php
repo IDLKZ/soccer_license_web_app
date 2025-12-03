@@ -210,8 +210,8 @@ class ClubManagement extends Component
             'description_ru' => $this->descriptionRu,
             'description_kk' => $this->descriptionKk,
             'description_en' => $this->descriptionEn,
-            'type_id' => $this->typeId,
-            'parent_id' => $this->parentId,
+            'type_id' => $this->typeId ?: null,
+            'parent_id' => $this->parentId ?: null,
             'verified' => (bool) $this->verified,
         ];
 
@@ -291,8 +291,8 @@ class ClubManagement extends Component
             'description_ru' => $this->descriptionRu,
             'description_kk' => $this->descriptionKk,
             'description_en' => $this->descriptionEn,
-            'type_id' => $this->typeId,
-            'parent_id' => $this->parentId,
+            'type_id' => $this->typeId ?: null,
+            'parent_id' => $this->parentId ?: null,
             'verified' => (bool) $this->verified,
         ];
 
@@ -318,17 +318,11 @@ class ClubManagement extends Component
 
         $club = Club::findOrFail($clubId);
 
-        // Prevent deleting clubs with teams
-        if ($club->club_teams()->count() > 0) {
-            session()->flash('error', 'Нельзя удалить клуб, привязанный к командам');
-            return;
-        }
+        // Delete related club teams
+        $club->club_teams()->delete();
 
-        // Prevent deleting clubs with child clubs
-        if ($club->clubs()->count() > 0) {
-            session()->flash('error', 'Нельзя удалить клуб, имеющий дочерние клубы');
-            return;
-        }
+        // Delete child clubs (recursively if needed)
+        $club->clubs()->delete();
 
         // Delete club photo if exists
         if ($club->image_url) {

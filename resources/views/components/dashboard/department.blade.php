@@ -45,6 +45,44 @@
         <p class="text-purple-100">{{ $departmentName }}</p>
     </div>
 
+    <!-- Documents Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-file-pdf text-red-500 mr-2"></i>
+            Нормативные документы
+        </h2>
+        @php
+            $documentsPath = base_path('docs.json');
+            $documents = file_exists($documentsPath) ? json_decode(file_get_contents($documentsPath), true) : [];
+        @endphp
+
+        @if(count($documents) > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($documents as $doc)
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors group">
+                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-file-pdf text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-medium text-gray-900 dark:text-white truncate">{{ $doc['title'] }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">PDF документ</p>
+                            </div>
+                        </div>
+                        <a href="{{ asset($doc['path']) }}"
+                           target="_blank"
+                           class="ml-3 flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                           title="Открыть документ">
+                            <i class="fas fa-external-link-alt text-blue-600 dark:text-blue-400 text-sm"></i>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <p class="text-gray-600 dark:text-gray-400 text-center py-4">Нет доступных документов</p>
+        @endif
+    </div>
+
     <!-- Statistics Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Pending Applications -->
