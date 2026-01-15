@@ -65,15 +65,34 @@ return [
 
     'temporary_file_upload' => [
         'disk' => null,        // Example: 'local', 's3'              | Default: 'default'
-        'rules' => null,       // Example: ['file', 'mimes:png,jpg']  | Default: ['required', 'file', 'max:12288'] (12MB)
+        'rules' => [
+            'required',
+            'file',
+            'max:10485760', // 10 GB
+        ],       // Example: ['file', 'mimes:png,jpg']  | Default: ['required', 'file', 'max:12288'] (12MB)
         'directory' => null,   // Example: 'tmp'                      | Default: 'livewire-tmp'
         'middleware' => null,  // Example: 'throttle:5,1'             | Default: 'throttle:60,1'
-        'preview_mimes' => [   // Supported file types for temporary pre-signed file URLs...
-            'png', 'gif', 'bmp', 'svg', 'wav', 'mp4',
-            'mov', 'avi', 'wmv', 'mp3', 'm4a',
-            'jpg', 'jpeg', 'mpga', 'webp', 'wma',
+        'preview_mimes' => [
+            // Images
+            'png', 'gif', 'bmp', 'svg', 'jpg', 'jpeg', 'webp', 'tiff', 'ico',
+
+            // Audio
+            'mp3', 'wav', 'ogg', 'm4a', 'wma', 'aac', 'flac',
+
+            // Video
+            'mp4', 'mov', 'avi', 'wmv', 'mkv', 'webm', 'flv', 'mpeg',
+
+            // Archives
+            'zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz',
+
+            // Documents
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+            'txt', 'csv', 'rtf', 'odt', 'ods',
+
+            // Other
+            'json', 'xml', 'yaml', 'yml',
         ],
-        'max_upload_time' => 5, // Max duration (in minutes) before an upload is invalidated...
+        'max_upload_time' => 5000, // Max duration (in minutes) before an upload is invalidated...
         'cleanup' => true, // Should cleanup temporary uploads older than 24 hrs...
     ],
 
