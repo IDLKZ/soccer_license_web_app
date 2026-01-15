@@ -67,7 +67,7 @@ class MyApplicationDetail extends Component
     public $viewingDocument = null;
 
     // Upload form data
-    #[Validate('required|file|max:102400')] // Max 100MB as fallback
+    #[Validate('required|file|max:10485760')] // Max 100MB as fallback
     public $uploadFile = null;
 
     #[Validate('required|string|max:255')]
