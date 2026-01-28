@@ -57,6 +57,7 @@ class DepartmentApplicationDetail extends Component
     public $licenseCertificates = []; // License certificates for approved applications
 
     public $downloadingReports = []; // Track which reports are being downloaded
+    public $deletingReports = []; // Track which reports are being deleted
 
     // Permissions
     #[Locked]
@@ -140,8 +141,9 @@ class DepartmentApplicationDetail extends Component
     public $reportCriterionId = null;
 
     public $selectedDocumentIds = [];
-
+    public array $openGroups = [];
     public $availableDocumentsForReport = [];
+    public $groupedDocuments = [];
 
     // Edit Solution Modal
     public $showEditSolutionModal = false;
@@ -1736,6 +1738,22 @@ class DepartmentApplicationDetail extends Component
         }
     }
 
+    public function deleteReport($reportId)
+    {
+        $this->deletingReports[$reportId] = true;
+
+        try {
+            $applicationReport = ApplicationReport::find($reportId);
+            $applicationReport?->delete();
+            $this->loadReportsForAllCriteria();
+            $this->deletingReports[$reportId] = false;
+        } catch (\Exception $e) {
+            Log::error('Error downloading report: '.$e->getMessage());
+            toastr()->error('Произошла ошибка при скачивании отчета');
+            $this->downloadingReports[$reportId] = false;
+        }
+    }
+
     /**
      * Download department report from external service
      */
@@ -2132,22 +2150,22 @@ class DepartmentApplicationDetail extends Component
         }
 
         // Check if criterion is at awaiting-control-check or awaiting-final-decision status
-        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE && $criterion->application_status->value !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
-            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки или финального решения.');
-
-            return;
-        }
+//        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE && $criterion->application_status->value !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
+//            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки или финального решения.');
+//
+//            return;
+//        }
 
         // Check if report already exists for this criterion
-        $existingReport = ApplicationReport::where('application_id', $criterion->application_id)
-            ->where('criteria_id', $criterionId)
-            ->first();
-
-        if ($existingReport) {
-            toastr()->error('Отчет для этого критерия уже существует.');
-
-            return;
-        }
+//        $existingReport = ApplicationReport::where('application_id', $criterion->application_id)
+//            ->where('criteria_id', $criterionId)
+//            ->first();
+//
+//        if ($existingReport) {
+//            toastr()->error('Отчет для этого критерия уже существует.');
+//
+//            return;
+//        }
 
         $this->reportCriterionId = $criterionId;
         $this->selectedDocumentIds = [];
@@ -2170,10 +2188,19 @@ class DepartmentApplicationDetail extends Component
                 'comment' => $appDoc->industry_comment,
             ];
         })->toArray();
-
+        $this->groupedDocuments = collect($this->availableDocumentsForReport)
+            ->groupBy('document_id');
         $this->showGenerateReportModal = true;
     }
 
+    public function toggleDocumentGroup(array $ids, bool $checked): void
+    {
+        if ($checked) {
+            $this->selectedDocumentIds = array_values(array_unique(array_merge($this->selectedDocumentIds, $ids)));
+        } else {
+            $this->selectedDocumentIds = array_values(array_diff($this->selectedDocumentIds, $ids));
+        }
+    }
     /**
      * Close generate report modal
      */
@@ -2183,6 +2210,7 @@ class DepartmentApplicationDetail extends Component
         $this->reportCriterionId = null;
         $this->selectedDocumentIds = [];
         $this->availableDocumentsForReport = [];
+        $this->groupedDocuments = [];
     }
 
     /**
@@ -2504,6 +2532,22 @@ class DepartmentApplicationDetail extends Component
         $this->certificateTypeRu = '';
         $this->certificateTypeKk = '';
         $this->dispatch('closeEditCertificateModal');
+    }
+
+    public function toggleGroupOpen($groupKey): void
+    {
+        $groupKey = (string) $groupKey;
+
+        if (in_array($groupKey, $this->openGroups, true)) {
+            $this->openGroups = array_values(array_diff($this->openGroups, [$groupKey]));
+        } else {
+            $this->openGroups[] = $groupKey;
+        }
+    }
+
+    public function isGroupOpen($groupKey): bool
+    {
+        return in_array((string)$groupKey, $this->openGroups, true);
     }
 
     public function render()

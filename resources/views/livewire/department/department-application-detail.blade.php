@@ -933,14 +933,14 @@
                                                     </div>
                                                 @endif
 
-                                                <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
-                                                    @if($report->application && $report->application->user)
-                                                        <span>
-                                                            <i class="fas fa-user mr-1"></i>
-                                                            {{ $report->application->user->name }}
-                                                        </span>
-                                                    @endif
-                                                </div>
+{{--                                                <div class="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">--}}
+{{--                                                    @if($report->application && $report->application->user)--}}
+{{--                                                        <span>--}}
+{{--                                                            <i class="fas fa-user mr-1"></i>--}}
+{{--                                                            {{ $report->application->user->name }}--}}
+{{--                                                        </span>--}}
+{{--                                                    @endif--}}
+{{--                                                </div>--}}
                                             </div>
 
                                             <div class="ml-4">
@@ -955,6 +955,19 @@
                                                     <span wire:loading.remove wire:target="downloadReport({{ $report->id }})">
                                                         <i class="fas fa-download mr-1.5"></i>
                                                         Скачать отчет
+                                                    </span>
+                                                </button>
+                                                <button
+                                                    wire:click="deleteReport({{ $report->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    class="inline-flex items-center px-3 py-1.5 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
+                                                    <span wire:loading wire:target="deleteReport({{ $report->id }})">
+                                                        <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                        Удаление...
+                                                    </span>
+                                                    <span wire:loading.remove wire:target="deleteReport({{ $report->id }})">
+                                                        <i class="fa fa-trash mr-1.5"></i>
+                                                        Удалить отчет
                                                     </span>
                                                 </button>
                                             </div>
@@ -2002,32 +2015,81 @@
                 <div class="p-6">
                     @if(!empty($availableDocumentsForReport))
                         <div class="space-y-3 max-h-96 overflow-y-auto">
-                            @foreach($availableDocumentsForReport as $doc)
-                                <label class="flex items-start p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
-                                    <input
-                                        type="checkbox"
-                                        wire:model.live="selectedDocumentIds"
-                                        value="{{ $doc['id'] }}"
-                                        class="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded">
-                                    <div class="ml-3 flex-1">
-                                        <div class="font-medium text-gray-900 dark:text-gray-100">
-                                            {{ $doc['title_ru'] }}
+                            @foreach($groupedDocuments as $documentId => $docs)
+                                @php
+                                    $groupKey = (string) $documentId;
+                                    $ids = collect($docs)->pluck('id')->values()->all();
+                                    $open = $this->isGroupOpen($groupKey);
+                                @endphp
+
+                                <div class="border border-gray-200 dark:border-gray-600 rounded-lg" wire:key="group-{{ $groupKey }}">
+                                    <!-- HEADER -->
+                                    <div class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <div class="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                class="h-4 w-4 text-green-600 rounded mr-3"
+                                                wire:change="toggleDocumentGroup(@js($ids), $event.target.checked)"
+                                            />
+
+                                            <button
+                                                type="button"
+                                                class="font-semibold text-gray-900 dark:text-gray-100 text-left"
+                                                wire:click="toggleGroupOpen('{{ $groupKey }}')"
+                                            >
+                                                {{ $docs->first()['title_ru'] }}
+                                            </button>
                                         </div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            @if($doc['status'])
-                                                <span class="text-green-500">Принят</span>
-                                            @else
-                                                <span class="text-red-500">Отклонен ({{$doc['comment']}})</span>
-                                            @endif
-                                        </div>
-                                        @if(isset($doc['file_url']))
-                                            <div class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                                <i class="fas fa-file mr-1"></i>
-                                                {{ basename($doc['file_url']) }}
-                                            </div>
-                                        @endif
+
+                                        <button
+                                            type="button"
+                                            class="text-gray-500"
+                                            wire:click="toggleGroupOpen('{{ $groupKey }}')"
+                                        >
+                                            <i class="fas {{ $open ? 'fa-chevron-up' : 'fa-chevron-down' }}"></i>
+                                        </button>
                                     </div>
-                                </label>
+
+                                    <!-- BODY -->
+                                    @if($open)
+                                        <div class="px-4 pb-4 space-y-2">
+                                            @foreach($docs as $doc)
+                                                <label class="flex items-start p-3 border border-gray-100 dark:border-gray-700 rounded cursor-pointer"
+                                                       wire:key="doc-{{ $doc['id'] }}">
+                                                    <input
+                                                        type="checkbox"
+                                                        wire:model.live="selectedDocumentIds"
+                                                        value="{{ $doc['id'] }}"
+                                                        class="mt-1 h-4 w-4 text-green-600 rounded"
+                                                    >
+
+                                                    <div class="ml-3 flex-1">
+                                                        <div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                            {{ $doc['title_ru'] }}
+                                                        </div>
+
+                                                        <div class="text-xs text-gray-500">
+                                                            @if($doc['status'])
+                                                                <span class="text-green-500">Принят</span>
+                                                            @else
+                                                                <span class="text-red-500">
+                                                Отклонен ({{ $doc['comment'] }})
+                                            </span>
+                                                            @endif
+                                                        </div>
+
+                                                        @if(isset($doc['file_url']))
+                                                            <div class="text-xs text-gray-400 mt-1">
+                                                                <i class="fas fa-file mr-1"></i>
+                                                                {{ basename($doc['file_url']) }}
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
 
@@ -2052,6 +2114,7 @@
                             <p>Нет доступных документов для этого критерия</p>
                         </div>
                     @endif
+
                 </div>
 
                 <!-- Modal Footer -->
