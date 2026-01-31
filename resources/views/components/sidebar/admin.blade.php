@@ -19,6 +19,21 @@
                     <span class="ml-3 font-medium">Панель администратора</span>
                 </a>
 
+                @can('view-full-application')
+                @php
+                    $criteriaErrorCount = \App\Livewire\Admin\CriteriaMonitoring::getErrorCount();
+                @endphp
+                <a href="{{ route('admin.criteria-monitoring') }}" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors group {{ request()->routeIs('admin.criteria-monitoring') ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : '' }}">
+                    <i class="fas fa-heartbeat w-5 text-center text-red-500 dark:text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300"></i>
+                    <span class="ml-3 font-medium">Мониторинг критериев</span>
+                    @if($criteriaErrorCount > 0)
+                        <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                            {{ $criteriaErrorCount > 99 ? '99+' : $criteriaErrorCount }}
+                        </span>
+                    @endif
+                </a>
+                @endcan
+
                 <!-- Система -->
                 <div class="pt-4 pb-2">
                     <p class="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Система</p>

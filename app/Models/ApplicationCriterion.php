@@ -48,6 +48,40 @@ class ApplicationCriterion extends Model
 {
     protected $table = 'application_criteria';
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        // DEBUG: Catch ANY status_id change
+        static::saving(function ($model) {
+            $oldStatusId = $model->getOriginal('status_id');
+            $newStatusId = $model->status_id;
+
+            // Log ALL status changes
+            if ($oldStatusId != $newStatusId) {
+                \Illuminate\Support\Facades\Log::warning("CRITERION SAVING: status_id changing", [
+                    'criterion_id' => $model->id,
+                    'old' => $oldStatusId,
+                    'new' => $newStatusId,
+                    'trace' => collect(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 15))
+                        ->map(fn($t) => ($t['class'] ?? '') . '@' . ($t['function'] ?? '') . ':' . ($t['line'] ?? ''))
+                        ->filter()
+                        ->values()
+                        ->toArray(),
+                ]);
+            }
+
+            // ALERT if resetting to 1
+            if ($newStatusId == 1 && $oldStatusId > 1) {
+                \Illuminate\Support\Facades\Log::error("!!! CRITERION RESET TO 1 !!!", [
+                    'criterion_id' => $model->id,
+                    'application_id' => $model->application_id,
+                    'old_status_id' => $oldStatusId,
+                ]);
+            }
+        });
+    }
+
     protected $casts = [
         'application_id' => 'int',
         'category_id' => 'int',

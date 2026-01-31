@@ -43,7 +43,10 @@ class LicenceRequirementObserver
      */
     public function updated(LicenceRequirement $licenceRequirement): void
     {
-        $this->syncApplicationCriteria($licenceRequirement);
+        // Only sync if category_id changed
+        if ($licenceRequirement->isDirty('category_id')) {
+            $this->syncApplicationCriteria($licenceRequirement);
+        }
     }
 
     /**
@@ -100,11 +103,13 @@ class LicenceRequirementObserver
     protected function syncCriteriaForApplication(Application $application): void
     {
         // Get all unique category_ids from licence_requirements for this application's license
+        // Cast to integers to ensure consistent comparison
         $requiredCategoryIds = DB::table('licence_requirements')
             ->where('licence_id', $application->license_id)
             ->distinct()
             ->pluck('category_id')
             ->filter() // Remove null values
+            ->map(fn($id) => (int) $id)
             ->toArray();
 
         // Get existing application_criteria for this application
@@ -114,7 +119,8 @@ class LicenceRequirementObserver
             ->get()
             ->keyBy('category_id');
 
-        $existingCategoryIds = $existingCriteria->keys()->toArray();
+        // Cast to integers for consistent comparison
+        $existingCategoryIds = $existingCriteria->keys()->map(fn($id) => (int) $id)->toArray();
 
         // Find missing category_ids that need to be added
         $missingCategoryIds = array_diff($requiredCategoryIds, $existingCategoryIds);
@@ -134,14 +140,45 @@ class LicenceRequirementObserver
             );
         }
 
-        // Find excess category_ids that need to be removed
+        // Find excess category_ids that need to be removed (integers already)
         $excessCategoryIds = array_diff($existingCategoryIds, $requiredCategoryIds);
 
-        // Delete excess application_criteria
+        // DEBUG: Log sync operation
+        \Illuminate\Support\Facades\Log::info("LicenceRequirementObserver::syncCriteriaForApplication", [
+            'application_id' => $application->id,
+            'requiredCategoryIds' => $requiredCategoryIds,
+            'existingCategoryIds' => $existingCategoryIds,
+            'missingCategoryIds' => $missingCategoryIds,
+            'excessCategoryIds' => $excessCategoryIds,
+        ]);
+
+        // Delete excess application_criteria ONLY if they haven't started processing
+        // Don't delete criteria that have status_id > 1 (already in review process)
         if (! empty($excessCategoryIds)) {
-            ApplicationCriterion::where('application_id', $application->id)
+            $deletedCount = ApplicationCriterion::where('application_id', $application->id)
                 ->whereIn('category_id', $excessCategoryIds)
+                ->where('status_id', 1) // Only delete if still in initial state
                 ->delete();
+
+            if ($deletedCount > 0) {
+                \Illuminate\Support\Facades\Log::warning("LicenceRequirementObserver: Deleted {$deletedCount} criteria", [
+                    'application_id' => $application->id,
+                    'category_ids' => $excessCategoryIds,
+                ]);
+            }
+
+            // Log warning if there are criteria that couldn't be deleted
+            $remainingCount = ApplicationCriterion::where('application_id', $application->id)
+                ->whereIn('category_id', $excessCategoryIds)
+                ->where('status_id', '>', 1)
+                ->count();
+
+            if ($remainingCount > 0) {
+                \Illuminate\Support\Facades\Log::warning("LicenceRequirementObserver: {$remainingCount} criteria not deleted (already in review)", [
+                    'application_id' => $application->id,
+                    'category_ids' => $excessCategoryIds,
+                ]);
+            }
         }
     }
 }

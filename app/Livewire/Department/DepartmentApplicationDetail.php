@@ -718,6 +718,13 @@ class DepartmentApplicationDetail extends Component
         try {
             DB::beginTransaction();
 
+            // DEBUG: Log before any changes
+            Log::info("submitFirstCheck START", [
+                'criterion_id' => $criterion->id,
+                'status_id_before' => $criterion->status_id,
+                'decision' => $decision,
+            ]);
+
             $user = Auth::user();
             $userName = trim(($user->last_name ?? '').' '.($user->first_name ?? '').' '.($user->patronymic ?? ''));
 
@@ -776,6 +783,14 @@ class DepartmentApplicationDetail extends Component
 
             $criterion->update($updateData);
 
+            // DEBUG: Check after update
+            $criterion->refresh();
+            Log::info("submitFirstCheck AFTER UPDATE", [
+                'criterion_id' => $criterion->id,
+                'status_id_after' => $criterion->status_id,
+                'expected' => $newStatus->id,
+            ]);
+
             // Log to application_steps
             ApplicationStep::create([
                 'application_id' => $this->application->id,
@@ -799,6 +814,13 @@ class DepartmentApplicationDetail extends Component
             }
 
             DB::commit();
+
+            // DEBUG: Check after commit
+            $criterion->refresh();
+            Log::info("submitFirstCheck AFTER COMMIT", [
+                'criterion_id' => $criterion->id,
+                'status_id_final' => $criterion->status_id,
+            ]);
 
             toastr()->success('Первичная проверка завершена.');
             $this->reviewDecisions = [];

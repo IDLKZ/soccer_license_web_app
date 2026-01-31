@@ -58,6 +58,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/application-statuses', ApplicationStatusManagement::class)->name('application-statuses');
         Route::get('/applications', ApplicationFullManagement::class)->name('applications');
         Route::get('/application/{application_id}', ApplicationDetailedManagement::class)->name('application-detailed');
+        Route::get('/criteria-monitoring', \App\Livewire\Admin\CriteriaMonitoring::class)->name('criteria-monitoring');
     });
 
     // Club routes
