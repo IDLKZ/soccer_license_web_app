@@ -57,6 +57,7 @@ class DepartmentApplicationDetail extends Component
     public $licenseCertificates = []; // License certificates for approved applications
 
     public $downloadingReports = []; // Track which reports are being downloaded
+
     public $deletingReports = []; // Track which reports are being deleted
 
     // Permissions
@@ -82,6 +83,21 @@ class DepartmentApplicationDetail extends Component
     public $currentDocumentTitle = '';
 
     public $rejectComment = '';
+
+    public $acceptComment = '';
+
+    // Group Accept/Reject modals
+    public $showAcceptGroupModal = false;
+
+    public $showRejectGroupModal = false;
+
+    public $currentGroupId = null;
+
+    public $currentGroupTitle = '';
+
+    public $acceptGroupComment = '';
+
+    public $rejectGroupComment = '';
 
     // Final decision
     public $showFinalDecisionModal = false;
@@ -141,8 +157,11 @@ class DepartmentApplicationDetail extends Component
     public $reportCriterionId = null;
 
     public $selectedDocumentIds = [];
+
     public array $openGroups = [];
+
     public $availableDocumentsForReport = [];
+
     public $groupedDocuments = [];
 
     // Edit Solution Modal
@@ -457,6 +476,7 @@ class DepartmentApplicationDetail extends Component
     {
         $this->activeTab = $categoryId;
         $this->reviewDecisions = []; // Reset decisions when changing tabs
+        $this->dispatch('decisions-cleared');
         $this->criterionComment = '';
         $this->loadLicenceRequirements();
     }
@@ -505,13 +525,20 @@ class DepartmentApplicationDetail extends Component
         $this->showAcceptModal = false;
         $this->currentDocumentId = null;
         $this->currentDocumentTitle = '';
+        $this->acceptComment = '';
     }
 
     // Confirm accept
     public function confirmAccept()
     {
         if ($this->currentDocumentId) {
-            $this->setReviewDecision($this->currentDocumentId, true, '');
+            $comment = $this->acceptComment ?? '';
+            $this->setReviewDecision($this->currentDocumentId, true, $comment);
+            $this->dispatch('decisionUpdated', [
+                'documentId' => $this->currentDocumentId,
+                'decision' => true,
+                'comment' => $comment,
+            ]);
         }
         $this->closeAcceptModal();
     }
@@ -562,6 +589,11 @@ class DepartmentApplicationDetail extends Component
         // Set review decision (accept) for all documents
         foreach ($documentsToAccept as $doc) {
             $this->setReviewDecision($doc->id, true, '');
+            $this->dispatch('decisionUpdated', [
+                'documentId' => $doc->id,
+                'decision' => true,
+                'comment' => '',
+            ]);
         }
 
         toastr()->success('Все документы ('.$documentsToAccept->count().') отмечены как принятые.');
@@ -596,8 +628,158 @@ class DepartmentApplicationDetail extends Component
 
         if ($this->currentDocumentId) {
             $this->setReviewDecision($this->currentDocumentId, false, $this->rejectComment);
+            $this->dispatch('decisionUpdated', [
+                'documentId' => $this->currentDocumentId,
+                'decision' => false,
+                'comment' => $this->rejectComment,
+            ]);
         }
         $this->closeRejectModal();
+    }
+
+    // Open accept group modal
+    public function openAcceptGroupModal($documentId, $groupTitle)
+    {
+        $this->currentGroupId = $documentId;
+        $this->currentGroupTitle = $groupTitle;
+        $this->acceptGroupComment = '';
+        $this->showAcceptGroupModal = true;
+    }
+
+    // Close accept group modal
+    public function closeAcceptGroupModal()
+    {
+        $this->showAcceptGroupModal = false;
+        $this->currentGroupId = null;
+        $this->currentGroupTitle = '';
+        $this->acceptGroupComment = '';
+    }
+
+    // Confirm accept group
+    public function confirmAcceptGroup()
+    {
+        if (! $this->currentGroupId) {
+            return;
+        }
+
+        $reviewableDocs = $this->getReviewableDocsForGroup($this->currentGroupId);
+        $comment = $this->acceptGroupComment ?? '';
+
+        foreach ($reviewableDocs as $doc) {
+            $docObj = is_array($doc) ? (object) $doc : $doc;
+            $this->setReviewDecision($docObj->id, true, $comment);
+            $this->dispatch('decisionUpdated', [
+                'documentId' => $docObj->id,
+                'decision' => true,
+                'comment' => $comment,
+            ]);
+        }
+
+        $count = count($reviewableDocs);
+        if ($count > 0) {
+            toastr()->success("Все документы ({$count}) в группе отмечены как принятые.");
+        }
+
+        $this->closeAcceptGroupModal();
+    }
+
+    // Open reject group modal
+    public function openRejectGroupModal($documentId, $groupTitle)
+    {
+        $this->currentGroupId = $documentId;
+        $this->currentGroupTitle = $groupTitle;
+        $this->rejectGroupComment = '';
+        $this->showRejectGroupModal = true;
+    }
+
+    // Close reject group modal
+    public function closeRejectGroupModal()
+    {
+        $this->showRejectGroupModal = false;
+        $this->currentGroupId = null;
+        $this->currentGroupTitle = '';
+        $this->rejectGroupComment = '';
+    }
+
+    // Confirm reject group
+    public function confirmRejectGroup()
+    {
+        if (! $this->rejectGroupComment) {
+            toastr()->error('Необходимо указать причину отклонения.');
+
+            return;
+        }
+
+        if (! $this->currentGroupId) {
+            return;
+        }
+
+        $reviewableDocs = $this->getReviewableDocsForGroup($this->currentGroupId);
+
+        foreach ($reviewableDocs as $doc) {
+            $docObj = is_array($doc) ? (object) $doc : $doc;
+            $this->setReviewDecision($docObj->id, false, $this->rejectGroupComment);
+            $this->dispatch('decisionUpdated', [
+                'documentId' => $docObj->id,
+                'decision' => false,
+                'comment' => $this->rejectGroupComment,
+            ]);
+        }
+
+        $count = count($reviewableDocs);
+        if ($count > 0) {
+            toastr()->success("Все документы ({$count}) в группе отмечены как отклоненные.");
+        }
+
+        $this->closeRejectGroupModal();
+    }
+
+    // Get reviewable documents for a specific group (by document type ID)
+    private function getReviewableDocsForGroup($documentId)
+    {
+        $criterion = $this->getCurrentCriterion();
+        if (! $criterion) {
+            return [];
+        }
+
+        $statusValue = $criterion->application_status->value ?? null;
+        $uploadedDocs = $this->getUploadedDocumentsForRequirement($documentId);
+
+        return collect($uploadedDocs)->filter(function ($appDoc) use ($statusValue) {
+            $doc = is_array($appDoc) ? (object) $appDoc : $appDoc;
+
+            if ($statusValue === 'awaiting-first-check' &&
+                $doc->is_first_passed === null &&
+                $doc->is_industry_passed === null &&
+                $doc->is_final_passed === null) {
+                return true;
+            } elseif ($statusValue === 'awaiting-industry-check' &&
+                      $doc->is_first_passed === true &&
+                      $doc->is_industry_passed === null &&
+                      $doc->is_final_passed === null) {
+                return true;
+            } elseif ($statusValue === 'awaiting-control-check' &&
+                      $doc->is_first_passed === true &&
+                      $doc->is_industry_passed === true &&
+                      $doc->is_final_passed === null) {
+                return true;
+            }
+
+            return false;
+        })->all();
+    }
+
+    // Get current criterion based on active tab
+    private function getCurrentCriterion()
+    {
+        if (! $this->application || ! $this->activeTab) {
+            return null;
+        }
+
+        return $this->application->application_criteria()
+            ->with('application_status')
+            ->where('category_id', $this->activeTab)
+            ->first();
     }
 
     // Check if all documents in current category have been reviewed
@@ -719,7 +901,7 @@ class DepartmentApplicationDetail extends Component
             DB::beginTransaction();
 
             // DEBUG: Log before any changes
-            Log::info("submitFirstCheck START", [
+            Log::info('submitFirstCheck START', [
                 'criterion_id' => $criterion->id,
                 'status_id_before' => $criterion->status_id,
                 'decision' => $decision,
@@ -785,7 +967,7 @@ class DepartmentApplicationDetail extends Component
 
             // DEBUG: Check after update
             $criterion->refresh();
-            Log::info("submitFirstCheck AFTER UPDATE", [
+            Log::info('submitFirstCheck AFTER UPDATE', [
                 'criterion_id' => $criterion->id,
                 'status_id_after' => $criterion->status_id,
                 'expected' => $newStatus->id,
@@ -817,13 +999,14 @@ class DepartmentApplicationDetail extends Component
 
             // DEBUG: Check after commit
             $criterion->refresh();
-            Log::info("submitFirstCheck AFTER COMMIT", [
+            Log::info('submitFirstCheck AFTER COMMIT', [
                 'criterion_id' => $criterion->id,
                 'status_id_final' => $criterion->status_id,
             ]);
 
             toastr()->success('Первичная проверка завершена.');
             $this->reviewDecisions = [];
+            $this->dispatch('decisions-cleared');
             $this->criterionComment = '';
             $this->loadApplication();
             $this->loadTabsAndRequirements();
@@ -954,6 +1137,7 @@ class DepartmentApplicationDetail extends Component
 
             toastr()->success('Отраслевая проверка завершена.');
             $this->reviewDecisions = [];
+            $this->dispatch('decisions-cleared');
             $this->criterionComment = '';
             $this->loadApplication();
             $this->loadTabsAndRequirements();
@@ -1085,6 +1269,7 @@ class DepartmentApplicationDetail extends Component
 
             toastr()->success('Контрольная проверка завершена.');
             $this->reviewDecisions = [];
+            $this->dispatch('decisions-cleared');
             $this->criterionComment = '';
             $this->loadApplication();
             $this->loadTabsAndRequirements();
@@ -2172,22 +2357,22 @@ class DepartmentApplicationDetail extends Component
         }
 
         // Check if criterion is at awaiting-control-check or awaiting-final-decision status
-//        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE && $criterion->application_status->value !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
-//            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки или финального решения.');
-//
-//            return;
-//        }
+        //        if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE && $criterion->application_status->value !== ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE) {
+        //            toastr()->error('Отчет можно сгенерировать только для критериев на этапе контрольной проверки или финального решения.');
+        //
+        //            return;
+        //        }
 
         // Check if report already exists for this criterion
-//        $existingReport = ApplicationReport::where('application_id', $criterion->application_id)
-//            ->where('criteria_id', $criterionId)
-//            ->first();
-//
-//        if ($existingReport) {
-//            toastr()->error('Отчет для этого критерия уже существует.');
-//
-//            return;
-//        }
+        //        $existingReport = ApplicationReport::where('application_id', $criterion->application_id)
+        //            ->where('criteria_id', $criterionId)
+        //            ->first();
+        //
+        //        if ($existingReport) {
+        //            toastr()->error('Отчет для этого критерия уже существует.');
+        //
+        //            return;
+        //        }
 
         $this->reportCriterionId = $criterionId;
         $this->selectedDocumentIds = [];
@@ -2223,6 +2408,7 @@ class DepartmentApplicationDetail extends Component
             $this->selectedDocumentIds = array_values(array_diff($this->selectedDocumentIds, $ids));
         }
     }
+
     /**
      * Close generate report modal
      */
@@ -2254,7 +2440,7 @@ class DepartmentApplicationDetail extends Component
         // Get awaiting-control-check and awaiting-final-decision status IDs
         $allowedStatusIds = ApplicationStatus::whereIn('value', [
             ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE,
-            ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE
+            ApplicationStatusConstants::AWAITING_FINAL_DECISION_VALUE,
         ])->pluck('id')->toArray();
 
         // Get ALL criteria for this application
@@ -2387,8 +2573,9 @@ class DepartmentApplicationDetail extends Component
     {
         $solution = ApplicationSolution::find($solutionId);
 
-        if (!$solution) {
+        if (! $solution) {
             toastr()->error('Решение не найдено.');
+
             return;
         }
 
@@ -2422,11 +2609,13 @@ class DepartmentApplicationDetail extends Component
         // Validate new criteria fields
         if (empty($this->newCriteriaTitle)) {
             toastr()->error('Выберите критерий.');
+
             return;
         }
 
         if (empty($this->newCriteriaDeadline)) {
             toastr()->error('Укажите срок.');
+
             return;
         }
 
@@ -2434,6 +2623,7 @@ class DepartmentApplicationDetail extends Component
         foreach ($this->listCriteria as $item) {
             if ($item['title'] === $this->newCriteriaTitle) {
                 toastr()->error('Этот критерий уже добавлен в список.');
+
                 return;
             }
         }
@@ -2466,8 +2656,9 @@ class DepartmentApplicationDetail extends Component
     {
         $solution = ApplicationSolution::find($this->editingSolutionId);
 
-        if (!$solution) {
+        if (! $solution) {
             toastr()->error('Решение не найдено.');
+
             return;
         }
 
@@ -2514,8 +2705,9 @@ class DepartmentApplicationDetail extends Component
     {
         $certificate = LicenseCertificate::find($certificateId);
 
-        if (!$certificate) {
+        if (! $certificate) {
             toastr()->error('Сертификат не найден.');
+
             return;
         }
 
@@ -2530,8 +2722,9 @@ class DepartmentApplicationDetail extends Component
     {
         $certificate = LicenseCertificate::find($this->editingCertificateId);
 
-        if (!$certificate) {
+        if (! $certificate) {
             toastr()->error('Сертификат не найден.');
+
             return;
         }
 
@@ -2569,7 +2762,7 @@ class DepartmentApplicationDetail extends Component
 
     public function isGroupOpen($groupKey): bool
     {
-        return in_array((string)$groupKey, $this->openGroups, true);
+        return in_array((string) $groupKey, $this->openGroups, true);
     }
 
     public function render()

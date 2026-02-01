@@ -1,4 +1,56 @@
-<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8"
+     x-data="{
+         applicationId: @js($application?->id ?? null),
+         localStorageKey: 'review_decisions_' + (@js($application?->id ?? 0)),
+
+         init() {
+             // Load decisions from LocalStorage on init
+             this.loadFromLocalStorage();
+
+             // Listen for Livewire decision updates
+             Livewire.on('decisionUpdated', (data) => {
+                 this.saveToLocalStorage(data[0].documentId, data[0].decision, data[0].comment);
+             });
+         },
+
+         loadFromLocalStorage() {
+             const stored = localStorage.getItem(this.localStorageKey);
+             if (stored) {
+                 try {
+                     const decisions = JSON.parse(stored);
+                     // Sync to Livewire
+                     Object.keys(decisions).forEach(docId => {
+                         $wire.setReviewDecision(
+                             parseInt(docId),
+                             decisions[docId].decision,
+                             decisions[docId].comment || ''
+                         );
+                     });
+                 } catch (e) {
+                     console.error('Error loading decisions from LocalStorage:', e);
+                 }
+             }
+         },
+
+         saveToLocalStorage(documentId, decision, comment) {
+             const stored = localStorage.getItem(this.localStorageKey);
+             let decisions = {};
+             if (stored) {
+                 try {
+                     decisions = JSON.parse(stored);
+                 } catch (e) {
+                     decisions = {};
+                 }
+             }
+             decisions[documentId] = { decision: decision, comment: comment || '' };
+             localStorage.setItem(this.localStorageKey, JSON.stringify(decisions));
+         },
+
+         clearLocalStorage() {
+             localStorage.removeItem(this.localStorageKey);
+         }
+     }"
+     x-on:decisions-cleared.window="clearLocalStorage()">
     <!-- Flash Messages -->
     @if (session()->has('success'))
         <div class="mb-6 bg-green-100 border border-green-400 text-green-700 dark:bg-green-900 dark:border-green-600 dark:text-green-200 px-4 py-3 rounded-lg relative">
@@ -646,6 +698,52 @@
                                                     @endif
                                                 </div>
                                             </div>
+
+                                            {{-- Group action buttons (Accept All / Reject All for this document group) --}}
+                                            @php
+                                                $groupStatusValue = $criterion->application_status->value ?? null;
+                                                $canReviewGroup = $this->canReviewCriterion($criterion);
+                                                $reviewableDocsInGroup = collect($uploadedDocs)->filter(function($appDoc) use ($groupStatusValue) {
+                                                    $d = is_array($appDoc) ? (object)$appDoc : $appDoc;
+                                                    if ($groupStatusValue === 'awaiting-first-check' &&
+                                                        $d->is_first_passed === null &&
+                                                        $d->is_industry_passed === null &&
+                                                        $d->is_final_passed === null) {
+                                                        return true;
+                                                    } elseif ($groupStatusValue === 'awaiting-industry-check' &&
+                                                              $d->is_first_passed === true &&
+                                                              $d->is_industry_passed === null &&
+                                                              $d->is_final_passed === null) {
+                                                        return true;
+                                                    } elseif ($groupStatusValue === 'awaiting-control-check' &&
+                                                              $d->is_first_passed === true &&
+                                                              $d->is_industry_passed === true &&
+                                                              $d->is_final_passed === null) {
+                                                        return true;
+                                                    }
+                                                    return false;
+                                                });
+                                                $hasReviewableDocs = $canReviewGroup && $reviewableDocsInGroup->count() > 0;
+                                            @endphp
+
+                                            @if($hasReviewableDocs)
+                                                <div class="flex items-center space-x-2">
+                                                    <button
+                                                        wire:click="openAcceptGroupModal({{ $documentId }}, '{{ addslashes($document->title_ru ?? 'Документы') }}')"
+                                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs inline-flex items-center"
+                                                        title="Принять все документы в группе">
+                                                        <i class="fas fa-check-double mr-1"></i>
+                                                        Принять все ({{ $reviewableDocsInGroup->count() }})
+                                                    </button>
+                                                    <button
+                                                        wire:click="openRejectGroupModal({{ $documentId }}, '{{ addslashes($document->title_ru ?? 'Документы') }}')"
+                                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded text-xs inline-flex items-center"
+                                                        title="Отклонить все документы в группе">
+                                                        <i class="fas fa-times-circle mr-1"></i>
+                                                        Отклонить все
+                                                    </button>
+                                                </div>
+                                            @endif
                                         </div>
 
                                         <!-- Uploaded Documents List with Review Buttons -->
@@ -780,18 +878,24 @@
 
                                                                 <!-- Review buttons (if can review) -->
                                                                 @if($canReviewThisDoc)
-                                                                    <button
-                                                                        wire:click="openAcceptModal({{ $doc->id }}, '{{ addslashes($doc->title ?? 'Документ') }}')"
-                                                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs inline-flex items-center"
-                                                                        title="Принять">
-                                                                        <i class="fas fa-check"></i>
-                                                                    </button>
-                                                                    <button
-                                                                        wire:click="openRejectModal({{ $doc->id }}, '{{ addslashes($doc->title ?? 'Документ') }}')"
-                                                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs inline-flex items-center"
-                                                                        title="Отклонить">
-                                                                        <i class="fas fa-times"></i>
-                                                                    </button>
+                                                                    {{-- Show Accept button only if no decision or decision is reject --}}
+                                                                    @if(!$hasDecision || ($hasDecision && !$decision['decision']))
+                                                                        <button
+                                                                            wire:click="openAcceptModal({{ $doc->id }}, '{{ addslashes($doc->title ?? 'Документ') }}')"
+                                                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs inline-flex items-center"
+                                                                            title="Принять">
+                                                                            <i class="fas fa-check"></i>
+                                                                        </button>
+                                                                    @endif
+                                                                    {{-- Show Reject button only if no decision or decision is accept --}}
+                                                                    @if(!$hasDecision || ($hasDecision && $decision['decision']))
+                                                                        <button
+                                                                            wire:click="openRejectModal({{ $doc->id }}, '{{ addslashes($doc->title ?? 'Документ') }}')"
+                                                                            class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs inline-flex items-center"
+                                                                            title="Отклонить">
+                                                                            <i class="fas fa-times"></i>
+                                                                        </button>
+                                                                    @endif
                                                                 @endif
                                                             </div>
                                                         </div>
@@ -1422,10 +1526,21 @@
                         Принять документ?
                     </h3>
 
-                    <p class="text-gray-600 dark:text-gray-400 text-center mb-6">
+                    <p class="text-gray-600 dark:text-gray-400 text-center mb-4">
                         Вы уверены, что хотите <span class="font-semibold text-green-600 dark:text-green-400">принять</span> документ<br>
                         <span class="font-medium text-gray-900 dark:text-gray-100">"{{ $currentDocumentTitle }}"</span>?
                     </p>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            Комментарий <span class="text-gray-400 text-xs">(необязательно)</span>
+                        </label>
+                        <textarea
+                            wire:model="acceptComment"
+                            rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            placeholder="Введите комментарий (необязательно)..."></textarea>
+                    </div>
 
                     <div class="flex items-center space-x-3">
                         <button
@@ -1491,6 +1606,108 @@
                             class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center">
                             <i class="fas fa-times mr-2"></i>
                             Отклонить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Accept Group Modal -->
+    @if($showAcceptGroupModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeAcceptGroupModal">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-all">
+                <div class="p-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="bg-green-100 dark:bg-green-900 rounded-full p-4">
+                            <i class="fas fa-check-double text-green-600 dark:text-green-400 text-4xl"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center mb-2">
+                        Принять все документы?
+                    </h3>
+
+                    <p class="text-gray-600 dark:text-gray-400 text-center mb-4">
+                        Вы уверены, что хотите <span class="font-semibold text-green-600 dark:text-green-400">принять все</span> документы в группе<br>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">"{{ $currentGroupTitle }}"</span>?
+                    </p>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            Комментарий <span class="text-gray-400 text-xs">(необязательно)</span>
+                        </label>
+                        <textarea
+                            wire:model="acceptGroupComment"
+                            rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            placeholder="Введите комментарий для всех документов (необязательно)..."></textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button
+                            wire:click="closeAcceptGroupModal"
+                            class="flex-1 px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium border border-gray-300 dark:border-gray-600 rounded-lg transition-colors">
+                            Отмена
+                        </button>
+                        <button
+                            wire:click="confirmAcceptGroup"
+                            class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center">
+                            <i class="fas fa-check-double mr-2"></i>
+                            Принять все
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Reject Group Modal -->
+    @if($showRejectGroupModal)
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" wire:click.self="closeRejectGroupModal">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-all">
+                <div class="p-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="bg-red-100 dark:bg-red-900 rounded-full p-4">
+                            <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-4xl"></i>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center mb-2">
+                        Отклонить все документы?
+                    </h3>
+
+                    <p class="text-gray-600 dark:text-gray-400 text-center mb-4">
+                        Укажите причину отклонения всех документов в группе<br>
+                        <span class="font-medium text-gray-900 dark:text-gray-100">"{{ $currentGroupTitle }}"</span>
+                    </p>
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            Причина отклонения <span class="text-red-500">*</span>
+                        </label>
+                        <textarea
+                            wire:model="rejectGroupComment"
+                            rows="4"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            placeholder="Введите причину отклонения всех документов..."
+                            autofocus></textarea>
+                        @error('rejectGroupComment')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button
+                            wire:click="closeRejectGroupModal"
+                            class="flex-1 px-6 py-3 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium border border-gray-300 dark:border-gray-600 rounded-lg transition-colors">
+                            Отмена
+                        </button>
+                        <button
+                            wire:click="confirmRejectGroup"
+                            class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium rounded-lg transition-colors inline-flex items-center justify-center">
+                            <i class="fas fa-times mr-2"></i>
+                            Отклонить все
                         </button>
                     </div>
                 </div>
