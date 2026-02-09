@@ -304,7 +304,7 @@
             @if($applicationFinalDecision && $this->canApplyApplicationFinalDecision())
                 <button
                     wire:click="changeApplicationStatus"
-                    wire:confirm="Вы уверены, что хотите изменить статус заявки?"
+                    wire:confirm="Вы уверены, что хотите изменить статус заявки?5
                     class="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-medium py-3 px-6 rounded-lg transition-colors inline-flex items-center">
                     <i class="fas fa-check-circle mr-2"></i>
                     Применить решение
@@ -328,16 +328,17 @@
                 <nav class="flex -mb-px overflow-x-auto scrollbar-thin scrollbar-thumb-indigo-600 dark:scrollbar-thumb-indigo-700 scrollbar-track-indigo-100 dark:scrollbar-track-indigo-900 hover:scrollbar-thumb-indigo-500 dark:hover:scrollbar-thumb-indigo-600">
                     @foreach($criteriaTabs as $tab)
                         <button
-                            wire:click="setActiveTab('{{ $tab['category']->id }}')"
+                            wire:key="criteria-tab-{{ $tab['category']->id }}"
+                            wire:click="setActiveTab({{ $tab['category']->id }})"
                             class="{{ $activeTab === $tab['category']->id ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300' }}
                              flex flex-col items-start px-6 py-4 border-b-2 font-medium text-sm transition-colors whitespace-nowrap"
                         >
                             <div class="flex items-center">
                                 <i class="fas fa-folder mr-2"></i>
                                 {{ $tab['title'] }}
-                                <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">
-                                    {{ count($tab['criteria']) }}
-                                </span>
+{{--                                <span class="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full text-xs">--}}
+{{--                                    {{ count($tab['criteria']) }}--}}
+{{--                                </span>--}}
                             </div>
                             @if($tab['status'])
                                 <span class="mt-2 {{ $this->getCriterionStatusColorByValue($tab['status']->value) }} px-2 py-1 rounded-md text-xs font-medium">
@@ -935,9 +936,27 @@
                                     <i class="fas fa-clipboard-list text-blue-600 mr-2"></i>
                                     Первичные отчеты по критерию
                                 </h4>
-                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium">
-                                {{ count($initialReportsByCriteria[$criterion->id]) }} {{ count($initialReportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($initialReportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}
-                            </span>
+{{--                                <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium">--}}
+{{--                                    {{ count($initialReportsByCriteria[$criterion->id]) }} {{ count($initialReportsByCriteria[$criterion->id]) === 1 ? 'отчет' : (count($initialReportsByCriteria[$criterion->id]) <= 4 ? 'отчета' : 'отчетов') }}--}}
+{{--                                </span>--}}
+                                @if(count($initialReportsByCriteria[$criterion->id]) == 0 && $criterion->application_status && ($criterion->application_status->value === 'awaiting-industry-check' || $criterion->application_status->value === 'industry-check-revision' || $criterion->application_status->value === 'awaiting-control-check' || $criterion->application_status->value === 'control-check-revision'))
+                                    <button
+                                        wire:click="generateInitialReport({{ $criterion->id }})"
+                                        wire:loading.attr="disabled"
+                                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors">
+
+                                        <span wire:loading wire:target="generateInitialReport({{ $criterion->id }})">
+                                            <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                            Генерация...
+                                        </span>
+                                        <span wire:loading.remove wire:target="generateInitialReport({{ $criterion->id }})">
+                                            <i class="fas fa-plus mr-2"></i>
+                                            Генерировать отчет
+                                        </span>
+
+                                    </button>
+                                @endif
+
                             </div>
 
                             <div class="space-y-4">
@@ -951,8 +970,8 @@
                                                         Первичный отчет #{{ $report->id }}
                                                     </h4>
                                                     <span class="ml-3 text-xs text-gray-500 dark:text-gray-400">
-                                                    от {{ $report->created_at->format('d.m.Y H:i') }}
-                                                </span>
+                                                        от {{ $report->created_at->format('d.m.Y H:i') }}
+                                                    </span>
                                                 </div>
 
                                                 @if($report->application_criterion)
@@ -976,14 +995,14 @@
                                                     wire:click="downloadInitialReport({{ $report->id }})"
                                                     wire:loading.attr="disabled"
                                                     class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-75 disabled:cursor-not-allowed">
-                                                <span wire:loading wire:target="downloadInitialReport({{ $report->id }})">
-                                                    <i class="fas fa-spinner fa-spin mr-1.5"></i>
-                                                    Генерация...
-                                                </span>
+                                                    <span wire:loading wire:target="downloadInitialReport({{ $report->id }})">
+                                                        <i class="fas fa-spinner fa-spin mr-1.5"></i>
+                                                        Генерация...
+                                                    </span>
                                                     <span wire:loading.remove wire:target="downloadInitialReport({{ $report->id }})">
-                                                    <i class="fas fa-download mr-1.5"></i>
-                                                Скачать
-                                                </span>
+                                                        <i class="fas fa-download mr-1.5"></i>
+                                                        Скачать
+                                                    </span>
                                                 </button>
                                             </div>
                                         </div>

@@ -1021,15 +1021,32 @@ class DepartmentApplicationDetail extends Component
     // Submit Industry Check (2.2)
     public function submitIndustryCheck($criterionId, $decision)
     {
+        Log::info('IndustryCheck: start submitIndustryCheck', [
+            'criterion_id' => $criterionId,
+            'decision' => $decision,
+            'application_id' => $this->application->id ?? null,
+            'user_id' => Auth::id(),
+        ]);
+
         $criterion = ApplicationCriterion::with('application_status')->find($criterionId);
 
         if (! $criterion || ! $this->canReviewCriterion($criterion)) {
+            Log::warning('IndustryCheck: access denied', [
+                'criterion_found' => (bool) $criterion,
+                'user_id' => Auth::id(),
+            ]);
             toastr()->error('У вас нет прав для проверки этого критерия.');
 
             return;
         }
-
+        Log::info('IndustryCheck: criterion loaded', [
+            'criterion_id' => $criterion->id,
+            'status_value' => $criterion->application_status->value ?? null,
+        ]);
         if ($criterion->application_status->value !== ApplicationStatusConstants::AWAITING_INDUSTRY_CHECK_VALUE) {
+            Log::warning('IndustryCheck: invalid criterion status', [
+                'current_status' => $criterion->application_status->value,
+            ]);
             toastr()->error('Критерий не находится на этапе отраслевой проверки.');
 
             return;
@@ -1038,16 +1055,24 @@ class DepartmentApplicationDetail extends Component
         $documents = ApplicationDocument::where('application_id', $this->application->id)
             ->where('category_id', $criterion->category_id)
             ->get();
-
+        Log::info('IndustryCheck: documents loaded', [
+            'total_documents' => $documents->count(),
+        ]);
         // Validate that all documents with is_first_passed=true and is_industry_passed=null have been reviewed
         $documentsToReview = $documents->filter(function ($doc) {
             return $doc->is_first_passed === true &&
                    $doc->is_industry_passed === null &&
                    $doc->is_final_passed === null;
         });
-
+        Log::info('IndustryCheck: documents to review filtered', [
+            'documents_to_review_count' => $documentsToReview->count(),
+            'document_ids' => $documentsToReview->pluck('id')->values(),
+        ]);
         foreach ($documentsToReview as $doc) {
             if (! isset($this->reviewDecisions[$doc->id])) {
+                Log::warning('IndustryCheck: missing decision for document', [
+                    'document_id' => $doc->id,
+                ]);
                 toastr()->error('Необходимо принять решение по всем новым документам.');
 
                 return;
@@ -1056,7 +1081,7 @@ class DepartmentApplicationDetail extends Component
 
         try {
             DB::beginTransaction();
-
+            Log::info('IndustryCheck: DB transaction started');
             $user = Auth::user();
             $userName = trim(($user->last_name ?? '').' '.($user->first_name ?? '').' '.($user->patronymic ?? ''));
 
@@ -1066,7 +1091,11 @@ class DepartmentApplicationDetail extends Component
             foreach ($documentsToReview as $doc) {
                 if (isset($this->reviewDecisions[$doc->id])) {
                     $reviewDecision = $this->reviewDecisions[$doc->id];
-
+                    Log::info('IndustryCheck: updating document', [
+                        'document_id' => $doc->id,
+                        'decision' => $reviewDecision['decision'],
+                        'comment' => $reviewDecision['comment'] ?? null,
+                    ]);
                     $doc->update([
                         'is_industry_passed' => $reviewDecision['decision'],
                         'industry_comment' => $reviewDecision['comment'] ?? null,
@@ -1084,21 +1113,29 @@ class DepartmentApplicationDetail extends Component
             $previouslyFailed = $documents->filter(function ($doc) {
                 return $doc->is_industry_passed === false;
             });
-
+            Log::info('IndustryCheck: previously failed documents check', [
+                'failed_count' => $previouslyFailed->count(),
+                'failed_ids' => $previouslyFailed->pluck('id')->values(),
+            ]);
             if ($previouslyFailed->count() > 0) {
                 $allPassed = false;
             }
 
             if ($decision === 'revision') {
-                $newStatus = ApplicationStatus::where('value', ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE)->first();
+                $newStatusValue = ApplicationStatusConstants::INDUSTRY_CHECK_REVISION_VALUE;
                 $passed = false;
-            } elseif ($decision === 'approve') {
-                $newStatus = ApplicationStatus::where('value', ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE)->first();
-                $passed = $allPassed;
             } else {
-                $newStatus = ApplicationStatus::where('value', ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE)->first();
+                $newStatusValue = ApplicationStatusConstants::AWAITING_CONTROL_CHECK_VALUE;
                 $passed = $allPassed;
             }
+
+            $newStatus = ApplicationStatus::where('value', $newStatusValue)->first();
+
+            Log::info('IndustryCheck: status resolved', [
+                'new_status_value' => $newStatusValue,
+                'new_status_id' => $newStatus->id ?? null,
+                'passed' => $passed,
+            ]);
 
             // Update criterion - set is_first_passed and is_industry_passed = true when approve action
             $updateData = [
@@ -1111,7 +1148,9 @@ class DepartmentApplicationDetail extends Component
             ];
 
             $criterion->update($updateData);
-
+            Log::info('IndustryCheck: criterion updated', [
+                'criterion_id' => $criterion->id,
+            ]);
             ApplicationStep::create([
                 'application_id' => $this->application->id,
                 'application_criteria_id' => $criterion->id,
@@ -1121,7 +1160,7 @@ class DepartmentApplicationDetail extends Component
                 'is_passed' => $passed,
                 'result' => $this->criterionComment,
             ]);
-
+            Log::info('IndustryCheck: application step created');
             // Save deadline if sending for revision and deadline is set
             if ($decision === 'revision' && $this->deadlineEndAt) {
                 ApplicationCriteriaDeadline::create([
@@ -1131,20 +1170,28 @@ class DepartmentApplicationDetail extends Component
                     'deadline_end_at' => $this->deadlineEndAt,
                     'status_id' => $newStatus->id,
                 ]);
+
+                Log::info('IndustryCheck: deadline created', [
+                    'deadline_start' => $this->deadlineStartAt,
+                    'deadline_end' => $this->deadlineEndAt,
+                ]);
             }
 
             DB::commit();
-
+            Log::info('IndustryCheck: DB transaction committed');
             toastr()->success('Отраслевая проверка завершена.');
             $this->reviewDecisions = [];
             $this->dispatch('decisions-cleared');
             $this->criterionComment = '';
             $this->loadApplication();
             $this->loadTabsAndRequirements();
-
+            Log::info('IndustryCheck: UI state refreshed');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error submitting industry check: '.$e->getMessage());
+            Log::error('IndustryCheck: exception occurred', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             toastr()->error('Ошибка при сохранении проверки.');
         }
     }
@@ -2398,6 +2445,28 @@ class DepartmentApplicationDetail extends Component
         $this->groupedDocuments = collect($this->availableDocumentsForReport)
             ->groupBy('document_id');
         $this->showGenerateReportModal = true;
+    }
+
+    public function generateInitialReport($criterionId): void
+    {
+        $criterion = ApplicationCriterion::find($criterionId);
+        if ($criterion) {
+            $existingReport = ApplicationInitialReport::where('application_id', $criterion->application_id)
+                ->where('criteria_id', $criterionId)
+                ->first();
+
+            if (! $existingReport) {
+                ApplicationInitialReport::create([
+                    'application_id' => $criterion->application_id,
+                    'criteria_id' => $criterionId,
+                    'status' => 1, // Default status
+                ]);
+                $this->loadInitialReportsForAllCriteria();
+                Log::info("ApplicationInitialReport created for application #{$criterion->application_id} when criterion reached awaiting-industry-check status");
+            } else {
+                Log::info("ApplicationInitialReport already exists for application #{$criterion->application_id}, skipping creation.");
+            }
+        }
     }
 
     public function toggleDocumentGroup(array $ids, bool $checked): void
