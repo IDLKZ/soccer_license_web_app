@@ -67,7 +67,7 @@ class MyApplicationDetail extends Component
     public $viewingDocument = null;
 
     // Upload form data
-    #[Validate('required|file|max:10485760')] // Max 100MB as fallback
+    #[Validate('required|file')] // Max 100MB as fallback
     public $uploadFile = null;
 
     #[Validate('required|string|max:255')]
@@ -116,7 +116,7 @@ class MyApplicationDetail extends Component
             $this->club = $this->application->club;
             $this->user = $this->application->user;
         } catch (\Exception $e) {
-            \Log::error('Error loading application: '.$e->getMessage());
+            Log::error('Error loading application: '.$e->getMessage());
             $this->application = null;
         }
     }
