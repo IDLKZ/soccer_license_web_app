@@ -713,7 +713,7 @@
                                                         return true;
                                                     } elseif ($groupStatusValue === 'awaiting-industry-check' &&
                                                               $d->is_first_passed === true &&
-                                                              $d->is_industry_passed === null &&
+                                                              ($d->is_industry_passed === null || $d->is_industry_passed === false) &&
                                                               $d->is_final_passed === null) {
                                                         return true;
                                                     } elseif ($groupStatusValue === 'awaiting-control-check' &&
@@ -764,7 +764,7 @@
                                                             $canReviewThisDoc = $this->canReviewCriterion($criterion);
                                                         } elseif ($statusValue === 'awaiting-industry-check' &&
                                                                   $doc->is_first_passed === true &&
-                                                                  $doc->is_industry_passed === null &&
+                                                                  ($doc->is_industry_passed === null || $doc->is_industry_passed === false) &&
                                                                   $doc->is_final_passed === null) {
                                                             $canReviewThisDoc = $this->canReviewCriterion($criterion);
                                                         } elseif ($statusValue === 'awaiting-control-check' &&
@@ -773,7 +773,6 @@
                                                                   $doc->is_final_passed === null) {
                                                             $canReviewThisDoc = $this->canReviewCriterion($criterion);
                                                         }
-
                                                         $hasDecision = isset($reviewDecisions[$doc->id]);
                                                         $decision = $hasDecision ? $reviewDecisions[$doc->id] : null;
                                                     @endphp
@@ -878,6 +877,7 @@
                                                                 @endif
 
                                                                 <!-- Review buttons (if can review) -->
+
                                                                 @if($canReviewThisDoc)
                                                                     {{-- Show Accept button only if no decision or decision is reject --}}
                                                                     @if(!$hasDecision || ($hasDecision && !$decision['decision']))

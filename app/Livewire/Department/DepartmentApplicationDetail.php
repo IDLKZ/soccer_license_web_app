@@ -498,7 +498,6 @@ class DepartmentApplicationDetail extends Component
         if (is_string($roleValues)) {
             $roleValues = json_decode($roleValues, true) ?? [];
         }
-
         return $userRole && is_array($roleValues) && in_array($userRole, $roleValues);
     }
 
@@ -755,12 +754,12 @@ class DepartmentApplicationDetail extends Component
                 return true;
             } elseif ($statusValue === 'awaiting-industry-check' &&
                       $doc->is_first_passed === true &&
-                      $doc->is_industry_passed === null &&
+                      ($doc->is_industry_passed === null || $doc->is_industry_passed === false) &&
                       $doc->is_final_passed === null) {
                 return true;
             } elseif ($statusValue === 'awaiting-control-check' &&
                       $doc->is_first_passed === true &&
-                      $doc->is_industry_passed === true &&
+                      $doc->is_industry_passed &&
                       $doc->is_final_passed === null) {
                 return true;
             }
@@ -852,6 +851,7 @@ class DepartmentApplicationDetail extends Component
 
         // Check if any document has been rejected in current review decisions
         foreach ($documents as $doc) {
+
             if (isset($this->reviewDecisions[$doc->id]) && $this->reviewDecisions[$doc->id]['decision'] === false) {
                 return true;
             }
