@@ -499,16 +499,6 @@ class MyApplicationDetail extends Component
             return;
         }
 
-        // Get values from arrays
-        $maxSizeMb = $this->selectedRequirement['max_file_size_mb'] ?? 10;
-        $maxSizeKb = $maxSizeMb * 1024;
-
-        if ($this->uploadFile->getSize() > ($maxSizeKb * 1024)) {
-            toastr()->error("Размер файла превышает максимально допустимый ({$maxSizeMb} МБ).");
-
-            return;
-        }
-
         // Validate file extension
         $allowedExtensions = $this->selectedRequirement['allowed_extensions'] ?? [];
 
