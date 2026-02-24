@@ -753,13 +753,13 @@ class DepartmentApplicationDetail extends Component
                 $doc->is_final_passed === null) {
                 return true;
             } elseif ($statusValue === 'awaiting-industry-check' &&
-                      $doc->is_first_passed === true &&
-                      ($doc->is_industry_passed === null || $doc->is_industry_passed === false) &&
+                      ($doc->is_first_passed === true || $doc->is_first_passed === null) &&
+                      $doc->is_industry_passed === null &&
                       $doc->is_final_passed === null) {
                 return true;
             } elseif ($statusValue === 'awaiting-control-check' &&
                       $doc->is_first_passed === true &&
-                      $doc->is_industry_passed &&
+                      $doc->is_industry_passed === true &&
                       $doc->is_final_passed === null) {
                 return true;
             }
@@ -1060,7 +1060,7 @@ class DepartmentApplicationDetail extends Component
         ]);
         // Validate that all documents with is_first_passed=true and is_industry_passed=null have been reviewed
         $documentsToReview = $documents->filter(function ($doc) {
-            return $doc->is_first_passed === true &&
+            return ($doc->is_first_passed === true || $doc->is_first_passed === null) &&
                    $doc->is_industry_passed === null &&
                    $doc->is_final_passed === null;
         });
