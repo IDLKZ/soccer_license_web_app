@@ -807,7 +807,7 @@ class DepartmentApplicationDetail extends Component
             // 2.2: Check documents where is_first_passed == true AND is_industry_passed == null AND is_final_passed == null
             $documentsToReview = $documents->filter(function ($doc) {
                 return $doc->is_first_passed === true &&
-                       $doc->is_industry_passed === null &&
+                    ($doc->is_industry_passed === null) &&
                        $doc->is_final_passed === null;
             });
         } elseif ($statusValue === 'awaiting-control-check') {
@@ -824,8 +824,11 @@ class DepartmentApplicationDetail extends Component
 
         // Check if all documents that need review have been reviewed
         foreach ($documentsToReview as $doc) {
+
             if (! isset($this->reviewDecisions[$doc->id])) {
-                return false;
+                if ($doc->document_id != null) {
+                    return false;
+                }
             }
         }
 

@@ -51,7 +51,8 @@ class ApplicationStatus extends Model
     {
         return [
             'value' => [
-                'source' => 'title_ru'
+                'source' => 'title_ru',
+                'onUpdate' => false,
             ]
         ];
     }

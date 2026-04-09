@@ -467,8 +467,10 @@
 
                                 <!-- Action buttons based on status - ONLY show if all documents reviewed -->
                                 @if($this->allDocumentsReviewed($criterion->id))
+
                                     <div class="flex items-center space-x-3">
                                         @if($statusValue === 'awaiting-first-check')
+
                                             @if($this->hasRejectedDocuments($criterion->id))
                                                 <button
                                                     wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'first')"
@@ -485,6 +487,7 @@
                                                 Отправить на отраслевое рассмотрение
                                             </button>
                                         @elseif($statusValue === 'awaiting-industry-check')
+
                                             @if($this->hasRejectedDocuments($criterion->id))
                                                 <button
                                                     wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'industry')"
@@ -501,6 +504,7 @@
                                                 Отправить на контрольное рассмотрение
                                             </button>
                                         @elseif($statusValue === 'awaiting-control-check')
+
                                             @if($this->hasRejectedDocuments($criterion->id))
                                                 <button
                                                     wire:click="openRevisionDeadlineModal({{ $criterion->id }}, 'control')"
