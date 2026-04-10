@@ -883,6 +883,7 @@ class DepartmentApplicationDetail extends Component
         // Get all documents for this category
         $documents = ApplicationDocument::where('application_id', $this->application->id)
             ->where('category_id', $criterion->category_id)
+            ->whereNotNull('document_id')
             ->get();
 
         // Validate that all documents with null is_first_passed have been reviewed
@@ -1057,7 +1058,9 @@ class DepartmentApplicationDetail extends Component
 
         $documents = ApplicationDocument::where('application_id', $this->application->id)
             ->where('category_id', $criterion->category_id)
+            ->whereNotNull('document_id')
             ->get();
+
         Log::info('IndustryCheck: documents loaded', [
             'total_documents' => $documents->count(),
         ]);
@@ -1071,6 +1074,7 @@ class DepartmentApplicationDetail extends Component
             'documents_to_review_count' => $documentsToReview->count(),
             'document_ids' => $documentsToReview->pluck('id')->values(),
         ]);
+
         foreach ($documentsToReview as $doc) {
             if (! isset($this->reviewDecisions[$doc->id])) {
                 Log::warning('IndustryCheck: missing decision for document', [
@@ -2232,6 +2236,7 @@ class DepartmentApplicationDetail extends Component
 
         // Determine which submit method to call based on revision type
         switch ($this->revisionType) {
+
             case 'first':
                 $this->submitFirstCheck($this->revisionCriterionId, 'revision');
                 break;

@@ -756,6 +756,7 @@
                                             @if(!empty($uploadedDocs))
                                                 @foreach($uploadedDocs as $appDoc)
                                                     @php
+
                                                         $doc = is_array($appDoc) ? (object)$appDoc : $appDoc;
                                                         $statusValue = $criterion->application_status->value ?? null;
 
@@ -780,6 +781,7 @@
                                                         $hasDecision = isset($reviewDecisions[$doc->id]);
                                                         $decision = $hasDecision ? $reviewDecisions[$doc->id] : null;
                                                     @endphp
+
                                                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors cursor-pointer" wire:click="openDocumentInfoModal({{ $doc->id }})">
                                                         <div class="flex items-start justify-between">
                                                             <div class="flex items-start flex-1">
@@ -820,6 +822,8 @@
                                                                                 <i class="fas fa-check mr-1"></i>Прошел первичную и отраслевую
                                                                             </span>
                                                                         @endif
+
+
 
                                                                         <!-- Temporary decision badge -->
                                                                         @if($hasDecision)
@@ -1789,7 +1793,7 @@
                                 @endif
                                 <div>
                                     <label class="text-xs text-gray-500 dark:text-gray-400">Загружено пользователем</label>
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->user->name ?? '-' }}</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $viewingDocument->uploaded_by ?? '-' }}</p>
                                 </div>
                                 <div>
                                     <label class="text-xs text-gray-500 dark:text-gray-400">Дата загрузки</label>
